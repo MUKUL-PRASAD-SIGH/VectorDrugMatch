@@ -8,7 +8,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.x-orange.svg)](https://pytorch.org/)
 [![PyG](https://img.shields.io/badge/PyTorch_Geometric-2.x-red.svg)](https://pyg.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Active_Research-brightgreen.svg)]()
+[![Status](https://img.shields.io/badge/Status-Production_Ready_Research_System-brightgreen.svg)]()
 
 ---
 
@@ -22,7 +22,7 @@ The system combines:
 - **Molecular Similarity Analysis** via RDKit Tanimoto fingerprints
 - **Automated Literature Mining** via PubMed Entrez API
 - **Neglected Disease Priority Index (NDPI)** — our core scoring innovation that folds in equity, affordability, and disease burden
-- **Interactive Web UI** (Flask + React, plus Streamlit prototype)
+- **Advanced Interactive Web UI** (Flask + React for production-ready research interface)
 
 ---
 
@@ -123,7 +123,7 @@ vectordrugmatch/
 │           └── About.jsx
 │
 ├── streamlit_app/
-│   └── app.py                       ← Prototype UI (use during dev)
+│   └── app.py                       ← Legacy prototype UI (deprecated in favor of React)
 │
 ├── notebooks/
 │   ├── 01_data_exploration.ipynb
@@ -191,14 +191,7 @@ python main_pipeline.py
 # Builds KG → trains GCN → computes NDPI → outputs ranked results
 ```
 
-### 5. Launch Prototype UI
-
-```bash
-streamlit run streamlit_app/app.py
-# Open http://localhost:8501
-```
-
-### 6. Launch Production API + Frontend
+### 5. Launch Advanced Research UI
 
 ```bash
 docker-compose up
@@ -267,8 +260,7 @@ VectorDrugMatch focuses on **WHO-classified Neglected Tropical Diseases**:
 | Literature Mining | Biopython (Entrez) |
 | Explainability | SHAP, PyG GNNExplainer |
 | Backend API | Flask, Pydantic |
-| Frontend (production) | React 18, Recharts |
-| Frontend (prototype) | Streamlit |
+| Frontend | React 18, Recharts (production-ready research interface) |
 | Containerisation | Docker, docker-compose |
 | Testing | pytest |
 | CI/CD | GitHub Actions |
