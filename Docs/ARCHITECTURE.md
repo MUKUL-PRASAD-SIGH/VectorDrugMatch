@@ -36,10 +36,10 @@
                       │
           ┌───────────┼───────────┐
           ▼           ▼           ▼
-   ┌────────────┐ ┌────────┐ ┌────────────┐
-   │ Flask API  │ │Streamlit│ │  React UI  │
-   │ /predict   │ │ (dev)  │ │ (prod)     │
-   └────────────┘ └────────┘ └────────────┘
+   ┌────────────┐          ┌────────────┐
+   │ Flask API  │          │  React UI  │
+   │ /predict   │          │ (prod)     │
+   └────────────┘          └────────────┘
 ```
 
 ## Component Responsibilities
@@ -76,9 +76,9 @@
 - Connects to Flask API
 - Three pages: Rankings, Explore (graph viz), About
 
-### `streamlit_app/` — Prototype UI
-- Used during development (faster iteration)
-- Load NDPI CSV directly, no API layer needed
+### `streamlit_app/` — Legacy Prototype UI
+- Deprecated in favor of React for production-ready interface
+- Kept for reference or quick prototyping
 
 ## Data Flow
 
@@ -92,12 +92,12 @@ Raw CSVs
                                 └─► outputs/models/gcn_best.pt
                                       └─► main_pipeline.py
                                             └─► outputs/ndpi_results.csv
-                                                  └─► API / Streamlit
+                                                  └─► API / React
 ```
 
 ## Key Design Decisions
 
-1. **Separate Streamlit prototype from Flask production API** — Faster iteration during development; clean API contract for frontend.
+1. **React UI connects to Flask production API** — Clean API contract for advanced research interface; supports complex visualizations and interactions.
 2. **NDPI formula uses fixed weights** — Interpretable to clinicians. Future work: learn weights with meta-learning.
 3. **Positive labels from Hetionet CtD edges** — Known, curated drug-treats-disease relationships. 1:1 negative sampling from unconfirmed pairs.
 4. **Literature scores are cached** — PubMed API has rate limits (3 req/sec). Cache all lookups to SQLite.

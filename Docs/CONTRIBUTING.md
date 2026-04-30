@@ -14,7 +14,7 @@ main            ← stable, always deployable
 │   ├── feat/data-pipeline      ← Nikita
 │   ├── feat/gcn-model          ← Arpit
 │   ├── feat/ndpi-scoring       ← Mukul
-│   └── feat/streamlit-ui       ← Swastik
+│   └── feat/react-ui       ← Swastik
 ```
 
 **Rules:**
