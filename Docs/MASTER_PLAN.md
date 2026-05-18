@@ -32,7 +32,7 @@ This document is the single source of truth for the entire project execution pla
 | **Nikita Ravindra** (Lead) | Data Engineering + Equity Scoring | `src/data/`, `src/scoring/equity.py`, coordination |
 | **Arpit Pandey** | GNN Modelling | `src/models/`, training scripts, evaluation |
 | **Mukul Prasad** | NDPI + Literature | `src/scoring/ndpi.py`, `src/scoring/literature.py` |
-| **Swastik R Phadke** | Frontend + Integration | `frontend/`, `api/`, `streamlit_app/`, `docker-compose.yml` |
+| **Swastik R Phadke** | Frontend + Integration | `frontend/`, `api/`, `docker-compose.yml` |
 
 ---
 
@@ -76,8 +76,8 @@ This document is the single source of truth for the entire project execution pla
 
 #### Swastik (Frontend Lead)
 - [ ] Install Node.js 18+ and verify: `node --version`
-- [ ] Install Streamlit: `pip install streamlit`
-- [ ] Run Streamlit hello world: `streamlit hello`
+- [ ] Set up React development environment: Install Node.js, npm
+- [ ] Create React app: `npx create-react-app frontend`
 - [ ] Set up React project: `cd frontend && npm install`
 
 **Week 1 Deliverable:** All tools installed, raw data downloaded, first notebook run.
@@ -118,7 +118,7 @@ This document is the single source of truth for the entire project execution pla
 - [ ] Implement basic `src/scoring/ndpi.py` with placeholder GNN score
 
 #### Swastik
-- [ ] Build Streamlit UI that loads `outputs/ndpi_results.csv`
+- [ ] Build React UI that connects to Flask API for NDPI results
 - [ ] Disease dropdown → filter table → show top-10 drugs
 - [ ] Add basic bar chart
 
@@ -165,13 +165,13 @@ This document is the single source of truth for the entire project execution pla
 - [ ] Generate `outputs/ndpi_results.csv`
 
 #### Swastik
-- [ ] Add NDPI bar chart to Streamlit (top-5 drugs per disease)
+- [ ] Add NDPI bar chart to React UI (top-5 drugs per disease)
 - [ ] Display GCN score vs NDPI score side by side
 
 **Week 3 Deliverable:**
 - GCN trained, ROC-AUC > 0.80
 - NDPI computed for all pairs
-- Streamlit showing NDPI scores
+- React UI showing NDPI scores
 
 ---
 
@@ -217,7 +217,7 @@ This document is the single source of truth for the entire project execution pla
 - [ ] Write equity score unit tests (`tests/test_ndpi.py`)
 
 #### Swastik
-- [ ] Add "NDPI Component Breakdown" tab to Streamlit
+- [ ] Add "NDPI Component Breakdown" tab to React UI
   - Stacked bar: GNN / Similarity / Literature / Equity contributions
 - [ ] Add drug detail popup with SMILES visualisation
 
@@ -225,7 +225,7 @@ This document is the single source of truth for the entire project execution pla
 - All 4 NDPI components working with real data
 - RDKit Tanimoto running
 - PubMed API literature scores cached
-- NDPI component breakdown chart in Streamlit
+- NDPI component breakdown chart in React UI
 
 ---
 
@@ -265,7 +265,7 @@ This document is the single source of truth for the entire project execution pla
 - [ ] Write explainability section for paper
 
 #### Swastik
-- [ ] Add "Explainability" tab to Streamlit:
+- [ ] Add "Explainability" tab to React UI:
   - SHAP bar chart per prediction
   - NDPI component radar chart
 - [ ] Add hover tooltips showing evidence supporting each prediction
@@ -278,7 +278,7 @@ This document is the single source of truth for the entire project execution pla
 **Week 5 Deliverable:**
 - SHAP plots for baseline
 - GNNExplainer subgraphs for top predictions
-- Explainability tab live in Streamlit
+- Explainability tab live in React UI
 - 5 case studies documented
 
 ---
@@ -412,7 +412,7 @@ This document is the single source of truth for the entire project execution pla
 - [ ] 4 clean CSV files created
 - [ ] NetworkX graph with 1000+ nodes visualised
 - [ ] Logistic Regression ROC-AUC > 0.65
-- [ ] Streamlit showing NDPI table
+- [ ] React UI showing NDPI table
 
 ### End of Week 4
 - [ ] GCN ROC-AUC > 0.80

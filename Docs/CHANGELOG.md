@@ -20,7 +20,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - Data preprocessing pipeline (`src/data/preprocessing.py`)
 - Knowledge graph construction with NetworkX (`src/data/graph_builder.py`)
 - Logistic Regression baseline (`src/models/baseline.py`)
-- Streamlit prototype UI (`streamlit_app/app.py`)
+- React production UI (`frontend/`)
 - WHO EML and NTD flag columns in drugs/diseases CSVs
 
 ---
