@@ -181,7 +181,20 @@ cp .env.example .env
 
 ```bash
 bash scripts/download_data.sh
-# Follow prompts for DrugBank & DisGeNET (free account required)
+# Follow prompts for Pubchem
+
+## Dataset Information
+This project uses the PubChem Compound dataset to match vector representations of drugs. Specifically, we process the `CIS-SMILES.gz` file. 
+
+To keep this repository lightweight and fast, the raw dataset is not uploaded to GitHub. 
+
+### How to set up the data locally:
+1. Create a folder named `data/` in the root directory of this project.
+2. Download the `CIS-SMILES.gz` dataset directly from PubChem.
+3. Place the downloaded file into your local `data/` folder.
+4. Run the data pipeline scripts (`process_pubchem_bulk.py` / `featurize_pubchem.py`). The pipeline is configured to automatically:
+   * Clean and preprocess the raw data.
+   * Select the first 50,000 entries for processing.
 ```
 
 ### 4. Run Full Pipeline
@@ -304,3 +317,12 @@ MIT License — see [LICENSE](LICENSE) for details.
 ---
 
 *Built with ❤️ for patients who deserve better treatment options.*
+
+
+
+
+
+
+
+
+
