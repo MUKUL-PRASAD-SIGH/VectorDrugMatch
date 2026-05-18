@@ -181,20 +181,38 @@ cp .env.example .env
 
 ```bash
 bash scripts/download_data.sh
-# Follow prompts for Pubchem
 
-## Dataset Information
-This project uses the PubChem Compound dataset to match vector representations of drugs. Specifically, we process the `CIS-SMILES.gz` file. 
 
-To keep this repository lightweight and fast, the raw dataset is not uploaded to GitHub. 
+## 📊 Data Setup & Reproduction
 
-### How to set up the data locally:
-1. Create a folder named `data/` in the root directory of this project.
-2. Download the `CIS-SMILES.gz` dataset directly from PubChem.
-3. Place the downloaded file into your local `data/` folder.
-4. Run the data pipeline scripts (`process_pubchem_bulk.py` / `featurize_pubchem.py`). The pipeline is configured to automatically:
-   * Clean and preprocess the raw data.
-   * Select the first 50,000 entries for processing.
+To run the preprocessing pipeline locally, you must manually download the required raw datasets and place them into the `data/raw/` directory.
+
+* **PubChem (Drugs):** Download the raw `CID-SMILES` compound mapping data file and save it exactly as `data/raw/CID-SMILES`.
+* **DisGeNET (Diseases):** Download the curated gene-disease associations file from the [DisGeNET Mirror](https://github.com/dhimmel/disgenet/blob/master/download/curated_gene_disease_associations.txt.gz) and save it exactly as `data/raw/curated_gene_disease_associations.tsv`.
+* **Hetionet (Edges):** Download the official v1.0 edge network network file from the [Hetionet Repository](https://github.com/hetio/hetionet/blob/main/hetnet/tsv/hetionet-v1.0-edges.sif.gz) and save it exactly as `data/raw/hetionet_edges.tsv`.
+
+> ⚠️ **Note on DrugBank:** The open DrugBank vocabulary portal was completely offline/unreachable during initial setup. The pipeline has been successfully pivoted to use the open-source PubChem (`CID-SMILES`) dataset for drug node generation instead.
+
+---
+
+Before running the pipeline script, ensure your local directory tree looks exactly like this:
+
+```text
+VectorDrugMatch/
+├── data/
+│   ├── raw/
+│   │   ├── CID-SMILES
+│   │   ├── curated_gene_disease_associations.tsv
+│   │   └── hetionet_edges.tsv
+│   └── processed/          # Will be created automatically
+└── scripts/
+    └── preprocess_all.py
+
+### 2. Running the Pipeline
+Once the three files are inside `data/raw/`, run the following command to generate the clean, filtered graph files:
+
+```bash
+python scripts/preprocess_all.py
 ```
 
 ### 4. Run Full Pipeline
