@@ -58,10 +58,10 @@
 - **ensemble.py**: Combines all models for production inference
 
 ### `src/scoring/` — NDPI Engine
-- **ndpi.py**: Orchestrates all 4 components into final NDPI score
+- **ndpi.py**: Orchestrates all 4 components into final NDPI score (all inputs must be normalised to [0,1])
 - **similarity.py**: RDKit Morgan fingerprint Tanimoto similarity
-- **literature.py**: PubMed evidence count + normalisation + caching
-- **equity.py**: WHO EML + DALY + affordability + generic availability
+- **literature.py**: PubMed evidence count + normalisation [0,1] + caching via Biopython Entrez API
+- **equity.py**: WHO EML + DALY + affordability + generic availability + normalisation [0,1] via WHO GHO OData API
 
 ### `src/explainability/` — Interpretability
 - **shap_explainer.py**: SHAP values for the Logistic Regression baseline

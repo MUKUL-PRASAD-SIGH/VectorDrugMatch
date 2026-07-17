@@ -234,7 +234,7 @@ docker-compose up
 
 ## 🧠 Core Innovation: NDPI
 
-The **Neglected Disease Priority Index** is our primary contribution. Unlike pure ML scores, NDPI explicitly weights real-world deployability:
+The **Neglected Disease Priority Index** is our primary contribution. Unlike pure ML scores, NDPI explicitly weights real-world deployability. All component scores are strictly normalized to a `(0, 1)` scale before being combined to prevent raw values from skewing the final score:
 
 ```
 NDPI = 0.35 × GNN_score
@@ -247,8 +247,8 @@ NDPI = 0.35 × GNN_score
 |---|---|---|
 | **GNN_score** | ML-predicted drug–disease association | 2-layer GCN / GAT |
 | **Similarity_score** | Chemical similarity to known NTD drugs | RDKit Tanimoto (Morgan FP) |
-| **Literature_score** | PubMed evidence count (normalised) | Biopython Entrez API |
-| **Equity_score** | WHO EML status + generic availability + affordability + DALY burden | WHO GHO API |
+| **Literature_score** | PubMed evidence count (normalised [0,1]) | Biopython Entrez API (`esearch`) |
+| **Equity_score** | WHO EML status + generic availability + affordability + DALY burden (normalised [0,1]) | WHO GHO OData API |
 
 ---
 
