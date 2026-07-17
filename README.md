@@ -179,23 +179,29 @@ cp .env.example .env
 
 ### 3. Download Data
 
+
+## 📊 Data Setup & Preprocessing
+
+> ⚠️ **CRITICAL STEP:** You **must** run the preprocessing script `preprocess_all.py` before starting any model training. The `data/` folder containing the processed datasets is intentionally excluded from this GitHub repository (`.gitignore`) to prevent repository bloat and file size limits.
+
+To generate the exact matching datasets on your local machine, follow these steps:
+
+### 1. Prerequisites
+Make sure you have your local copy of the raw `nodes.tsv` file placed directly in the root directory of this project (`VectorDrugMatch/`).
+
+### 2. Install Dependencies
+Ensure you have `pandas` installed in your Python environment:
 ```bash
-bash scripts/download_data.sh
+pip install pandas
 
-
-## 📊 Data Setup & Reproduction
-
-To run the preprocessing pipeline locally, you must manually download the required raw datasets and place them into the `data/raw/` directory.
-
-* **PubChem (Drugs):** Download the raw `CID-SMILES` compound mapping data file and save it exactly as `data/raw/CID-SMILES`.
-* **DisGeNET (Diseases):** Download the curated gene-disease associations file from the [DisGeNET Mirror](https://github.com/dhimmel/disgenet/blob/master/download/curated_gene_disease_associations.txt.gz) and save it exactly as `data/raw/curated_gene_disease_associations.tsv`.
-* **Hetionet (Edges):** Download the official v1.0 edge network network file from the [Hetionet Repository](https://github.com/hetio/hetionet/blob/main/hetnet/tsv/hetionet-v1.0-edges.sif.gz) and save it exactly as `data/raw/hetionet_edges.tsv`.
-
-> ⚠️ **Note on DrugBank:** The open DrugBank vocabulary portal was completely offline/unreachable during initial setup. The pipeline has been successfully pivoted to use the open-source PubChem (`CID-SMILES`) dataset for drug node generation instead.
+Run the Preprocessing Pipeline
+Execute the preprocessing script from the root directory to generate the training data:
 
 ---
 
 Before running the pipeline script, ensure your local directory tree looks exactly like this:
+```bash
+python3 scripts/preprocess_all.py
 
 ```text
 VectorDrugMatch/
