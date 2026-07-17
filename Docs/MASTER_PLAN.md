@@ -45,17 +45,17 @@ This document is the single source of truth for the entire project execution pla
 **Goal:** Everyone has a working dev environment and all data downloaded.
 
 #### All Team Members (Day 1)
-- [ ] Fork the repo and clone locally
-- [ ] Create Python 3.10+ virtual environment
-- [ ] Install all requirements: `pip install -r requirements.txt`
+- [x] Fork the repo and clone locally
+- [x] Create Python 3.10+ virtual environment
+- [x] Install all requirements: `pip install -r requirements.txt`
 - [ ] Verify PyTorch and PyTorch Geometric installed correctly:
   ```bash
   python -c "import torch; import torch_geometric; print('OK')"
   ```
-- [ ] Register free accounts: DrugBank, DisGeNET
+- [ ] Register free accounts: DisGeNET
 
 #### Nikita (Data Lead)
-- [ ] Download DrugBank vocabulary CSV
+- [x] Pivot to PubChem and write processing scripts (Replaced DrugBank)
 - [ ] Download DisGeNET curated associations TSV
 - [ ] Download Hetionet edges and nodes TSVs
 - [ ] Run `python scripts/preprocess_all.py`
@@ -70,9 +70,9 @@ This document is the single source of truth for the entire project execution pla
 - [ ] Document data statistics (node/edge counts, class balance)
 
 #### Mukul (Scoring Lead)
-- [ ] Test WHO GHO API — fetch DALY data for 5 NTDs
-- [ ] Verify PubMed Entrez access: run `pubmed_count("ivermectin", "lymphatic filariasis")`
-- [ ] Install RDKit: `conda install -c conda-forge rdkit` or `pip install rdkit`
+- [x] Test WHO GHO API — fetch DALY data for 5 NTDs
+- [x] Verify PubMed Entrez access: run `pubmed_count("ivermectin", "lymphatic filariasis")`
+- [x] Install RDKit: `conda install -c conda-forge rdkit` or `pip install rdkit`
 
 #### Swastik (Frontend Lead)
 - [ ] Install Node.js 18+ and verify: `node --version`
