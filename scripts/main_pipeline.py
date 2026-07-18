@@ -16,6 +16,10 @@ from pathlib import Path
 from tqdm import tqdm
 
 from src.data.graph_builder import build_hetero_data
+from src.models.gnn.gcn import create_gcn_model
+from src.models.gnn.graphsage import create_graphsage_model
+from src.models.gnn.gat import create_gat_model
+from src.models.gnn.rgcn import create_rgcn_model
 from src.models.gnn.hgt import create_hgt_model
 from src.models.gnn.base import GNNLinkPredictionModel
 from src.scoring.ndpi import calculate_ndpi
@@ -40,12 +44,26 @@ def run_pipeline(config_path: str):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     data = data.to(device)
     
-    # 2. Load Model (Assume HGT for now)
-    print("Loading Trained HGT Model...")
-    gnn = create_hgt_model(data.metadata(), hidden_channels=64, out_channels=64, heads=4)
+    # 2. Load Model dynamically from config
+    best_model_name = config.get("experiment", {}).get("best_model", "HGT")
+    print(f"Loading Trained {best_model_name} Model...")
+    
+    gnn_factories = {
+        "GCN": lambda: create_gcn_model(data.metadata(), hidden_channels=64, out_channels=64),
+        "GraphSAGE": lambda: create_graphsage_model(data.metadata(), hidden_channels=64, out_channels=64),
+        "GAT": lambda: create_gat_model(data.metadata(), hidden_channels=32, out_channels=64, heads=2),
+        "RGCN": lambda: create_rgcn_model(data.metadata(), hidden_channels=64, out_channels=64),
+        "HGT": lambda: create_hgt_model(data.metadata(), hidden_channels=64, out_channels=64, heads=4)
+    }
+    
+    if best_model_name not in gnn_factories:
+        print(f"ERROR: Unknown best_model {best_model_name}")
+        sys.exit(1)
+        
+    gnn = gnn_factories[best_model_name]()
     model = GNNLinkPredictionModel(gnn, in_channels=64, hidden_channels=32).to(device)
     
-    model_path = outputs_dir / "models" / "gnn_HGT.pth"
+    model_path = outputs_dir / "models" / f"gnn_{best_model_name}.pth"
     if not model_path.exists():
         print(f"ERROR: Model weights not found at {model_path}")
         sys.exit(1)
@@ -140,7 +158,8 @@ def run_pipeline(config_path: str):
         equity_score = compute_equity_score(is_eml, daly_burden, mw, atc_code)
         
         # 4. NDPI
-        ndpi = calculate_ndpi(row["ml_probability"], sim_score, lit_score, equity_score)
+        ndpi_weights = config.get("ndpi_weights", None)
+        ndpi = calculate_ndpi(row["ml_probability"], sim_score, lit_score, equity_score, weights=ndpi_weights)
         
         results.append({
             "drug_id": row["id"],

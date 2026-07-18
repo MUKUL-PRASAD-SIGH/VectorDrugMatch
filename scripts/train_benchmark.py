@@ -104,36 +104,31 @@ def train_node2vec_baseline(config_path):
     drug_embeddings = z[:num_drugs].cpu().numpy()
     disease_embeddings = z[num_drugs:].cpu().numpy()
     
-    # Now build the dataset splits from our regular process, but replace X with these embeddings
-    print("Extracting tabular dataset splits...")
-    splits = build_tabular_dataset(data, neg_ratio=5.0, test_size=0.15, val_size=0.15, random_state=random_seed)
+    # Now build the dataset splits from our regular process to get EXACT SAME negative edges
+    print("Extracting tabular dataset splits to align negative edges...")
+    splits = build_tabular_dataset(data, neg_ratio=dataset_cfg.get("neg_ratio", 5.0), 
+                                   test_size=dataset_cfg.get("test_size", 0.15), 
+                                   val_size=dataset_cfg.get("val_size", 0.15), 
+                                   random_state=random_seed)
     
-    # We ignore X_train from tabular and build our own from embeddings
-    # splits dict has y_train, y_val, etc. but we need the actual edges.
-    # Actually, build_tabular_dataset generates features. 
-    # To use embeddings, we need the edge indices that it sampled.
-    # Wait, `build_tabular_dataset` internally samples edges but doesn't return them by default unless modified.
-    # Let's just create a quick custom edge sampling for the benchmark here, 
-    # or just use the whole edge index.
-    
-    # Positive edges
-    pos_edge_index = data['drug', 'treats', 'disease'].edge_index.cpu().numpy()
-    num_pos = pos_edge_index.shape[1]
-    
-    # Negative edges (random sampling)
-    np.random.seed(random_seed)
-    neg_u = np.random.randint(0, num_drugs, num_pos * 5)
-    neg_v = np.random.randint(0, num_diseases, num_pos * 5)
-    neg_edge_index = np.vstack([neg_u, neg_v])
-    
-    all_u = np.concatenate([pos_edge_index[0], neg_edge_index[0]])
-    all_v = np.concatenate([pos_edge_index[1], neg_edge_index[1]])
-    y_all = np.concatenate([np.ones(num_pos), np.zeros(num_pos * 5)])
+    # Extract the exact edges used by the ML baselines
+    all_u, all_v, y_all = [], [], []
+    for split_name in ["train", "val", "test"]:
+        if f"edges_{split_name}" in splits:
+            edges = splits[f"edges_{split_name}"]
+            y = splits[f"y_{split_name}"]
+            all_u.append(edges[0])
+            all_v.append(edges[1])
+            y_all.append(y)
+            
+    all_u = np.concatenate(all_u)
+    all_v = np.concatenate(all_v)
+    y_all = np.concatenate(y_all)
     
     # Feature for LR is the element-wise product of embeddings (Hadamard)
     X_all = drug_embeddings[all_u] * disease_embeddings[all_v]
     
-    print("Training Logistic Regression on Node2Vec features (5-Fold CV)...")
+    print(f"Training Logistic Regression on Node2Vec features (5-Fold CV) - Shape: {X_all.shape}...")
     mlflow.set_experiment(exp_name)
     
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_seed)
@@ -145,10 +140,9 @@ def train_node2vec_baseline(config_path):
             X_test, y_test = X_all[test_idx], y_all[test_idx]
             
             clf = LogisticRegression(max_iter=1000, class_weight='balanced', random_state=random_seed)
-            calibrated = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv="prefit")
-            
-            clf.fit(X_train, y_train)
-            calibrated.fit(X_test, y_test)
+            # Fix calibration leakage
+            calibrated = CalibratedClassifierCV(estimator=clf, method="sigmoid", cv=3)
+            calibrated.fit(X_train, y_train)
             
             y_pred_proba = calibrated.predict_proba(X_test)[:, 1]
             metrics = compute_all_metrics(y_test, y_pred_proba)

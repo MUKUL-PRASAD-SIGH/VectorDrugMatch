@@ -27,10 +27,14 @@ from scripts.train_gnn import GNNLinkPredictionModel, train_epoch, evaluate_mode
 
 def objective(trial, config_path):
     # Hyperparameters to tune
-    hidden_channels = trial.suggest_categorical("hidden_channels", [32, 64, 128])
+    hidden_channels = trial.suggest_categorical("hidden_channels", [16, 32, 64, 128])
     heads = trial.suggest_categorical("heads", [2, 4, 8])
     lr = trial.suggest_float("lr", 1e-4, 1e-2, log=True)
-    dropout = trial.suggest_float("dropout", 0.1, 0.5)
+    dropout = trial.suggest_float("dropout", 0.1, 0.6)
+    weight_decay = trial.suggest_float("weight_decay", 1e-5, 1e-2, log=True)
+    epochs = trial.suggest_int("epochs", 30, 100)
+    optimizer_name = trial.suggest_categorical("optimizer", ["Adam", "AdamW"])
+    scheduler_factor = trial.suggest_categorical("scheduler_factor", [0.1, 0.5])
     
     config_path = REPO_ROOT / config_path
     with open(config_path, "r") as f:
@@ -62,10 +66,15 @@ def objective(trial, config_path):
     gnn = create_hgt_model(metadata, hidden_channels=hidden_channels, out_channels=hidden_channels, heads=heads)
     model = GNNLinkPredictionModel(gnn, in_channels=hidden_channels, hidden_channels=hidden_channels // 2).to(device)
     
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    if optimizer_name == "Adam":
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    else:
+        optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+        
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=scheduler_factor, patience=5)
+        
     scaler = torch.cuda.amp.GradScaler(enabled=device.type == 'cuda')
     
-    epochs = 50 # Fixed smaller epochs for tuning
     best_val_auc = 0
     
     with mlflow.start_run(nested=True):
@@ -76,6 +85,7 @@ def objective(trial, config_path):
             val_metrics = evaluate_model(model, val_data)
             
             val_auc = val_metrics["roc_auc"]
+            scheduler.step(val_auc)
             
             trial.report(val_auc, epoch)
             
@@ -103,7 +113,8 @@ def run_optuna(config_path, n_trials=10):
     
     mlflow.set_experiment(exp_name)
     with mlflow.start_run(run_name="optuna_hpo"):
-        study = optuna.create_study(direction="maximize")
+        db_path = f"sqlite:///{REPO_ROOT}/outputs/optuna_study.db"
+        study = optuna.create_study(direction="maximize", storage=db_path, load_if_exists=True, study_name=exp_name)
         study.optimize(lambda trial: objective(trial, config_path), n_trials=n_trials)
         
         print("\nBest Trial:")

@@ -505,6 +505,25 @@ NDPI = 0.35 × HGT_score
 
 ---
 
+## 🚀 Phase 9: Final Scientific Validation & Remaining Improvements (Future Work)
+*(To be implemented after core pipeline deployment on Colab)*
+
+- [ ] **Dynamic Best Model Loading**: Load best inference model from config instead of hardcoding HGT in `main_pipeline.py`.
+- [ ] **Configurable Feature Dimensions**: Remove hardcoded feature dimensions from ablation scripts (`run_ablations.py`).
+- [ ] **Statistical Significance**: Add statistical significance testing (DeLong/bootstrap confidence intervals) to prove model superiority isn't due to random chance.
+- [ ] **External Validation**: Test the trained HGT model on external, unseen datasets (e.g., DrugBank, RepoDB, Open Targets) to prove generalization beyond DisGeNET.
+- [ ] **Ranking Metrics**: Include full ranking metrics for the inference pipeline: Precision@K, Recall@K, Hits@K, MRR, NDCG.
+- [ ] **Embeddings Export**: Save learned drug and disease embeddings from the GNN for downstream clustering and analysis.
+- [ ] **Configurable NDPI**: Make NDPI component weights (currently 0.35, 0.20, 0.20, 0.25) configurable in `config.yaml`.
+- [ ] **Reproducibility Metadata**: Enhance `evaluate.py` to log full environment metadata (`pip freeze`, Python version, CUDA version, exact RNG states) into the MLflow artifacts.
+
+---
+
+## 🏆 Development Summary
+*For a complete history of the 18 development phases, including major milestones like SQLite caching (`cid_smiles.db`), the `DEFAULTS` model pattern, Node2Vec benchmarking, Optuna integration, and MLflow experiment tracking, see [Docs/DEVELOPMENT_SUMMARY.md](DEVELOPMENT_SUMMARY.md).*
+
+---
+
 ## ⚠️ Common Mistakes to Avoid (Across Devices)
 
 | Mistake | Prevention |

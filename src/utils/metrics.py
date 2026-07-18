@@ -19,6 +19,7 @@ try:
         matthews_corrcoef,
         confusion_matrix,
         classification_report,
+        brier_score_loss,
     )
     SKLEARN_AVAILABLE = True
 except ImportError:
@@ -62,6 +63,29 @@ def compute_all_metrics(y_true: np.ndarray, y_pred_proba: np.ndarray,
     metrics["recall"] = round(recall_score(y_true, y_pred, zero_division=0), 4)
     metrics["mcc"] = round(matthews_corrcoef(y_true, y_pred), 4)
     metrics["accuracy"] = round(np.mean(y_true == y_pred), 4)
+    
+    # Calibration metric
+    try:
+        metrics["brier"] = round(brier_score_loss(y_true, y_pred_proba), 4)
+    except ValueError:
+        metrics["brier"] = 0.0
+        
+    # Ranking metrics (Treating the full eval set as a single ranked list)
+    sorted_indices = np.argsort(y_pred_proba)[::-1]
+    y_true_sorted = y_true[sorted_indices]
+    
+    k_10 = min(10, len(y_true_sorted))
+    k_50 = min(50, len(y_true_sorted))
+    
+    metrics["hits_10"] = int(np.sum(y_true_sorted[:k_10]))
+    metrics["hits_50"] = int(np.sum(y_true_sorted[:k_50]))
+    
+    total_pos = np.sum(y_true_sorted)
+    metrics["precision_10"] = round(metrics["hits_10"] / k_10 if k_10 > 0 else 0, 4)
+    metrics["recall_10"] = round(metrics["hits_10"] / total_pos if total_pos > 0 else 0, 4)
+    
+    pos_ranks = np.where(y_true_sorted == 1)[0]
+    metrics["mrr"] = round(1.0 / (pos_ranks[0] + 1) if len(pos_ranks) > 0 else 0, 4)
 
     return metrics
 
@@ -70,12 +94,12 @@ def format_metrics_table(model_results: list[dict]) -> str:
     """Format a list of model results into a readable comparison table.
 
     Args:
-        model_results: List of dicts with keys: name, type, roc_auc, pr_auc, f1, mcc.
+        model_results: List of dicts with keys: name, type, roc_auc, pr_auc, f1, mcc, mrr, precision_10, recall_10.
 
     Returns:
         Formatted string table.
     """
-    header = f"{'Model':<25} {'Type':<8} {'ROC-AUC':>15} {'PR-AUC':>15} {'F1':>13} {'MCC':>13}"
+    header = f"{'Model':<25} {'Type':<8} {'ROC-AUC':>15} {'PR-AUC':>15} {'F1':>13} {'MCC':>13} {'MRR':>8} {'P@10':>8} {'R@10':>8}"
     sep = "-" * len(header)
 
     lines = [sep, header, sep]
@@ -92,17 +116,13 @@ def format_metrics_table(model_results: list[dict]) -> str:
         mcc_str = f"{r.get('mcc', 0):.4f}"
         if "mcc_std" in r: mcc_str += f" ± {r['mcc_std']:.4f}"
         
-        line = (
-            f"{r['name']:<25} "
-            f"{r.get('type', 'base'):<8} "
-            f"{roc_str:>15}  "
-            f"{pr_str:>15}  "
-            f"{f1_str:>13}  "
-            f"{mcc_str:>13}"
-        )
-        lines.append(line)
-    lines.append(sep)
+        mrr_str = f"{r.get('mrr', 0):.4f}"
+        p10_str = f"{r.get('precision_10', 0):.4f}"
+        r10_str = f"{r.get('recall_10', 0):.4f}"
 
+        lines.append(f"{r['name']:<25} {r.get('type', 'Base'):<8} {roc_str:>15} {pr_str:>15} {f1_str:>13} {mcc_str:>13} {mrr_str:>8} {p10_str:>8} {r10_str:>8}")
+
+    lines.append(sep)
     return "\n".join(lines)
 
 

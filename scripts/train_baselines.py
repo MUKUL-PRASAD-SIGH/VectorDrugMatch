@@ -149,11 +149,10 @@ def train_evaluate_baselines(selected_models, config_path):
                 base_model = ModelClass(**model_kwargs)
                 
                 # We wrap the internal sklearn model in CalibratedClassifierCV
-                # if it's RF, XGB, or Logistic
+                # using cv=3 internally on X_train to prevent leakage into X_test
                 if key in ["rf", "xgb", "logistic"] and hasattr(base_model, "model"):
-                    calibrated = CalibratedClassifierCV(estimator=base_model.model, method="sigmoid", cv="prefit")
-                    base_model.model.fit(X_train, y_train)
-                    calibrated.fit(X_test, y_test)
+                    calibrated = CalibratedClassifierCV(estimator=base_model.model, method="sigmoid", cv=3)
+                    calibrated.fit(X_train, y_train)
                     base_model.model = calibrated
                 else:
                     base_model.train(X_train, y_train)
@@ -222,6 +221,11 @@ def train_evaluate_baselines(selected_models, config_path):
                     np.random.seed(random_seed)
                     idx = np.random.choice(len(X_all), sample_size, replace=False)
                     X_sample = X_all[idx]
+                    
+                    # Save exact indices used
+                    idx_path = outputs_dir / f"{key}_shap_indices.npy"
+                    np.save(idx_path, idx)
+                    mlflow.log_artifact(str(idx_path))
                     
                     shap_values = explainer.shap_values(X_sample)
                     

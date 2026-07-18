@@ -4,6 +4,13 @@ experiment:
   name: baseline_morgan
   notes: ""
   save_predictions: true
+  best_model: HGT         # Model to use in inference (e.g. HGT, GraphSAGE, etc.)
+  
+ndpi_weights:
+  gnn: 0.35
+  similarity: 0.20
+  literature: 0.20
+  equity: 0.25
 
 dataset:
   neg_ratio: 5.0         # Number of negative edges per positive edge

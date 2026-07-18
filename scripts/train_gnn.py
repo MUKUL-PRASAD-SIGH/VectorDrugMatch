@@ -241,6 +241,7 @@ def train_evaluate_gnns(config_path: str):
         best_val_auc = 0.0
         best_metrics = None
         best_model_state = None
+        best_epoch = 0
         patience = 20
         epochs_no_improve = 0
         
@@ -255,6 +256,7 @@ def train_evaluate_gnns(config_path: str):
             if val_metrics["roc_auc"] > best_val_auc:
                 best_val_auc = val_metrics["roc_auc"]
                 best_model_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+                best_epoch = epoch
                 epochs_no_improve = 0
             else:
                 epochs_no_improve += 1
@@ -297,7 +299,8 @@ def train_evaluate_gnns(config_path: str):
                 "hidden_channels": EMB_DIM,
                 "learning_rate": 0.005,
                 "weight_decay": 1e-4,
-                "feature_dim": feature_dim
+                "feature_dim": feature_dim,
+                "best_epoch": best_epoch
             })
             mlflow.log_metrics({
                 "test_roc_auc": best_metrics.get("roc_auc", 0),
@@ -327,6 +330,17 @@ def train_evaluate_gnns(config_path: str):
                 })
                 pred_path = preds_dir / f"gnn_{name}_predictions.csv"
                 pred_df.to_csv(pred_path, index=False)
+                
+        # Save Embeddings
+        model.eval()
+        with torch.no_grad():
+            # Run forward pass on the full graph to extract node embeddings
+            node_embeddings = model.gnn(data.x_dict, data.edge_index_dict)
+            if 'drug' in node_embeddings and 'disease' in node_embeddings:
+                drug_emb = node_embeddings['drug'].cpu().numpy()
+                disease_emb = node_embeddings['disease'].cpu().numpy()
+                np.save(models_dir / f"gnn_{name}_drug_embeddings.npy", drug_emb)
+                np.save(models_dir / f"gnn_{name}_disease_embeddings.npy", disease_emb)
         
         results.append(best_metrics)
         print_metrics(name, best_metrics, "gnn (Test Set)")

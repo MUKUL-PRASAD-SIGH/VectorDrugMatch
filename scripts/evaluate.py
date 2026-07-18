@@ -14,12 +14,20 @@ sys.path.append(str(REPO_ROOT))
 
 from src.utils.metrics import format_metrics_table
 
-def main():
+def main(config_path):
     print("==========================================================")
     print("|   VectorDrugMatch - Comprehensive Model Comparison       |")
     print("==========================================================\n")
     
-    outputs_dir = REPO_ROOT / "outputs"
+    config_path = REPO_ROOT / config_path
+    import yaml
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+        
+    exp_name = config.get("experiment", {}).get("name", "baseline")
+    outputs_dir = REPO_ROOT / "outputs" / exp_name
+    models_dir = outputs_dir / "models"
+    
     base_csv = outputs_dir / "baseline_comparison.csv"
     gnn_csv = outputs_dir / "gnn_comparison.csv"
     
@@ -65,25 +73,49 @@ def main():
     print(f"\nFinal comparison saved to {out_csv}")
     
     print("\n--- Ablation Study ---")
-    print("Model\t\t\t\tROC-AUC\tPR-AUC\tF1")
+    print("Model\t\t\t\tROC-AUC\t\tPR-AUC\t\tF1")
     
-    rf_row = df_all[df_all["name"] == "Random Forest"]
-    hgt_row = df_all[df_all["name"] == "HGT"]
-    
-    if not rf_row.empty:
-        rf = rf_row.iloc[0]
-        # Morgan only (mocked if not available)
-        print(f"Morgan only\t\t\t{rf.get('roc_auc',0)-0.05:.3f}\t{rf.get('pr_auc',0)-0.08:.3f}\t{rf.get('f1',0)-0.06:.3f}")
-        # Morgan + RDKit (actual RF)
-        print(f"Morgan + RDKit\t\t\t{rf.get('roc_auc',0):.3f}\t{rf.get('pr_auc',0):.3f}\t{rf.get('f1',0):.3f}")
+    # Load ablation results if they exist
+    ablation_files = list(models_dir.glob("ablation*.json"))
+    ablation_results = []
+    for f in ablation_files:
+        import json
+        with open(f, "r") as json_f:
+            ablation_results.append(json.load(json_f))
+            
+    if ablation_results:
+        # Sort ablations logically
+        ab_order = {
+            "Ablation: Morgan Only": 1,
+            "Ablation: Morgan + RDKit": 2,
+            "Ablation: Morgan + RDKit + Disease": 3
+        }
+        ablation_results.sort(key=lambda x: ab_order.get(x.get("name", ""), 99))
         
+        for ab in ablation_results:
+            name = ab.get('name', 'Unknown')
+            roc = f"{ab.get('roc_auc',0):.3f}±{ab.get('roc_auc_std',0):.2f}" if "roc_auc_std" in ab else f"{ab.get('roc_auc',0):.3f}"
+            pr = f"{ab.get('pr_auc',0):.3f}±{ab.get('pr_auc_std',0):.2f}" if "pr_auc_std" in ab else f"{ab.get('pr_auc',0):.3f}"
+            f1 = f"{ab.get('f1',0):.3f}±{ab.get('f1_std',0):.2f}" if "f1_std" in ab else f"{ab.get('f1',0):.3f}"
+            print(f"{name:<30}\t{roc:<14}\t{pr:<14}\t{f1:<14}")
+    else:
+        print("No actual ablation models found. Run scripts/run_ablations.py.")
+        
+    # Also print GNN and NDPI for context
+    hgt_row = df_all[df_all["name"] == "HGT"]
     if not hgt_row.empty:
         hgt = hgt_row.iloc[0]
-        print(f"Morgan + RDKit + Disease\t{hgt.get('roc_auc',0)-0.02:.3f}\t{hgt.get('pr_auc',0)-0.04:.3f}\t{hgt.get('f1',0)-0.03:.3f}")
-        print(f"Full GNN (HGT)\t\t\t{hgt.get('roc_auc',0):.3f}\t{hgt.get('pr_auc',0):.3f}\t{hgt.get('f1',0):.3f}")
+        roc = f"{hgt.get('roc_auc',0):.3f}±{hgt.get('roc_auc_std',0):.2f}" if "roc_auc_std" in hgt and not pd.isna(hgt["roc_auc_std"]) else f"{hgt.get('roc_auc',0):.3f}"
+        pr = f"{hgt.get('pr_auc',0):.3f}±{hgt.get('pr_auc_std',0):.2f}" if "pr_auc_std" in hgt and not pd.isna(hgt["pr_auc_std"]) else f"{hgt.get('pr_auc',0):.3f}"
+        f1 = f"{hgt.get('f1',0):.3f}±{hgt.get('f1_std',0):.2f}" if "f1_std" in hgt and not pd.isna(hgt["f1_std"]) else f"{hgt.get('f1',0):.3f}"
+        print(f"{'Full GNN (HGT)':<30}\t{roc:<14}\t{pr:<14}\t{f1:<14}")
         
-    print("Full Pipeline (+ NDPI)\t\tScore represents final ranking composite, not pure ML metric.")
+    print(f"{'Full Pipeline (+ NDPI)':<30}\tScore represents final ranking composite, not pure ML metric.")
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, default="configs/baseline_morgan.yaml")
+    args = parser.parse_args()
+    main(args.config)

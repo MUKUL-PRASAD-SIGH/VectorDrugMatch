@@ -14,22 +14,17 @@
 
 ## 📖 Overview
 
-VectorDrugMatch is an open-source, AI-powered drug repurposing platform that identifies clinically viable and affordable treatment candidates for **neglected tropical diseases (NTDs)**. Unlike existing systems that focus on commercially profitable conditions, VectorDrugMatch explicitly prioritises diseases affecting low-resource, underserved populations.
+> *"To the best of our knowledge, there is limited work integrating heterogeneous graph learning, molecular fingerprints, automated literature mining, and disease-burden-aware prioritization into a unified, explainable framework for drug repurposing in neglected tropical diseases."*
 
-The system uses a **research-grade progressive model comparison** approach:
+VectorDrugMatch is not just another graph neural network project—it is a **comprehensive decision-support pipeline** designed to identify clinically viable, affordable, and actionable treatment candidates for **Neglected Tropical Diseases (NTDs)**. 
 
-1. **6 Classical ML Baselines** — From Random Guess to XGBoost, establishing that graph structure provides genuine improvement
-2. **5 Graph Neural Networks** — From GCN to HGT, demonstrating the value of heterogeneous, relation-aware graph learning
-3. **Neglected Disease Priority Index (NDPI)** — Our core innovation that folds HGT predictions with equity, affordability, and disease burden
+While many existing pipelines halt at predicting a raw machine learning probability, real-world clinical translation requires more. VectorDrugMatch introduces the **Neglected Disease Priority Index (NDPI)**, a novel multi-factor ranking framework that synthesizes graph-based predictions, chemical similarity, literature evidence, and disease burden into a single, explainable metric.
 
-The system combines:
-- **Heterogeneous Biomedical Knowledge Graph** built from PubChem, Hetionet, and DisGeNET (50,000+ edges, 10+ relation types)
-- **RDKit Morgan Fingerprints** (2048-bit) for molecular feature engineering
-- **Progressive Graph Neural Networks** (GCN → GraphSAGE → GAT → RGCN → **HGT**)
-- **Molecular Similarity Analysis** via RDKit Tanimoto fingerprints
-- **Automated Literature Mining** via PubMed Entrez API
-- **Neglected Disease Priority Index (NDPI)** — equity-aware scoring innovation
-- **Advanced Interactive Web UI** (Flask + React for production-ready research interface)
+Our end-to-end framework contributes:
+1. **Multi-Criteria Ranking (NDPI)** — Transcends raw ML probabilities by integrating structural chemical similarity, real-time literature evidence, and WHO health-equity metrics.
+2. **Explainable Prioritization** — Ranks candidates not just with a score, but with human-readable rationale (e.g., *"Structurally similar to approved compounds, supported by emerging literature, targets a high-burden disease, predicted strongly by HGT"*).
+3. **NTD-Specific Focus** — Purpose-built for diseases affecting low-resource populations, contrasting with the typical focus on oncology or Alzheimer's.
+4. **Rigorous Progressive Benchmarking** — 11 models evaluated across 5-fold cross-validation, proving the architectural necessity of Heterogeneous Graph Transformers (HGT) over classical baselines (Node2Vec + LR, Random Forest, XGBoost).
 
 ---
 
@@ -41,6 +36,7 @@ vectordrugmatch/
 ├── README.md                        ← You are here
 ├── Docs/
 │   ├── MASTER_PLAN.md               ← Full 8-week research & engineering roadmap
+│   ├── DEVELOPMENT_SUMMARY.md       ← Complete history of the 18 development phases
 │   ├── ARCHITECTURE.md              ← System design & component diagram
 │   ├── DATASETS.md                  ← All data sources, download links, cleaning steps
 │   ├── API.md                       ← REST API reference
@@ -120,7 +116,10 @@ vectordrugmatch/
 │   ├── preprocess.py                ← SINGLE unified preprocessing script
 │   ├── train_baselines.py           ← Train all 6 baseline models
 │   ├── train_gnn.py                 ← Train all 5 GNN models
-│   └── evaluate.py                  ← Unified 11-model comparison table
+│   ├── evaluate.py                  ← Unified 11-model comparison table
+│   ├── run_ablations.py             ← Evaluates feature combinations with 5-fold CV
+│   ├── optuna_gnn.py                ← Tunes GNN hyperparameters with MLflow logging
+│   └── export_codebase.py           ← Exports repository into a single codebase.md
 │
 ├── api/
 │   ├── __init__.py
@@ -249,23 +248,45 @@ docker-compose up
 
 ---
 
-## 🧠 Core Innovation: NDPI
+## 🧠 Core Innovation: The Complete Decision-Support Pipeline & NDPI
 
-The **Neglected Disease Priority Index** is our primary contribution. Unlike pure ML scores, NDPI explicitly weights real-world deployability. All component scores are strictly normalized to a `(0, 1)` scale before being combined to prevent raw values from skewing the final score:
+The true novelty of VectorDrugMatch lies in its **methodology and application integration**. The Graph Neural Network is merely one component of a much larger, fully reproducible pipeline:
+
+```text
+Raw Data (PubChem, Hetionet, DisGeNET) 
+  ↓ 
+Rigorous Preprocessing & Feature Engineering (RDKit, Morgan)
+  ↓ 
+Heterogeneous Biomedical Knowledge Graph
+  ↓ 
+Systematic Model Evaluation (Classical ML → Graph Baselines → HGT)
+  ↓ 
+Explainability (SHAP, GNNExplainer)
+  ↓ 
+NDPI (Multi-Criteria Ranking Synthesis)
+  ↓ 
+Actionable Drug Candidates
+```
+
+### The Neglected Disease Priority Index (NDPI)
+
+Unlike pure ML scores that lack clinical nuance, NDPI explicitly weights real-world deployability. It is a composite framework where all component scores are strictly normalized to a `(0, 1)` scale before fusion, preventing arbitrary scale skewing:
 
 ```
-NDPI = 0.35 × HGT_score
-     + 0.20 × Similarity_score
-     + 0.20 × Literature_score
-     + 0.25 × Equity_score
+NDPI = 0.35 × HGT_Score (Graph Prediction)
+     + 0.20 × Similarity_Score (Chemical Tanimoto)
+     + 0.20 × Literature_Score (PubMed Mining)
+     + 0.25 × Equity_Score (WHO EML / DALY Burden)
 ```
 
 | Component | What It Measures | Method |
 |---|---|---|
-| **HGT_score** | ML-predicted drug–disease association | Heterogeneous Graph Transformer (best GNN) |
-| **Similarity_score** | Chemical similarity to known NTD drugs | RDKit Tanimoto (2048-bit Morgan FP) |
-| **Literature_score** | PubMed evidence count (normalised [0,1]) | Biopython Entrez API (`esearch`) |
-| **Equity_score** | WHO EML status + generic availability + affordability + DALY burden (normalised [0,1]) | WHO GHO OData API |
+| **HGT_Score** | ML-predicted drug–disease association | Heterogeneous Graph Transformer (best performing GNN) |
+| **Similarity_Score** | Chemical similarity to known NTD drugs | RDKit Tanimoto (2048-bit Morgan FP) |
+| **Literature_Score** | Real-time scientific consensus | Biopython Entrez API (`esearch`) |
+| **Equity_Score** | Affordability and clinical urgency | WHO GHO OData API (DALY burden, Generic status) |
+
+By outputting an explainable composite score rather than an isolated probability, VectorDrugMatch provides researchers with highly actionable, context-aware repurposing candidates.
 
 ---
 

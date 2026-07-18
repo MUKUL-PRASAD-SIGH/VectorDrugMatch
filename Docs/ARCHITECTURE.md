@@ -63,6 +63,7 @@
               │  Precision, Recall, MCC      │
               │                              │
               │  11-model comparison table   │
+              │  (Including Node2Vec)        │
               └──────────────┬───────────────┘
                              │
          ┌───────────────────┼───────────────────┐
@@ -104,6 +105,9 @@
 | `train_baselines.py` | Trains all classical ML baselines, saves metrics + models to versioned `outputs/<exp>`. |
 | `train_gnn.py` | Trains all GNN models on `HeteroData`, saves metrics + model weights to versioned `outputs/<exp>`. |
 | `evaluate.py` | Loads all trained models, produces the unified comparison table. |
+| `run_ablations.py` | Evaluates feature combinations (Morgan, RDKit, Disease) using 5-fold CV, probability calibration, and MLflow logging. |
+| `optuna_gnn.py` | Tunes GNN hyperparameters (hidden size, heads, lr, dropout, etc.) and logs to MLflow. |
+| `export_codebase.py` | Exports the entire repository into a single `codebase.md` for AI code reviews. |
 
 ### `configs/` — Config-Driven Ablations
 - **YAML Configs**: All experiments are defined declaratively in `.yaml` files (e.g. `baseline_morgan.yaml`, `baseline_avalon.yaml`).
@@ -171,6 +175,9 @@ All GNN models reuse the **same RDKit features** as node features. The only diff
 ```
 Raw Data Sources
   │
+  ├─► cid_smiles.db (SQLite cache for speedup)
+  ├─► drugbank_smiles_cache.json (MyChem fallback cache)
+  │
   └─► scripts/preprocess.py  (SINGLE ENTRY POINT)
         │
         ├─► data/processed/drugs.csv           (drug_id, smiles, descriptors, node_type)
@@ -178,6 +185,7 @@ Raw Data Sources
         ├─► data/processed/genes.csv           (gene_id, symbol, node_type)
         ├─► data/processed/edges.csv           (source, target, relation, types)
         ├─► data/processed/drug_features.npy   (N_drugs × 2048 Morgan FP)
+        ├─► data/processed/missing_smiles.csv  (Logged unresolvable SMILES)
         └─► data/processed/graph_metadata.json (statistics, counts)
               │
               └─► src/data/graph_builder.py
