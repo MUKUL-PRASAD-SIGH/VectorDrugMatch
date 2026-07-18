@@ -107,17 +107,17 @@ Once the Colab training is finished and you have downloaded your `outputs/` fold
 - [ ] **SHAP for Baseline Models (P2 / AI Agent):** Write `src/explainability/shap_explainer.py` to generate SHAP summary plots for Logistic Regression, Random Forest, XGBoost, and MLP.
 - [ ] **GNNExplainer for HGT (P3 / AI Agent):** Write `src/explainability/gnn_explainer.py` to use PyG's GNNExplainer on the trained HGT model to generate subgraph visualisations showing which Drug→Gene→Disease paths drive each prediction.
 
-### Step C: Flask API & React Frontend / Docker (P4)
+### Step C: Flask API & React Frontend / Docker (P3)
 - [ ] **Action:** Place `outputs/ndpi_ranked_candidates.csv` and the UMAP coordinate files into the `api/` folder. Flask serves these endpoints. React fetches and displays the rankings and model comparison charts.
-- [ ] **Flask API (`api/app.py`):** AI writes and P4 tests the backend to serve the contents of the CSV and the UMAP coordinates.
-- [ ] **React Frontend (`frontend/src/`):** AI writes and P4 tests components for ranking tables, NDPI breakdowns, and the model comparison view.
-- [ ] **Dockerization:** AI writes `docker-compose.yml`. P4 runs `docker-compose up` to verify both React and Flask run together perfectly. Commit the UI code.
+- [ ] **Flask API (`api/app.py`):** AI writes and P3 tests the backend to serve the contents of the CSV and the UMAP coordinates.
+- [ ] **React Frontend (`frontend/src/`):** AI writes and P3 tests components for ranking tables, NDPI breakdowns, and the model comparison view.
+- [ ] **Dockerization:** AI writes `docker-compose.yml`. P3 runs `docker-compose up` to verify both React and Flask run together perfectly. Commit the UI code.
 
 ### Step D: Research Paper Assembly (All)
 - [ ] **P1:** Draft abstract and introduction.
 - [ ] **P3:** Write methodology for GNN progression (GCN → HGT), including math for architectures. Write results section with the 11-model comparison table.
 - [ ] **P2:** Write methodology for NDPI components. Formulate LaTeX for NDPI, HGT attention, and Tanimoto similarity. Write discussion on RDKit feature importance via SHAP.
-- [ ] **P4:** Capture screenshots of the UI.
+- [ ] **P3:** Capture screenshots of the UI.
 - [ ] **AI Agent:** Generate Python plotting scripts (`plot_metrics.py` for ROC-AUC, `plot_loss.py` for loss curves, `plot_ablations.py` for feature drop bars). Proofread and format citations.
 
 ---
