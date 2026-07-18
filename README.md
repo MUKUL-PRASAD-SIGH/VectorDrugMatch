@@ -37,6 +37,7 @@ vectordrugmatch/
 ├── Docs/
 │   ├── MASTER_PLAN.md               ← Full 8-week research & engineering roadmap
 │   ├── DEVELOPMENT_SUMMARY.md       ← Complete history of the 18 development phases
+│   ├── FINAL_EXECUTION_PLAN.md      ← Detailed Colab execution, task delegation & post-Colab steps
 │   ├── ARCHITECTURE.md              ← System design & component diagram
 │   ├── DATASETS.md                  ← All data sources, download links, cleaning steps
 │   ├── API.md                       ← REST API reference
