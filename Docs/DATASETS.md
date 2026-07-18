@@ -11,7 +11,7 @@ Complete reference for every dataset used in the project: what it is, where to g
 3. [Public Health & Equity Data](#public-health--equity-data)
 4. [Literature & Evidence](#literature--evidence)
 5. [Supplementary Sources](#supplementary-sources)
-6. [Cleaning Code Snippets](#cleaning-code-snippets)
+6. [Unified Preprocessing Pipeline](#unified-preprocessing-pipeline)
 7. [Data Schema Reference](#data-schema-reference)
 8. [Storage & Version Control Policy](#storage--version-control-policy)
 
@@ -22,17 +22,18 @@ Complete reference for every dataset used in the project: what it is, where to g
 | Dataset | What It Contains | Access | Registration | Priority |
 |---|---|---|---|---|
 | **Hetionet v1.0** | Biomedical KG: drugs, genes, diseases, pathways, 2M+ edges | [het.io](https://het.io) | ❌ None | ⭐⭐⭐ Must-have |
-| **DrugBank Vocabulary** | Drug names, SMILES, identifiers | [drugbank.com](https://go.drugbank.com/releases/latest) | ✅ Free account | ⭐⭐⭐ Must-have |
+| **PubChem** | Chemical structures (CID-SMILES), bioassays | [pubchem.ncbi.nlm.nih.gov](https://pubchem.ncbi.nlm.nih.gov/) | ❌ None | ⭐⭐⭐ Must-have |
 | **DisGeNET** | Gene–disease associations with confidence scores | [disgenet.com](https://www.disgenet.com/) | ✅ Free account | ⭐⭐⭐ Must-have |
-| **ChEMBL SQLite** | Bioactivity data, molecular properties, targets | [ebi.ac.uk](https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest/) | ❌ None | ⭐⭐⭐ Must-have |
 | **WHO GHO API** | DALY burden, disease prevalence by country | [ghoapi.azureedge.net](https://ghoapi.azureedge.net/api/) | ❌ Open API | ⭐⭐⭐ Must-have |
 | **WHO Essential Medicines List** | Approved essential drug list | [who.int/medicines](https://www.who.int/groups/expert-committee-on-selection-and-use-of-essential-medicines/essential-medicines-lists) | ❌ None | ⭐⭐ Important |
-| **PubChem** | Chemical structures, bioassays | [pubchem.ncbi.nlm.nih.gov](https://pubchem.ncbi.nlm.nih.gov/) | ❌ None | ⭐⭐ Important |
+| **ChEMBL SQLite** | Bioactivity data, molecular properties, targets | [ebi.ac.uk](https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest/) | ❌ None | ⭐⭐ Important |
 | **NCBI Gene** | Gene identifiers, annotations | [ncbi.nlm.nih.gov/gene](https://www.ncbi.nlm.nih.gov/gene) | ❌ None | ⭐⭐ Important |
 | **UniProt** | Protein sequences & function | [uniprot.org](https://www.uniprot.org/) | ❌ None | ⭐ Supplementary |
 | **OMIM** | Disease-gene links (Mendelian) | [omim.org](https://omim.org/) | ✅ Free account | ⭐ Supplementary |
 | **STRING DB** | Protein–protein interactions | [string-db.org](https://string-db.org/) | ❌ None | ⭐ Supplementary |
 | **KEGG Pathways** | Biological pathway maps | [kegg.jp](https://www.kegg.jp/) | ❌ None (API limited) | ⭐ Supplementary |
+
+> ⚠️ **Note on DrugBank:** The open DrugBank vocabulary portal was completely offline/unreachable during initial setup. The pipeline has been successfully pivoted to use the open-source **PubChem** (`CID-SMILES`) dataset for drug node generation instead.
 
 ---
 
@@ -44,8 +45,8 @@ Complete reference for every dataset used in the project: what it is, where to g
 
 **Download:**
 ```bash
-# Edges (TSV) — no account needed
-wget https://github.com/hetio/hetionet/raw/main/hetnet/tsv/hetionet-v1.0-edges.sdf
+# Edges (SIF format) — no account needed
+wget https://github.com/hetio/hetionet/raw/main/hetnet/tsv/hetionet-v1.0-edges.sif.gz
 
 # Nodes
 wget https://github.com/hetio/hetionet/raw/main/hetnet/tsv/hetionet-v1.0-nodes.tsv
@@ -58,78 +59,96 @@ wget https://github.com/hetio/hetionet/raw/main/hetnet/tsv/hetionet-v1.0-nodes.t
 | `metaedge` | Relation type (e.g., `CbG` = Compound binds Gene) |
 | `target` | Target node ID (e.g., `Gene::1`) |
 
-**Relation types used:**
-- `CbG` — Compound binds Gene
-- `CdG` — Compound downregulates Gene
-- `CuG` — Compound upregulates Gene
-- `CtD` — Compound treats Disease ← **positive labels**
-- `CpD` — Compound palliates Disease
-- `DaG` — Disease associates Gene
-- `DuG` — Disease upregulates Gene
+**⭐ ALL relation types used in the pipeline:**
 
-**Cleaning:**
-```python
-import pandas as pd
+| Code | Full Name | Source → Target | Count (approx) | Role in Pipeline |
+|---|---|---|---|---|
+| `CtD` | Compound treats Disease | Drug → Disease | ~750 | **Positive labels** for link prediction |
+| `CpD` | Compound palliates Disease | Drug → Disease | ~390 | Additional drug-disease signal |
+| `CbG` | Compound binds Gene | Drug → Gene | ~11,600 | Drug-target interactions |
+| `CdG` | Compound downregulates Gene | Drug → Gene | ~21,100 | Drug gene regulation |
+| `CuG` | Compound upregulates Gene | Drug → Gene | ~18,500 | Drug gene regulation |
+| `DaG` | Disease associates Gene | Disease → Gene | ~12,600 | Disease-gene associations |
+| `DuG` | Disease upregulates Gene | Disease → Gene | ~7,700 | Disease gene regulation |
+| `DdG` | Disease downregulates Gene | Disease → Gene | ~7,600 | Disease gene regulation |
+| `GiG` | Gene interacts Gene | Gene → Gene | ~147,100 | Protein-protein interactions |
+| `GrG` | Gene regulates Gene | Gene → Gene | ~265,600 | Gene regulatory network |
 
-edges = pd.read_csv('hetionet-v1.0-edges.sdf', sep='\t')
+> ⚠️ **CRITICAL:** The old `preprocess_all.py` only saved CtD edges (137 rows). The new `preprocess.py` preserves ALL relation types above, producing 50,000+ edges that connect the graph properly.
 
-# Extract drug-treats-disease edges (positive labels)
-treats = edges[edges['metaedge'] == 'CtD'].copy()
-treats['drug_id'] = treats['source'].str.split('::').str[1]
-treats['disease_id'] = treats['target'].str.split('::').str[1]
-treats['label'] = 1
+**Why ALL edges matter:**
 ```
+Drug A ──binds──► Gene X ──associated with──► Disease Y
+(CbG)                     (DaG)
+```
+Without CbG and DaG edges, the Drug and Disease nodes are completely disconnected. A GNN learns by passing messages along edges — if there are no connecting edges, the GNN behaves like a disconnected set of single nodes.
 
 ---
 
-### 2. DrugBank
+### 2. PubChem (Primary Drug Source)
 
-**What it is:** Gold-standard drug database. Use the **vocabulary CSV** (no parsing required) for basic info. The full XML requires a data access agreement.
+**What it is:** Free chemical database. Used for SMILES structures and as the primary source of drug compound identifiers.
 
-**Download:**
-1. Register free at https://go.drugbank.com/users/sign_up
-2. Go to Downloads → All Drugs → DrugBank Vocabulary (CSV)
-3. Save as `data/raw/drugbank/drugbank_vocabulary.csv`
-
-**Key columns:**
-| Column | Description |
-|---|---|
-| `DrugBank ID` | Unique ID (e.g., `DB00945`) |
-| `Common name` | Drug name |
-| `SMILES` | Chemical structure (SMILES string) |
-| `InChIKey` | Standardised chemical identifier |
-| `CAS Number` | Chemical Abstracts Service number |
-
-**Cleaning:**
-```python
-drugbank = pd.read_csv('data/raw/drugbank/drugbank_vocabulary.csv')
-
-drugs = drugbank[['DrugBank ID', 'Common name', 'SMILES', 'InChIKey']].rename(columns={
-    'DrugBank ID': 'drug_id',
-    'Common name': 'drug_name',
-    'SMILES': 'smiles',
-    'InChIKey': 'inchikey'
-})
-
-drugs = drugs.dropna(subset=['drug_id', 'drug_name'])
-drugs = drugs.drop_duplicates('drug_id')
-drugs = drugs[drugs['drug_id'].str.startswith('DB')]  # keep approved drugs only
-
-print(f"Drugs loaded: {len(drugs)}")
-drugs.to_csv('data/processed/drugs.csv', index=False)
+**Download (bulk CID-SMILES file):**
+```bash
+# ~3.5 GB compressed file containing all CID-SMILES mappings
+wget https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/Extras/CID-SMILES.gz
+gunzip CID-SMILES.gz
+# Save as: data/raw/CID-SMILES
 ```
 
-**NTD-relevant drugs to prioritise:**
-- Ivermectin (DB00602) — Lymphatic filariasis, River blindness
-- Albendazole (DB00518) — Helminthiases
-- Praziquantel (DB01058) — Schistosomiasis
-- Miltefosine (DB12165) — Leishmaniasis
-- Benznidazole (DB12499) — Chagas disease
-- Nifurtimox (DB08820) — Chagas, Sleeping sickness
-- Suramin (DB04786) — Sleeping sickness
-- Pentamidine (DB00738) — Sleeping sickness, Leishmaniasis
-- Eflornithine (DB00839) — Sleeping sickness
-- Amphotericin B (DB00681) — Visceral leishmaniasis
+**SQLite Local Cache (`cid_smiles.db`):**
+To avoid scanning the massive `CID-SMILES` file repeatedly, `preprocess.py` creates a local SQLite database (`data/raw/cid_smiles.db`) with an indexed `cid` column on its first run. Subsequent runs query this database for milliseconds-level lookup times. MyChem API is used as a fallback for missing IDs.
+
+**REST API (supplementary):**
+```python
+import requests
+
+def get_pubchem_properties(drug_name):
+    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{drug_name}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,IsomericSMILES/JSON"
+    r = requests.get(url, timeout=10)
+    if r.status_code == 200:
+        props = r.json()['PropertyTable']['Properties'][0]
+        return props
+    return None
+```
+
+**RDKit Feature Extraction (replaces old `featurize_pubchem.py`):**
+```python
+from rdkit import Chem
+from rdkit.Chem import AllChem, Descriptors
+import numpy as np
+
+def extract_drug_features(smiles: str) -> dict:
+    """
+    Convert a SMILES string into a full feature vector.
+    
+    Returns:
+        dict with Morgan FP (2048-bit) + 7 molecular descriptors
+        Returns None if SMILES is invalid.
+    """
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return None
+    
+    # Morgan Fingerprint (2048-bit) — the core drug representation
+    fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius=2, nBits=2048)
+    fp_array = np.array(fp, dtype=np.float32)
+    
+    # Molecular descriptors
+    descriptors = {
+        'morgan_fp': fp_array,               # 2048 features
+        'mw': Descriptors.MolWt(mol),         # Molecular weight
+        'logp': Descriptors.MolLogP(mol),     # LogP (lipophilicity)
+        'tpsa': Descriptors.TPSA(mol),        # Topological polar surface area
+        'hbd': Descriptors.NumHDonors(mol),   # H-bond donors
+        'hba': Descriptors.NumHAcceptors(mol), # H-bond acceptors
+        'rotatable_bonds': Descriptors.NumRotatableBonds(mol),
+    }
+    return descriptors
+```
+
+> ⚠️ **WHY NOT `smiles_length` and `num_C`?** Those fake features tell the model nothing about molecular function. Morgan Fingerprints encode actual chemical substructures (benzene rings, amide bonds, etc.) as a 2048-bit binary vector. This lets models learn: *"Drugs with this substructure pattern treat diseases of this type."*
 
 ---
 
@@ -150,19 +169,6 @@ drugs.to_csv('data/processed/drugs.csv', index=False)
 | `diseaseName` | Disease name |
 | `score` | Association confidence (0–1) |
 | `EI` | Evidence index |
-
-**Cleaning:**
-```python
-disgenet = pd.read_csv('data/raw/disgenet/curated_gene_disease_associations.tsv', sep='\t')
-
-# Keep only high-confidence associations
-gene_disease = disgenet[['geneId', 'geneSymbol', 'diseaseId', 'diseaseName', 'score']].copy()
-gene_disease = gene_disease[gene_disease['score'] > 0.3]
-gene_disease = gene_disease.dropna()
-gene_disease.columns = ['gene_id', 'gene_symbol', 'disease_id', 'disease_name', 'confidence']
-
-gene_disease.to_csv('data/processed/gene_disease_edges.csv', index=False)
-```
 
 ---
 
@@ -211,33 +217,9 @@ conn.close()
 
 ---
 
-### 5. PubChem
-
-**What it is:** Free chemical database. Use for SMILES, molecular properties, and bioassay results.
-
-**Access via REST API (no download needed):**
-```python
-import requests
-
-def get_pubchem_properties(drug_name):
-    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{drug_name}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,IsomericSMILES/JSON"
-    r = requests.get(url, timeout=10)
-    if r.status_code == 200:
-        props = r.json()['PropertyTable']['Properties'][0]
-        return props
-    return None
-
-# Example
-props = get_pubchem_properties("ivermectin")
-print(props)
-# {'CID': 6321424, 'MolecularFormula': 'C48H74O14', 'MolecularWeight': 875.1, ...}
-```
-
----
-
 ## Public Health & Equity Data
 
-### 6. WHO Global Health Observatory (GHO) API
+### 5. WHO Global Health Observatory (GHO) API
 
 **What it is:** Open API providing global health statistics including DALY burden by disease and country.
 
@@ -282,18 +264,13 @@ DALY_INDICATORS = {
 
 ---
 
-### 7. WHO Essential Medicines List (EML)
+### 6. WHO Essential Medicines List (EML)
 
 **What it is:** Official list of medicines that satisfy priority health care needs. Drugs on this list are expected to be affordable and available worldwide.
 
 **Download (PDF → parse or use pre-parsed):**
 ```python
-# Pre-parsed CSV available at:
-# https://raw.githubusercontent.com/samayo/country-json/master/src/country-who-eml.json
-
-import requests
-
-# Or manually create from WHO website
+# Manually curated list of NTD-relevant essential medicines
 who_eml_drugs = [
     'ivermectin', 'albendazole', 'praziquantel', 'miltefosine',
     'benznidazole', 'nifurtimox', 'suramin', 'pentamidine',
@@ -307,7 +284,7 @@ def is_on_eml(drug_name: str) -> int:
 
 ---
 
-### 8. Drug Pricing Data
+### 7. Drug Pricing Data
 
 **What it is:** Generic drug price data to compute affordability score.
 
@@ -331,7 +308,7 @@ def affordability_proxy(molecular_weight: float) -> float:
 
 ## Literature & Evidence
 
-### 9. PubMed via Biopython Entrez
+### 8. PubMed via Biopython Entrez
 
 **What it is:** Free access to 35M+ biomedical abstracts via NCBI's Entrez API.
 
@@ -370,7 +347,7 @@ def literature_score(drug_name: str, disease_name: str, max_papers: int = 100) -
 
 ## Supplementary Sources
 
-### 10. UniProt (Protein Information)
+### 9. UniProt (Protein Information)
 
 ```python
 import requests
@@ -389,7 +366,7 @@ def get_protein_info(uniprot_id: str) -> dict:
     return {}
 ```
 
-### 11. STRING DB (Protein–Protein Interactions)
+### 10. STRING DB (Protein–Protein Interactions)
 
 ```python
 import requests
@@ -410,16 +387,22 @@ def get_ppi_network(protein_ids: list, min_score: int = 700) -> pd.DataFrame:
 
 ---
 
-## Cleaning Code Snippets
+## Unified Preprocessing Pipeline
+
+> ⚠️ **REPLACES:** The old 3-script pipeline (`process_pubchem_bulk.py`, `featurize_pubchem.py`, `preprocess_all.py`) is consolidated into a **single** `scripts/preprocess.py`.
 
 ### Full Pipeline: Build All Processed Files
 
 ```python
-# scripts/preprocess_all.py
+# scripts/preprocess.py — SINGLE UNIFIED SCRIPT
+# Replaces: process_pubchem_bulk.py, featurize_pubchem.py, preprocess_all.py
 
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from rdkit import Chem
+from rdkit.Chem import AllChem, Descriptors
+import json
 
 RAW = Path('data/raw')
 PROC = Path('data/processed')
@@ -427,32 +410,57 @@ PROC.mkdir(parents=True, exist_ok=True)
 
 
 def build_drugs():
-    db = pd.read_csv(RAW / 'drugbank/drugbank_vocabulary.csv')
-    drugs = db[['DrugBank ID', 'Common name', 'SMILES']].rename(columns={
-        'DrugBank ID': 'drug_id',
-        'Common name': 'drug_name',
-        'SMILES': 'smiles'
-    })
-    drugs = drugs.dropna(subset=['drug_id', 'drug_name']).drop_duplicates('drug_id')
-    drugs['node_type'] = 'drug'
+    """Load PubChem CID-SMILES, compute RDKit features, save drugs.csv + drug_features.npy."""
+    df = pd.read_csv(RAW / 'CID-SMILES', sep='\t', header=None,
+                     names=['drug_id', 'smiles'])
+    df = df.dropna(subset=['drug_id', 'smiles']).drop_duplicates('drug_id')
+
+    # Canonicalize SMILES and compute descriptors
+    features = []
+    valid_rows = []
+    for _, row in df.iterrows():
+        mol = Chem.MolFromSmiles(row['smiles'])
+        if mol is None:
+            continue
+        fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius=2, nBits=2048)
+        features.append(np.array(fp, dtype=np.float32))
+        valid_rows.append({
+            'drug_id': str(row['drug_id']),
+            'name': f"CID:{row['drug_id']}",
+            'smiles': Chem.MolToSmiles(mol),  # canonical
+            'mw': Descriptors.MolWt(mol),
+            'logp': Descriptors.MolLogP(mol),
+            'tpsa': Descriptors.TPSA(mol),
+            'hbd': Descriptors.NumHDonors(mol),
+            'hba': Descriptors.NumHAcceptors(mol),
+            'rotatable_bonds': Descriptors.NumRotatableBonds(mol),
+            'node_type': 'drug'
+        })
+
+    drugs = pd.DataFrame(valid_rows)
     drugs.to_csv(PROC / 'drugs.csv', index=False)
-    print(f"[drugs] {len(drugs)} rows")
+    np.save(PROC / 'drug_features.npy', np.array(features))
+    print(f"[drugs] {len(drugs)} rows, features shape: {np.array(features).shape}")
 
 
 def build_diseases():
-    dg = pd.read_csv(RAW / 'disgenet/curated_gene_disease_associations.tsv', sep='\t')
+    """Load DisGeNET, extract unique diseases with metadata."""
+    dg = pd.read_csv(RAW / 'curated_gene_disease_associations.tsv', sep='\t')
     diseases = dg[['diseaseId', 'diseaseName']].drop_duplicates('diseaseId').rename(columns={
         'diseaseId': 'disease_id', 'diseaseName': 'disease_name'
     })
     diseases['node_type'] = 'disease'
+    diseases['is_ntd'] = 0       # Will be enriched from WHO data
+    diseases['daly_rate'] = 0.0  # Will be enriched from WHO GHO API
     diseases.to_csv(PROC / 'diseases.csv', index=False)
     print(f"[diseases] {len(diseases)} rows")
 
 
 def build_genes():
-    dg = pd.read_csv(RAW / 'disgenet/curated_gene_disease_associations.tsv', sep='\t')
+    """Load DisGeNET, extract unique genes."""
+    dg = pd.read_csv(RAW / 'curated_gene_disease_associations.tsv', sep='\t')
     genes = dg[['geneId', 'geneSymbol']].drop_duplicates('geneId').rename(columns={
-        'geneId': 'gene_id', 'geneSymbol': 'gene_name'
+        'geneId': 'gene_id', 'geneSymbol': 'gene_symbol'
     })
     genes['node_type'] = 'gene'
     genes.to_csv(PROC / 'genes.csv', index=False)
@@ -460,36 +468,90 @@ def build_genes():
 
 
 def build_edges():
-    het = pd.read_csv(RAW / 'hetionet/hetionet-v1.0-edges.sdf', sep='\t')
-    dg = pd.read_csv(RAW / 'disgenet/curated_gene_disease_associations.tsv', sep='\t')
+    """
+    Load Hetionet + DisGeNET. PRESERVE ALL RELATION TYPES.
+    
+    ⚠️ CRITICAL FIX: The old script only saved CtD edges (137 rows).
+    This version keeps ALL heterogeneous edge types:
+      CtD, CpD, CbG, CdG, CuG, DaG, DuG, DdG, GiG, GrG
+    """
+    # --- Hetionet edges (ALL types) ---
+    het = pd.read_csv(RAW / 'hetionet-v1.0-edges.sif', sep='\t', header=None,
+                      names=['source', 'metaedge', 'target'])
 
-    # Drug-targets-Gene (from Hetionet CbG)
-    drug_gene = het[het['metaedge'].isin(['CbG', 'CdG', 'CuG'])].copy()
-    drug_gene['source_id'] = drug_gene['source'].str.split('::').str[1]
-    drug_gene['target_id'] = drug_gene['target'].str.split('::').str[1]
-    drug_gene['relation'] = 'drug_targets_gene'
+    # Parse node IDs (format: "Type::ID")
+    het['source_id'] = het['source'].str.split('::').str[1]
+    het['target_id'] = het['target'].str.split('::').str[1]
+    het['source_type'] = het['source'].str.split('::').str[0]
+    het['target_type'] = het['target'].str.split('::').str[0]
 
-    # Gene-associated-Disease (from DisGeNET)
+    # Keep relation column (this is the FIX — old script lost this)
+    het_edges = het[['source_id', 'target_id', 'metaedge', 'source_type', 'target_type']].copy()
+    het_edges = het_edges.rename(columns={'metaedge': 'relation'})
+
+    # --- DisGeNET gene-disease associations (high confidence) ---
+    dg = pd.read_csv(RAW / 'curated_gene_disease_associations.tsv', sep='\t')
     gene_disease = dg[dg['score'] > 0.3][['geneId', 'diseaseId', 'score']].rename(columns={
-        'geneId': 'source_id', 'diseaseId': 'target_id'
+        'geneId': 'source_id', 'diseaseId': 'target_id', 'score': 'confidence'
     })
-    gene_disease['relation'] = 'gene_associated_with_disease'
+    gene_disease['source_id'] = gene_disease['source_id'].astype(str)
+    gene_disease['target_id'] = gene_disease['target_id'].astype(str)
+    gene_disease['relation'] = 'DaG_disgenet'
+    gene_disease['source_type'] = 'Gene'
+    gene_disease['target_type'] = 'Disease'
 
-    # Drug-treats-Disease (positive labels from Hetionet CtD)
-    treats = het[het['metaedge'] == 'CtD'].copy()
-    treats['source_id'] = treats['source'].str.split('::').str[1]
-    treats['target_id'] = treats['target'].str.split('::').str[1]
-    treats['relation'] = 'treats'
-    treats['label'] = 1
-
+    # --- Merge all edges ---
     edges = pd.concat([
-        drug_gene[['source_id', 'target_id', 'relation']],
-        gene_disease[['source_id', 'target_id', 'relation']],
-        treats[['source_id', 'target_id', 'relation']]
+        het_edges[['source_id', 'target_id', 'relation', 'source_type', 'target_type']],
+        gene_disease[['source_id', 'target_id', 'relation', 'source_type', 'target_type']]
     ], ignore_index=True)
 
+    edges = edges.drop_duplicates()
     edges.to_csv(PROC / 'edges.csv', index=False)
     print(f"[edges] {len(edges)} rows")
+
+    # Print breakdown by relation type
+    print("\nEdge type breakdown:")
+    for rel, count in edges['relation'].value_counts().items():
+        print(f"  {rel}: {count:,}")
+
+
+def validate_and_save_metadata():
+    """Cross-reference all outputs and save graph_metadata.json."""
+    drugs = pd.read_csv(PROC / 'drugs.csv')
+    diseases = pd.read_csv(PROC / 'diseases.csv')
+    genes = pd.read_csv(PROC / 'genes.csv')
+    edges = pd.read_csv(PROC / 'edges.csv')
+
+    # Check for orphan nodes
+    all_edge_nodes = set(edges['source_id'].astype(str)) | set(edges['target_id'].astype(str))
+
+    metadata = {
+        'node_counts': {
+            'drugs': len(drugs),
+            'diseases': len(diseases),
+            'genes': len(genes),
+            'total': len(drugs) + len(diseases) + len(genes)
+        },
+        'edge_counts': {
+            'total': len(edges),
+            'by_relation': edges['relation'].value_counts().to_dict()
+        },
+        'validation': {
+            'duplicate_edges': int(edges.duplicated().sum()),
+            'drugs_with_smiles': int(drugs['smiles'].notna().sum()),
+        }
+    }
+
+    with open(PROC / 'graph_metadata.json', 'w') as f:
+        json.dump(metadata, f, indent=2, default=str)
+
+    print(f"\n=== Validation Summary ===")
+    print(f"Drug nodes:     {metadata['node_counts']['drugs']:,}")
+    print(f"Disease nodes:  {metadata['node_counts']['diseases']:,}")
+    print(f"Gene nodes:     {metadata['node_counts']['genes']:,}")
+    print(f"Total edges:    {metadata['edge_counts']['total']:,}")
+    print(f"Duplicate edges: {metadata['validation']['duplicate_edges']}")
 
 
 if __name__ == '__main__':
@@ -497,7 +559,8 @@ if __name__ == '__main__':
     build_diseases()
     build_genes()
     build_edges()
-    print("Done.")
+    validate_and_save_metadata()
+    print("\n✅ Preprocessing complete.")
 ```
 
 ---
@@ -507,14 +570,25 @@ if __name__ == '__main__':
 ### `data/processed/drugs.csv`
 | Column | Type | Description |
 |---|---|---|
-| `drug_id` | str | DrugBank ID (e.g., `DB00602`) |
-| `drug_name` | str | Common name |
-| `smiles` | str | SMILES string (nullable) |
-| `inchikey` | str | InChI key (nullable) |
+| `drug_id` | str | PubChem CID (e.g., `2244`) |
+| `name` | str | Display name (e.g., `CID:2244` or common name if resolved) |
+| `smiles` | str | Canonical SMILES string (RDKit-canonicalized) |
+| `mw` | float | Molecular weight (RDKit `Descriptors.MolWt`) |
+| `logp` | float | LogP / lipophilicity (RDKit `Descriptors.MolLogP`) |
+| `tpsa` | float | Topological polar surface area |
+| `hbd` | int | Number of hydrogen bond donors |
+| `hba` | int | Number of hydrogen bond acceptors |
+| `rotatable_bonds` | int | Number of rotatable bonds |
 | `node_type` | str | Always `"drug"` |
-| `on_who_eml` | int | 1 if on WHO EML, else 0 |
-| `generic_available` | int | 1 if generic exists |
-| `affordability_score` | float | [0, 1] computed from MW proxy |
+| `on_who_eml` | int | 1 if on WHO EML, else 0 (enriched in scoring step) |
+
+### `data/processed/drug_features.npy`
+| Property | Value |
+|---|---|
+| Shape | `(N_drugs, 2048)` |
+| Dtype | `float32` |
+| Contents | Morgan Fingerprint bit vectors (radius=2, nBits=2048) |
+| Each row | Corresponds to the same row index in `drugs.csv` |
 
 ### `data/processed/diseases.csv`
 | Column | Type | Description |
@@ -524,13 +598,12 @@ if __name__ == '__main__':
 | `node_type` | str | Always `"disease"` |
 | `is_ntd` | int | 1 if WHO-classified NTD |
 | `daly_rate` | float | DALY per 100k (from WHO GHO) |
-| `daly_normalized` | float | [0, 1] normalised DALY burden |
 
 ### `data/processed/genes.csv`
 | Column | Type | Description |
 |---|---|---|
 | `gene_id` | int | NCBI Gene ID |
-| `gene_name` | str | Gene symbol (e.g., `ABCB1`) |
+| `gene_symbol` | str | Gene symbol (e.g., `ABCB1`) |
 | `node_type` | str | Always `"gene"` |
 
 ### `data/processed/edges.csv`
@@ -539,21 +612,63 @@ if __name__ == '__main__':
 | `source_id` | str | Source node ID |
 | `target_id` | str | Target node ID |
 | `relation` | str | Edge type (see relation types below) |
-| `confidence` | float | Evidence score (0–1, nullable) |
-| `label` | int | 1 = treats (positive), 0 = unknown |
+| `source_type` | str | Node type of source (`Compound`, `Gene`, `Disease`) |
+| `target_type` | str | Node type of target |
 
-**Edge relation types:**
-- `drug_targets_gene`
-- `gene_associated_with_disease`
-- `treats` ← positive training label
-- `drug_similar_to_drug` ← added by similarity module
+**Edge relation types (preserved from Hetionet):**
+
+| Relation | Source → Target | Description |
+|---|---|---|
+| `CtD` | Compound → Disease | **Positive training label** (treats) |
+| `CpD` | Compound → Disease | Palliates |
+| `CbG` | Compound → Gene | Drug binds protein target |
+| `CdG` | Compound → Gene | Drug downregulates gene |
+| `CuG` | Compound → Gene | Drug upregulates gene |
+| `DaG` | Disease → Gene | Disease associated with gene |
+| `DuG` | Disease → Gene | Disease upregulates gene |
+| `DdG` | Disease → Gene | Disease downregulates gene |
+| `GiG` | Gene → Gene | Protein-protein interaction |
+| `GrG` | Gene → Gene | Gene regulation |
+| `DaG_disgenet` | Gene → Disease | From DisGeNET (high-confidence, score > 0.3) |
+
+### `data/processed/graph_metadata.json`
+```json
+{
+  "node_counts": {
+    "drugs": 1553,
+    "diseases": 138,
+    "genes": 20945,
+    "total": 22636
+  },
+  "edge_counts": {
+    "total": 512847,
+    "by_relation": {
+      "GrG": 265672,
+      "GiG": 147164,
+      "CdG": 21102,
+      "CuG": 18539,
+      "DaG": 12623,
+      "CbG": 11571,
+      "DuG": 7731,
+      "DdG": 7623,
+      "CtD": 755,
+      "CpD": 390,
+      "DaG_disgenet": 8677
+    }
+  },
+  "validation": {
+    "duplicate_edges": 0,
+    "drugs_with_smiles": 1553
+  }
+}
+```
 
 ---
 
 ## Storage & Version Control Policy
 
-- **`data/raw/`** — Git-ignored. Download manually using `scripts/download_data.sh`.
-- **`data/processed/`** — Git-ignored (large files). Regenerate via `python scripts/preprocess_all.py`.
+- **`data/raw/`** — Git-ignored. Download manually using instructions above.
+- **`data/processed/`** — Git-ignored (large files). Regenerate via `python scripts/preprocess.py`.
 - **`data/external/`** — Version-controlled. Small reference files (WHO EML, NTD list) that change rarely.
 - Use **DVC** (Data Version Control) for large files if collaborating:
 
@@ -566,4 +681,4 @@ git add data/processed/.gitignore data/processed.dvc
 
 ---
 
-*Last updated: March 2026 | Maintained by VectorDrugMatch Team*
+*Last updated: July 2026 | Maintained by VectorDrugMatch Team*

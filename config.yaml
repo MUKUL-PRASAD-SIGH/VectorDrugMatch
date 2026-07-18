@@ -1,0 +1,42 @@
+# VectorDrugMatch Configuration File
+
+experiment:
+  name: baseline_morgan
+  notes: ""
+  save_predictions: true
+  best_model: HGT         # Model to use in inference (e.g. HGT, GraphSAGE, etc.)
+  
+ndpi_weights:
+  gnn: 0.35
+  similarity: 0.20
+  literature: 0.20
+  equity: 0.25
+
+dataset:
+  neg_ratio: 5.0         # Number of negative edges per positive edge
+  test_size: 0.15        # Proportion of data for test set
+  val_size: 0.15         # Proportion of data for validation set
+  random_seed: 42        # Seed for reproducibility
+
+features:
+  drug:
+    use_morgan: true        # Standard Morgan FP (radius=2, 2048-bit)
+    use_maccs: false        # MACCS Keys (167-bit)
+    use_descriptors: false  # RDKit continuous descriptors (MW, LogP, etc.)
+    use_scaffold: false     # Murcko Scaffold Morgan FP (1024-bit)
+    use_avalon: false       # Avalon Fingerprint (1024-bit)
+    use_ecfp3: false        # ECFP radius=3 (2048-bit)
+    use_fcfp3: false        # FCFP radius=3 (2048-bit)
+  disease:
+    use_basic: true         # Simple features [is_ntd, daly_rate]
+    use_sapbert: false      # HuggingFace SapBERT embeddings (768-dim)
+
+models:
+  random_forest:
+    n_estimators: 100
+    max_depth: 10
+  xgboost:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    scale_pos_weight: 5.0

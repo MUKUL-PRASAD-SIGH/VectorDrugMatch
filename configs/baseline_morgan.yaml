@@ -1,0 +1,33 @@
+# Phase 3 Baseline Configuration
+
+experiment:
+  name: baseline_morgan
+  notes: "Standard Phase 3 baseline: Morgan fingerprints and basic disease features."
+  save_predictions: true
+
+dataset:
+  neg_ratio: 5.0
+  test_size: 0.15
+  val_size: 0.15
+  random_seed: 42
+
+features:
+  drug:
+    use_morgan: true
+    use_maccs: false
+    use_descriptors: false
+    use_scaffold: false
+    use_avalon: false
+    use_ecfp3: false
+    use_fcfp3: false
+  disease:
+    use_basic: true
+    use_sapbert: false
+
+models:
+  rf:
+    n_estimators: 100
+    max_depth: 10
+  xgb:
+    n_estimators: 100
+    learning_rate: 0.1

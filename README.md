@@ -8,21 +8,23 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.x-orange.svg)](https://pytorch.org/)
 [![PyG](https://img.shields.io/badge/PyTorch_Geometric-2.x-red.svg)](https://pyg.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Production_Ready_Research_System-brightgreen.svg)]()
+[![Status](https://img.shields.io/badge/Status-Research_Grade_System-brightgreen.svg)]()
 
 ---
 
 ## 📖 Overview
 
-VectorDrugMatch is an open-source, AI-powered drug repurposing platform that identifies clinically viable and affordable treatment candidates for **neglected tropical diseases (NTDs)**. Unlike existing systems that focus on commercially profitable conditions, VectorDrugMatch explicitly prioritises diseases affecting low-resource, underserved populations.
+> *"To the best of our knowledge, there is limited work integrating heterogeneous graph learning, molecular fingerprints, automated literature mining, and disease-burden-aware prioritization into a unified, explainable framework for drug repurposing in neglected tropical diseases."*
 
-The system combines:
-- **Biomedical Knowledge Graph** built from DrugBank, ChEMBL, Hetionet, and DisGeNET
-- **Graph Neural Network (GCN/GAT)** for drug–disease association prediction
-- **Molecular Similarity Analysis** via RDKit Tanimoto fingerprints
-- **Automated Literature Mining** via PubMed Entrez API
-- **Neglected Disease Priority Index (NDPI)** — our core scoring innovation that folds in equity, affordability, and disease burden
-- **Advanced Interactive Web UI** (Flask + React for production-ready research interface)
+VectorDrugMatch is not just another graph neural network project—it is a **comprehensive decision-support pipeline** designed to identify clinically viable, affordable, and actionable treatment candidates for **Neglected Tropical Diseases (NTDs)**. 
+
+While many existing pipelines halt at predicting a raw machine learning probability, real-world clinical translation requires more. VectorDrugMatch introduces the **Neglected Disease Priority Index (NDPI)**, a novel multi-factor ranking framework that synthesizes graph-based predictions, chemical similarity, literature evidence, and disease burden into a single, explainable metric.
+
+Our end-to-end framework contributes:
+1. **Multi-Criteria Ranking (NDPI)** — Transcends raw ML probabilities by integrating structural chemical similarity, real-time literature evidence, and WHO health-equity metrics.
+2. **Explainable Prioritization** — Ranks candidates not just with a score, but with human-readable rationale (e.g., *"Structurally similar to approved compounds, supported by emerging literature, targets a high-burden disease, predicted strongly by HGT"*).
+3. **NTD-Specific Focus** — Purpose-built for diseases affecting low-resource populations, contrasting with the typical focus on oncology or Alzheimer's.
+4. **Rigorous Progressive Benchmarking** — 11 models evaluated across 5-fold cross-validation, proving the architectural necessity of Heterogeneous Graph Transformers (HGT) over classical baselines (Node2Vec + LR, Random Forest, XGBoost).
 
 ---
 
@@ -32,32 +34,32 @@ The system combines:
 vectordrugmatch/
 │
 ├── README.md                        ← You are here
-├── DATASETS.md                      ← All data sources, download links, cleaning steps
-├── MASTER_PLAN.md                   ← Full 8-week research & engineering roadmap
-├── CONTRIBUTING.md                  ← How to contribute
-├── ARCHITECTURE.md                  ← System design & component diagram
-├── API.md                           ← REST API reference
-├── CHANGELOG.md                     ← Version history
-├── LICENSE
+├── Docs/
+│   ├── MASTER_PLAN.md               ← Full 8-week research & engineering roadmap
+│   ├── DEVELOPMENT_SUMMARY.md       ← Complete history of the 18 development phases
+│   ├── FINAL_EXECUTION_PLAN.md      ← Detailed Colab execution, task delegation & post-Colab steps
+│   ├── ARCHITECTURE.md              ← System design & component diagram
+│   ├── DATASETS.md                  ← All data sources, download links, cleaning steps
+│   ├── API.md                       ← REST API reference
+│   ├── CHANGELOG.md                 ← Version history
+│   └── CONTRIBUTING.md              ← How to contribute
+│
 ├── requirements.txt
-├── requirements-dev.txt
-├── pyproject.toml
 ├── .env.example
+├── config.yaml                      ← Feature and model hyperparameters
 │
 ├── data/
 │   ├── raw/                         ← Original downloads (git-ignored)
-│   │   ├── drugbank/
-│   │   ├── chembl/
-│   │   ├── hetionet/
-│   │   ├── disgenet/
-│   │   └── who_gho/
-│   ├── processed/
-│   │   ├── drugs.csv                ← Cleaned drug entities
-│   │   ├── diseases.csv             ← Disease entities (NTD-focused)
-│   │   ├── genes.csv                ← Gene/protein entities
-│   │   ├── edges.csv                ← All graph edges with relation types
-│   │   ├── node_features.npy        ← Feature matrix (N × D)
-│   │   └── edge_index.npy           ← Graph connectivity (PyG format)
+│   │   ├── CID-SMILES               ← PubChem compound-SMILES mapping
+│   │   ├── curated_gene_disease_associations.tsv  ← DisGeNET
+│   │   └── hetionet-v1.0-edges.sif  ← Hetionet edges (all relation types)
+│   ├── processed/                   ← Generated by scripts/preprocess.py (git-ignored)
+│   │   ├── drugs.csv                ← Drug entities with RDKit descriptors
+│   │   ├── diseases.csv             ← Disease entities with DALY/WHO metadata
+│   │   ├── genes.csv                ← Gene entities
+│   │   ├── edges.csv                ← ALL graph edges with relation types preserved
+│   │   ├── drug_features.npy        ← Morgan FP matrix (N_drugs × 2048)
+│   │   └── graph_metadata.json      ← Node/edge counts, validation stats
 │   └── external/
 │       ├── who_eml.csv              ← WHO Essential Medicines List
 │       ├── who_ntd_list.csv         ← Official WHO NTD disease list
@@ -65,20 +67,33 @@ vectordrugmatch/
 │
 ├── src/
 │   ├── __init__.py
+│   │
 │   ├── data/
 │   │   ├── __init__.py
-│   │   ├── loaders.py               ← Dataset download & ingestion
-│   │   ├── preprocessing.py         ← Cleaning, normalisation, deduplication
-│   │   ├── graph_builder.py         ← NetworkX → PyG knowledge graph
-│   │   └── feature_engineering.py  ← Node feature construction
+│   │   └── graph_builder.py         ← Processed CSVs → PyTorch Geometric HeteroData
+│   │
+│   ├── features/
+│   │   ├── __init__.py
+│   │   ├── drug.py                  ← RDKit Morgan FP (2048) + molecular descriptors
+│   │   ├── disease.py               ← DALY burden, WHO NTD flags
+│   │   └── graph.py                 ← Node degree, centrality, Node2Vec
 │   │
 │   ├── models/
 │   │   ├── __init__.py
-│   │   ├── baseline.py              ← Logistic Regression baseline
-│   │   ├── gcn.py                   ← 2-layer Graph Convolutional Network
-│   │   ├── gat.py                   ← Graph Attention Network (advanced)
-│   │   ├── link_predictor.py        ← Drug–disease link scoring head
-│   │   └── ensemble.py              ← Model ensemble (production)
+│   │   ├── baseline/
+│   │   │   ├── __init__.py
+│   │   │   ├── logistic.py          ← Logistic Regression
+│   │   │   ├── naive_bayes.py       ← Gaussian Naive Bayes
+│   │   │   ├── random_forest.py     ← Random Forest
+│   │   │   ├── xgboost_model.py     ← XGBoost / LightGBM
+│   │   │   └── mlp.py              ← Multi-Layer Perceptron (PyTorch)
+│   │   └── gnn/
+│   │       ├── __init__.py
+│   │       ├── gcn.py               ← Graph Convolutional Network
+│   │       ├── graphsage.py         ← GraphSAGE (inductive)
+│   │       ├── gat.py               ← Graph Attention Network
+│   │       ├── rgcn.py              ← Relational GCN (multi-relation)
+│   │       └── hgt.py               ← Heterogeneous Graph Transformer ★
 │   │
 │   ├── scoring/
 │   │   ├── __init__.py
@@ -89,14 +104,23 @@ vectordrugmatch/
 │   │
 │   ├── explainability/
 │   │   ├── __init__.py
-│   │   ├── shap_explainer.py        ← SHAP values for baseline model
-│   │   └── gnn_explainer.py         ← GNNExplainer for graph model
+│   │   ├── shap_explainer.py        ← SHAP for all baseline models
+│   │   └── gnn_explainer.py         ← GNNExplainer for HGT model
 │   │
 │   └── utils/
 │       ├── __init__.py
 │       ├── logging.py
-│       ├── metrics.py               ← ROC-AUC, AUPRC, MRR, Hit@K
+│       ├── metrics.py               ← ROC-AUC, PR-AUC, F1, MCC, Hit@K
 │       └── visualisation.py         ← Graph & result plots
+│
+├── scripts/
+│   ├── preprocess.py                ← SINGLE unified preprocessing script
+│   ├── train_baselines.py           ← Train all 6 baseline models
+│   ├── train_gnn.py                 ← Train all 5 GNN models
+│   ├── evaluate.py                  ← Unified 11-model comparison table
+│   ├── run_ablations.py             ← Evaluates feature combinations with 5-fold CV
+│   ├── optuna_gnn.py                ← Tunes GNN hyperparameters with MLflow logging
+│   └── export_codebase.py           ← Exports repository into a single codebase.md
 │
 ├── api/
 │   ├── __init__.py
@@ -104,7 +128,8 @@ vectordrugmatch/
 │   ├── routes/
 │   │   ├── predict.py               ← POST /predict
 │   │   ├── diseases.py              ← GET /diseases
-│   │   └── drugs.py                 ← GET /drugs
+│   │   ├── drugs.py                 ← GET /drugs
+│   │   └── models.py               ← GET /models (comparison table)
 │   └── schemas.py                   ← Pydantic request/response models
 │
 ├── frontend/
@@ -116,37 +141,34 @@ vectordrugmatch/
 │       │   ├── DiseaseSelector.jsx
 │       │   ├── DrugRankingTable.jsx
 │       │   ├── NDPIBreakdownChart.jsx
+│       │   ├── ModelComparisonChart.jsx
 │       │   └── ExplainabilityPanel.jsx
 │       └── pages/
 │           ├── Rankings.jsx
 │           ├── Explore.jsx
+│           ├── ModelComparison.jsx
 │           └── About.jsx
-│
-├── streamlit_app/
-│   └── app.py                       ← Legacy prototype UI (deprecated in favor of React)
 │
 ├── notebooks/
 │   ├── 01_data_exploration.ipynb
 │   ├── 02_graph_construction.ipynb
-│   ├── 03_baseline_model.ipynb
-│   ├── 04_gcn_training.ipynb
+│   ├── 03_baseline_models.ipynb
+│   ├── 04_gnn_training.ipynb
 │   ├── 05_ndpi_scoring.ipynb
 │   ├── 06_explainability.ipynb
 │   └── 07_case_studies.ipynb
 │
-├── scripts/
-│   ├── download_data.sh
-│   ├── preprocess_all.py
-│   └── evaluate_all.py
-│
 ├── tests/
 │   ├── test_preprocessing.py
-│   ├── test_models.py
+│   ├── test_features.py
+│   ├── test_baselines.py
+│   ├── test_gnn.py
 │   ├── test_ndpi.py
 │   └── test_api.py
 │
 ├── outputs/
 │   ├── ndpi_results.csv             ← Final NDPI rankings (git-ignored)
+│   ├── model_comparison.csv         ← 11-model evaluation table
 │   ├── models/                      ← Saved model checkpoints
 │   └── figures/                     ← Plots for paper
 │
@@ -179,56 +201,46 @@ cp .env.example .env
 
 ### 3. Download Data
 
+Download the following files manually and place them in `data/raw/`:
 
-## 📊 Data Setup & Preprocessing
-
-> ⚠️ **CRITICAL STEP:** You **must** run the preprocessing script `preprocess_all.py` before starting any model training. The `data/` folder containing the processed datasets is intentionally excluded from this GitHub repository (`.gitignore`) to prevent repository bloat and file size limits.
-
-To generate the exact matching datasets on your local machine, follow these steps:
-
-### 1. Prerequisites
-Make sure you have your local copy of the raw `nodes.tsv` file placed directly in the root directory of this project (`VectorDrugMatch/`).
-
-### 2. Install Dependencies
-Ensure you have `pandas` installed in your Python environment:
-```bash
-pip install pandas
+| File | Source | Save As |
+|---|---|---|
+| PubChem CID-SMILES | [NCBI FTP](https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/Extras/CID-SMILES.gz) | `data/raw/CID-SMILES` |
+| DisGeNET curated | [DisGeNET](https://www.disgenet.com/) or [GitHub mirror](https://github.com/dhimmel/disgenet/) | `data/raw/curated_gene_disease_associations.tsv` |
+| Hetionet edges | [Hetionet GitHub](https://github.com/hetio/hetionet/blob/main/hetnet/tsv/hetionet-v1.0-edges.sif.gz) | `data/raw/hetionet-v1.0-edges.sif` |
 
 Run the Preprocessing Pipeline
 Execute the preprocessing script from the root directory to generate the training data:
 
----
-
-Before running the pipeline script, ensure your local directory tree looks exactly like this:
-```bash
-python3 scripts/preprocess_all.py
-
-```text
-VectorDrugMatch/
-├── data/
-│   ├── raw/
-│   │   ├── CID-SMILES
-│   │   ├── curated_gene_disease_associations.tsv
-│   │   └── hetionet_edges.tsv
-│   └── processed/          # Will be created automatically
-└── scripts/
-    └── preprocess_all.py
-
-### 2. Running the Pipeline
-Once the three files are inside `data/raw/`, run the following command to generate the clean, filtered graph files:
+### 4. Run Preprocessing
 
 ```bash
-python scripts/preprocess_all.py
+python scripts/preprocess.py
+# Merges PubChem + DisGeNET + Hetionet → processed CSVs + RDKit features
+# Produces: drugs.csv, diseases.csv, genes.csv, edges.csv, drug_features.npy
 ```
 
-### 4. Run Full Pipeline
+### 5. Train All Models
+
+```bash
+# Phase 1: Train 6 classical baselines
+python scripts/train_baselines.py
+
+# Phase 2: Train 5 GNN models  
+python scripts/train_gnn.py
+
+# Phase 3: Unified evaluation
+python scripts/evaluate.py
+```
+
+### 6. Run Full Pipeline
 
 ```bash
 python main_pipeline.py
-# Builds KG → trains GCN → computes NDPI → outputs ranked results
+# Preprocess → Train → Evaluate → Compute NDPI → Output rankings
 ```
 
-### 5. Launch Advanced Research UI
+### 7. Launch Advanced Research UI
 
 ```bash
 docker-compose up
@@ -238,34 +250,84 @@ docker-compose up
 
 ---
 
-## 🧠 Core Innovation: NDPI
+## 🧠 Core Innovation: The Complete Decision-Support Pipeline & NDPI
 
-The **Neglected Disease Priority Index** is our primary contribution. Unlike pure ML scores, NDPI explicitly weights real-world deployability. All component scores are strictly normalized to a `(0, 1)` scale before being combined to prevent raw values from skewing the final score:
+The true novelty of VectorDrugMatch lies in its **methodology and application integration**. The Graph Neural Network is merely one component of a much larger, fully reproducible pipeline:
+
+```text
+Raw Data (PubChem, Hetionet, DisGeNET) 
+  ↓ 
+Rigorous Preprocessing & Feature Engineering (RDKit, Morgan)
+  ↓ 
+Heterogeneous Biomedical Knowledge Graph
+  ↓ 
+Systematic Model Evaluation (Classical ML → Graph Baselines → HGT)
+  ↓ 
+Explainability (SHAP, GNNExplainer)
+  ↓ 
+NDPI (Multi-Criteria Ranking Synthesis)
+  ↓ 
+Actionable Drug Candidates
+```
+
+### The Neglected Disease Priority Index (NDPI)
+
+Unlike pure ML scores that lack clinical nuance, NDPI explicitly weights real-world deployability. It is a composite framework where all component scores are strictly normalized to a `(0, 1)` scale before fusion, preventing arbitrary scale skewing:
 
 ```
-NDPI = 0.35 × GNN_score
-     + 0.20 × Similarity_score
-     + 0.20 × Literature_score
-     + 0.25 × Equity_score
+NDPI = 0.35 × HGT_Score (Graph Prediction)
+     + 0.20 × Similarity_Score (Chemical Tanimoto)
+     + 0.20 × Literature_Score (PubMed Mining)
+     + 0.25 × Equity_Score (WHO EML / DALY Burden)
 ```
 
 | Component | What It Measures | Method |
 |---|---|---|
-| **GNN_score** | ML-predicted drug–disease association | 2-layer GCN / GAT |
-| **Similarity_score** | Chemical similarity to known NTD drugs | RDKit Tanimoto (Morgan FP) |
-| **Literature_score** | PubMed evidence count (normalised [0,1]) | Biopython Entrez API (`esearch`) |
-| **Equity_score** | WHO EML status + generic availability + affordability + DALY burden (normalised [0,1]) | WHO GHO OData API |
+| **HGT_Score** | ML-predicted drug–disease association | Heterogeneous Graph Transformer (best performing GNN) |
+| **Similarity_Score** | Chemical similarity to known NTD drugs | RDKit Tanimoto (2048-bit Morgan FP) |
+| **Literature_Score** | Real-time scientific consensus | Biopython Entrez API (`esearch`) |
+| **Equity_Score** | Affordability and clinical urgency | WHO GHO OData API (DALY burden, Generic status) |
+
+By outputting an explainable composite score rather than an isolated probability, VectorDrugMatch provides researchers with highly actionable, context-aware repurposing candidates.
 
 ---
 
-## 📊 Results (Current Prototype)
+## ⚙️ Configuration & Ablation Studies
 
-| Model | ROC-AUC | AUPRC | Notes |
-|---|---|---|---|
-| Logistic Regression (baseline) | 0.730 | — | Feature concatenation |
-| 2-layer GCN | **0.830** | — | PyTorch Geometric |
-| GAT (planned Week 5) | TBD | TBD | Attention mechanism |
-| Ensemble (planned Week 7) | TBD | TBD | GCN + LR + Similarity |
+VectorDrugMatch is designed for rigorous scientific evaluation through systematic ablation studies. All advanced biological representations are hidden behind configuration flags in `config.yaml`. 
+
+This enables you to isolate the performance impact of individual feature families:
+- **Drug Representations**: Morgan (default), MACCS Keys, Continuous Descriptors, Murcko Scaffolds, Avalon Fingerprints, ECFP3, FCFP3.
+- **Disease Representations**: Basic NTD/DALY features (default), SapBERT 768-dim semantic embeddings.
+
+To perform an ablation study, modify `config.yaml` and rerun `scripts/preprocess.py`. The downstream models will dynamically adapt to the new feature vector dimensions.
+
+---
+
+## 📊 Model Comparison (Research-Grade)
+
+The pipeline trains and evaluates **11 models** in a progressive comparison framework:
+
+| Stage | Model | ROC-AUC | PR-AUC | F1 | Type |
+|---|---|---|---|---|---|
+| **Sanity Check** | Random Guess | ~0.50 | — | — | Baseline |
+| **Sanity Check** | Majority Class | ~0.50 | — | — | Baseline |
+| **Classical ML** | Logistic Regression | TBD | TBD | TBD | Baseline |
+| **Classical ML** | Naive Bayes | TBD | TBD | TBD | Baseline |
+| **Classical ML** | Random Forest | TBD | TBD | TBD | Baseline |
+| **Classical ML** | XGBoost | TBD | TBD | TBD | Baseline |
+| **Classical ML** | MLP | TBD | TBD | TBD | Baseline |
+| **Graph Baseline** | GCN | TBD | TBD | TBD | GNN |
+| **Graph Baseline** | GraphSAGE | TBD | TBD | TBD | GNN |
+| **Graph Baseline** | GAT | TBD | TBD | TBD | GNN |
+| **Relation-aware** | RGCN | TBD | TBD | TBD | GNN |
+| **Final Model ★** | **HGT** | **TBD** | **TBD** | **TBD** | **GNN** |
+
+This progression ensures reviewers see clear evidence that:
+1. The task is non-trivial (baselines < 0.80)
+2. Graph structure helps (GCN > XGBoost)
+3. Relation awareness helps (RGCN > GCN)
+4. Heterogeneous attention helps (HGT > RGCN)
 
 ---
 
@@ -291,7 +353,9 @@ VectorDrugMatch focuses on **WHO-classified Neglected Tropical Diseases**:
 | Layer | Technology |
 |---|---|
 | Core ML | PyTorch 2.x, PyTorch Geometric |
-| Cheminformatics | RDKit |
+| Graph Models | GCN, GraphSAGE, GAT, RGCN, HGT |
+| Cheminformatics | RDKit (Morgan FP, Tanimoto, molecular descriptors) |
+| Classical ML | scikit-learn, XGBoost / LightGBM |
 | Graph Processing | NetworkX |
 | Data | Pandas, NumPy, SQLite |
 | Literature Mining | Biopython (Entrez) |
@@ -309,8 +373,8 @@ VectorDrugMatch focuses on **WHO-classified Neglected Tropical Diseases**:
 | Name | Role | IEEE Member ID | Email |
 |---|---|---|---|
 | Nikita Ravindra | Team Lead, Data & Equity Scoring | 102191349 | ravindranikita21@gmail.com |
-| Arpit Pandey | GNN Modelling | 102199062 | 1ms24ci023@msrit.edu |
-| Mukul Prasad | Literature Mining & NDPI | 10177317 | mukulprasad958@gmail.com |
+| Arpit Pandey | ML Modelling (Baselines + GNNs) | 102199062 | 1ms24ci023@msrit.edu |
+| Mukul Prasad | Features, Literature & NDPI | 10177317 | mukulprasad958@gmail.com |
 | Swastik R Phadke | Frontend & Integration | 102192683 | swastikphadke098@gmail.com |
 
 **Faculty Advisor:** Dr. Parkavi A, Department of Computer Science, Ramaiah Institute of Technology  
@@ -324,7 +388,7 @@ If you use VectorDrugMatch in your research, please cite:
 
 ```bibtex
 @misc{vectordrugmatch2026,
-  title        = {VectorDrugMatch: Vector-Based Drug Repurposing Engine for Neglected Disease Patients},
+  title        = {VectorDrugMatch: Heterogeneous Graph Transformer-Based Drug Repurposing for Neglected Disease Patients},
   author       = {Ravindra, Nikita and Pandey, Arpit and Prasad, Mukul and Phadke, Swastik R},
   year         = {2026},
   institution  = {Ramaiah Institute of Technology, Bangalore},
@@ -341,12 +405,3 @@ MIT License — see [LICENSE](LICENSE) for details.
 ---
 
 *Built with ❤️ for patients who deserve better treatment options.*
-
-
-
-
-
-
-
-
-
