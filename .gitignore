@@ -1,1 +1,25 @@
-data/
+# Data directories
+data/raw/
+data/processed/
+
+# Keep external metadata trackable
+!data/external/
+
+# Python environment & cache
+__pycache__/
+*.pyc
+venv/
+.venv/
+env/
+
+# Model outputs & checkpoint files
+outputs/
+*.pt
+*.pkl
+*.npy
+
+# Config & local environment
+.env
+
+# Jupyter notebooks
+.ipynb_checkpoints/
