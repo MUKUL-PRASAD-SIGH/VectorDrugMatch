@@ -209,7 +209,8 @@ Download the following files manually and place them in `data/raw/`:
 | DisGeNET curated | [DisGeNET](https://www.disgenet.com/) or [GitHub mirror](https://github.com/dhimmel/disgenet/) | `data/raw/curated_gene_disease_associations.tsv` |
 | Hetionet edges | [Hetionet GitHub](https://github.com/hetio/hetionet/blob/main/hetnet/tsv/hetionet-v1.0-edges.sif.gz) | `data/raw/hetionet-v1.0-edges.sif` |
 
-> ⚠️ **Note on DrugBank:** The open DrugBank vocabulary portal was completely offline/unreachable during initial setup. The pipeline has been successfully pivoted to use the open-source PubChem (`CID-SMILES`) dataset for drug node generation instead.
+Run the Preprocessing Pipeline
+Execute the preprocessing script from the root directory to generate the training data:
 
 ### 4. Run Preprocessing
 
