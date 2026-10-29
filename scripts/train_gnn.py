@@ -39,6 +39,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(REPO_ROOT))
 
 from src.data.graph_builder import build_hetero_data
+from src.data.dataset import build_tabular_dataset
 from src.utils.metrics import compute_all_metrics, format_metrics_table, print_metrics
 from src.utils.experiment_logger import log_experiment
 
@@ -140,22 +141,29 @@ def train_evaluate_gnns(config_path: str, epochs: int = 100):
     neg_ratio = dataset_cfg.get("neg_ratio", 5.0)
     test_size = dataset_cfg.get("test_size", 0.15)
     val_size = dataset_cfg.get("val_size", 0.15)
+    random_seed = dataset_cfg.get("random_seed", 42)
     
-    # 2. Train/Val/Test Split using PyG's RandomLinkSplit
-    print(f"\nSplitting graph into Train/Val/Test (negative sampling ratio {neg_ratio})...")
-    transform = T.RandomLinkSplit(
-        num_val=val_size,
-        num_test=test_size,
-        disjoint_train_ratio=0.3,
-        neg_sampling_ratio=neg_ratio,
-        add_negative_train_samples=True,
-        edge_types=[target_edge],
-        # Remove the reverse of each held-out edge too, otherwise val/test labels leak via message passing
-        rev_edge_types=[('disease', 'rev_treats', 'drug')],
-    )
-    
-    train_data, val_data, test_data = transform(data)
-    
+    # 2. Train/Val/Test split: same drug-disjoint (cold-start) split and hard negatives as the baselines
+    print(f"\nSplitting (cold-start drug split, hard negatives, ratio {neg_ratio})...")
+    splits = build_tabular_dataset(data, target_edge=target_edge, neg_ratio=neg_ratio,
+                                   test_size=test_size, val_size=val_size, random_state=random_seed)
+
+    # Message-passing graph with every drug->disease "treats" edge (and its reverse) removed, so no
+    # label can reach a prediction through message passing. Supervision comes only from edge_label_index.
+    rev_target = ('disease', 'rev_treats', 'drug')
+    mp_data = data.clone()
+    for et in (target_edge, rev_target):
+        if et in mp_data.edge_types:
+            mp_data[et].edge_index = torch.empty((2, 0), dtype=torch.long)
+
+    def make_split(name):
+        d = mp_data.clone()
+        d[target_edge].edge_label_index = torch.as_tensor(splits[f"edges_{name}"], dtype=torch.long)
+        d[target_edge].edge_label = torch.as_tensor(splits[f"y_{name}"], dtype=torch.long)
+        return d
+
+    train_data, val_data, test_data = make_split("train"), make_split("val"), make_split("test")
+
     train_edges = train_data[target_edge].edge_label.shape[0]
     test_edges = test_data[target_edge].edge_label.shape[0]
     print(f"  Train set: {train_edges:,} edges")
