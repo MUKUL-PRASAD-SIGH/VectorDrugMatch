@@ -47,44 +47,7 @@ from src.models.gnn.graphsage import create_graphsage_model
 from src.models.gnn.gat import create_gat_model
 from src.models.gnn.rgcn import create_rgcn_model
 from src.models.gnn.hgt import create_hgt_model
-
-
-class LinkPredictor(torch.nn.Module):
-    """Simple MLP to predict edge probability from node embeddings."""
-    def __init__(self, in_channels, hidden_channels):
-        super().__init__()
-        # Concat approach: in_channels * 2 -> hidden_channels -> 1
-        self.lin1 = torch.nn.Linear(in_channels * 2, hidden_channels)
-        self.lin2 = torch.nn.Linear(hidden_channels, 1)
-
-    def forward(self, z_src, z_dst, edge_label_index):
-        # Gather embeddings for source and destination nodes of the edges
-        z_src_edges = z_src[edge_label_index[0]]
-        z_dst_edges = z_dst[edge_label_index[1]]
-        
-        # Concatenate and pass through MLP
-        z = torch.cat([z_src_edges, z_dst_edges], dim=-1)
-        z = F.relu(self.lin1(z))
-        z = self.lin2(z).squeeze(-1)
-        return torch.sigmoid(z)
-
-
-class GNNLinkPredictionModel(torch.nn.Module):
-    """Wrapper that combines a GNN and a LinkPredictor."""
-    def __init__(self, gnn, in_channels, hidden_channels):
-        super().__init__()
-        self.gnn = gnn
-        self.predictor = LinkPredictor(in_channels, hidden_channels)
-        
-    def forward(self, x_dict, edge_index_dict, edge_label_index):
-        # 1. Get node embeddings from GNN
-        z_dict = self.gnn(x_dict, edge_index_dict)
-        
-        # 2. Predict links for the specific relation (drug-treats-disease)
-        z_src = z_dict['drug']
-        z_dst = z_dict['disease']
-        
-        return self.predictor(z_src, z_dst, edge_label_index)
+from src.models.gnn.base import GNNLinkPredictionModel
 
 
 def train_epoch(model, optimizer, train_data, scaler):
@@ -125,7 +88,7 @@ def evaluate_model(model, data):
     return metrics
 
 
-def train_evaluate_gnns(config_path: str):
+def train_evaluate_gnns(config_path: str, epochs: int = 100):
     if not PYG_AVAILABLE:
         print("ERROR: PyTorch Geometric is required to train GNNs.")
         sys.exit(1)
@@ -187,7 +150,8 @@ def train_evaluate_gnns(config_path: str):
         neg_sampling_ratio=neg_ratio,
         add_negative_train_samples=True,
         edge_types=[target_edge],
-        rev_edge_types=None,
+        # Remove the reverse of each held-out edge too, otherwise val/test labels leak via message passing
+        rev_edge_types=[('disease', 'rev_treats', 'drug')],
     )
     
     train_data, val_data, test_data = transform(data)
@@ -218,7 +182,7 @@ def train_evaluate_gnns(config_path: str):
     results = []
     
     # 4. Train & Evaluate
-    EPOCHS = 100
+    EPOCHS = epochs
     
     for name, factory in gnn_factories.items():
         print(f"\n" + "="*50)
@@ -235,7 +199,7 @@ def train_evaluate_gnns(config_path: str):
                      train_data[target_edge].edge_label_index)
             
         optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-4)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=10, verbose=True)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=10)
         scaler = torch.cuda.amp.GradScaler(enabled=device.type == 'cuda')
         
         best_val_auc = 0.0
@@ -287,7 +251,7 @@ def train_evaluate_gnns(config_path: str):
         import json
         import shutil
         with open(models_dir / f"gnn_{name}_metrics.json", "w") as f:
-            json.dump(best_metrics, f, indent=4)
+            json.dump(best_metrics, f, indent=4, default=float)
         if config_path.exists():
             shutil.copy2(config_path, models_dir / f"gnn_{name}_config.yaml")
             
@@ -361,6 +325,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="VectorDrugMatch GNN Training")
     parser.add_argument("--config", type=str, default="config.yaml", help="Path to experiment config file")
+    parser.add_argument("--epochs", type=int, default=100, help="Max training epochs per model")
     args = parser.parse_args()
     
-    train_evaluate_gnns(args.config)
+    train_evaluate_gnns(args.config, epochs=args.epochs)

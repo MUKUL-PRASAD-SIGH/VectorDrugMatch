@@ -21,7 +21,8 @@ except ImportError:
 
 
 # The Entrez email must be set to comply with NCBI guidelines
-Entrez.email = os.getenv("ENTREZ_EMAIL", "researcher@example.com")
+if BIO_AVAILABLE:
+    Entrez.email = os.getenv("ENTREZ_EMAIL", "researcher@example.com")
 CACHE_FILE = "data/processed/pubmed_cache.sqlite"
 
 

@@ -38,8 +38,12 @@ def calculate_ndpi(
             "equity": 0.20
         }
         
-    # Ensure weights sum to 1.0
-    total_weight = sum(weights.values())
+    # config.yaml names the ML weight "gnn"; accept it as an alias for "ml"
+    if "gnn" in weights and "ml" not in weights:
+        weights = {**weights, "ml": weights["gnn"]}
+
+    # Normalise by the total of the weights actually used
+    total_weight = sum(weights.get(k, 0) for k in ("ml", "similarity", "literature", "equity"))
     
     score = (
         (ml_probability * weights.get("ml", 0)) +

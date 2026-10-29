@@ -1,0 +1,11 @@
+disease_id,disease_name,who_ntd,daly_burden,region
+MESH:D016791,Chagas Disease,1,190000,Americas
+MESH:D002637,Leishmaniasis,1,2100000,South-East Asia
+MESH:D002917,Cryptococcosis,0,374000,Africa
+MESH:D007898,Lymphatic Filariasis,1,5800000,South-East Asia
+MESH:D009081,Mucormycosis,0,1740000,Africa
+MESH:D014355,Trypanosomiasis African,1,1900000,Africa
+MESH:D001424,Bacterial Infections,0,890000,Global
+MESH:D014552,Urinary Tract Infections,0,320000,Global
+MESH:D007390,Intestinal Diseases,0,190000,Global
+MESH:D008288,Malaria,1,56000000,Africa

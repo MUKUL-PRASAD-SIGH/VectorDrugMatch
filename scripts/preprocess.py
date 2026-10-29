@@ -525,6 +525,7 @@ def build_edges(proc_dir: Path) -> pd.DataFrame:
 
     if het is not None:
         het = het.dropna(subset=["source", "metaedge", "target"])
+        het = het[het["metaedge"] != "metaedge"]  # drop the .sif header row
 
         # Parse source/target IDs and types (format: "Type::ID")
         def parse_node(val):
@@ -541,6 +542,7 @@ def build_edges(proc_dir: Path) -> pd.DataFrame:
 
         het_edges = het[["source_id", "target_id", "metaedge", "source_type", "target_type"]].copy()
         het_edges = het_edges.rename(columns={"metaedge": "relation"})
+        het_edges["relation"] = het_edges["relation"].replace({"Gr>G": "GrG"})  # graph_builder uses GrG
         het_edges = het_edges.drop_duplicates()
 
         all_edges.append(het_edges)
@@ -798,11 +800,15 @@ def main():
         RAW.mkdir(parents=True, exist_ok=True)
 
     # Load Hetionet nodes once (shared by drugs, diseases, genes)
-    hetionet_nodes = None
-    hetio_nodes_path = RAW / "hetionet-v1.0-nodes.tsv"
-    if hetio_nodes_path.exists():
-        hetionet_nodes = pd.read_csv(hetio_nodes_path, sep="\t")
-        print(f"\n  Hetionet nodes loaded: {len(hetionet_nodes):,} ({hetionet_nodes['kind'].value_counts().to_dict()})")
+    required = [RAW / "hetionet-v1.0-nodes.tsv", RAW / "hetionet-v1.0-edges.sif"]
+    missing_raw = [p.name for p in required
+                   if not p.exists() and not p.with_name(p.name + ".gz").exists()]
+    if missing_raw:
+        sys.exit(f"[ERROR] Missing required raw files in {RAW}: {', '.join(missing_raw)}. "
+                 "See Docs/DATASETS.md for download links. Mock data lives in tests/fixtures/mock_raw/.")
+    hetio_nodes_path = required[0]
+    hetionet_nodes = pd.read_csv(hetio_nodes_path, sep="\t")
+    print(f"\n  Hetionet nodes loaded: {len(hetionet_nodes):,} ({hetionet_nodes['kind'].value_counts().to_dict()})")
 
     # Build each component
     t_start = time.time()

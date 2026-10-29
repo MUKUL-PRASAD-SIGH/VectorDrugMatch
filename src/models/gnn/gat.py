@@ -29,13 +29,17 @@ class GAT(torch.nn.Module):
             self.convs.append(GATConv(hidden_channels * heads, out_channels, heads=1, concat=False, add_self_loops=False))
             self.norms.append(BatchNorm1d(out_channels))
 
+        # Decided statically so to_hetero's symbolic tracing never branches on tensor shapes
+        widths = [n.num_features for n in self.norms]
+        self.residual = [i > 0 and widths[i] == widths[i - 1] for i in range(len(widths))]
+
     def forward(self, x, edge_index):
         for i, (conv, norm) in enumerate(zip(self.convs, self.norms)):
             x_out = conv(x, edge_index)
             x_out = norm(x_out)
             
             # Residual connection
-            if i > 0 and x_out.size(-1) == x.size(-1):
+            if self.residual[i]:
                 x_out = x_out + x
                 
             x = x_out

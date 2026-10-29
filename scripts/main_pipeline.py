@@ -11,9 +11,14 @@ scripts/main_pipeline.py - End-to-End Inference & NDPI Ranking Pipeline
 import sys
 import yaml
 import torch
+from rdkit import Chem
+from rdkit.Chem import Descriptors
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(REPO_ROOT))
 
 from src.data.graph_builder import build_hetero_data
 from src.models.gnn.gcn import create_gcn_model
@@ -27,9 +32,7 @@ from src.scoring.similarity import compute_similarity_scores
 from src.scoring.literature import compute_literature_score
 from src.scoring.equity import compute_equity_score
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-
-def run_pipeline(config_path: str):
+def run_pipeline(config_path: str, disease: str = None, top_k: int = 50, use_literature: bool = True):
     config_path = REPO_ROOT / config_path
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
@@ -71,71 +74,51 @@ def run_pipeline(config_path: str):
     # Lazy init fix before loading state dict
     with torch.no_grad():
         target_edge = ('drug', 'treats', 'disease')
-        _ = model(data.x_dict, data.edge_index_dict, data[target_edge].edge_label_index)
+        _ = model(data.x_dict, data.edge_index_dict, data[target_edge].edge_index[:, :1])
         
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     
-    # 3. Load Candidates to rank (e.g., from inference.csv)
-    # For now, let's just score the TEST set positive edges from the graph as a proxy 
-    # if no inference CSV is provided, or a specific CSV if given.
-    # In a real scenario, this would be all possible drug-disease pairs minus known positives.
-    
-    print("Extracting Candidates...")
-    # Mocking candidate selection: We'll score all drugs against a single disease (e.g. Malaria)
-    # For demonstration, we'll just score the test edges or negative samples.
-    # Let's assume we have a list of pairs to score.
-    # We will score ALL drugs against a specific disease.
-    
-    nodes_df = pd.read_csv(processed_dir / "nodes.csv")
-    diseases = nodes_df[nodes_df["type"] == "disease"]
-    drugs = nodes_df[nodes_df["type"] == "drug"]
-    
-    # Pick the most connected disease as the target
-    target_disease_id = diseases.iloc[0]["id"]
-    target_disease_name = diseases.iloc[0]["name"]
-    daly_burden = float(diseases.iloc[0].get("daly_burden", 0.5)) # Mock DALY
-    
+    # 3. Candidate selection: score every drug that is not already a known treatment of the target disease
+    drugs = pd.read_csv(processed_dir / "drugs.csv")        # row order == graph node index
+    diseases = pd.read_csv(processed_dir / "diseases.csv")
+    edges_df = pd.read_csv(processed_dir / "edges.csv", usecols=["source_id", "target_id", "relation"])
+    treats = edges_df[edges_df["relation"] == "CtD"]
+
+    if disease:
+        mask = (diseases["disease_id"].astype(str) == disease) |                diseases["disease_name"].str.contains(disease, case=False, regex=False)
+        if not mask.any():
+            sys.exit(f"ERROR: no disease matching '{disease}' in diseases.csv")
+        disease_idx = int(diseases[mask].index[0])
+    else:
+        # default: the disease with the most known treatments
+        counts = treats["target_id"].value_counts()
+        disease_idx = int(diseases.index[diseases["disease_id"].astype(str) == str(counts.index[0])][0])
+
+    target_disease_id = str(diseases.loc[disease_idx, "disease_id"])
+    target_disease_name = diseases.loc[disease_idx, "disease_name"]
+    daly_burden = float(diseases.loc[disease_idx].get("daly_rate", 0.0) or 0.0)
     print(f"Targeting Disease: {target_disease_name} ({target_disease_id})")
-    
-    # Get known treatments to exclude them and use for similarity
-    edges_df = pd.read_csv(processed_dir / "edges.csv")
-    treats = edges_df[edges_df["relation"] == "treats"]
-    known_drug_ids = treats[treats["dst"] == target_disease_id]["src"].tolist()
-    known_drugs_df = drugs[drugs["id"].isin(known_drug_ids)]
-    known_drugs_smiles = known_drugs_df["smiles"].dropna().tolist()
-    
-    # Candidate drugs (drugs not already treating the disease)
-    candidate_drugs = drugs[~drugs["id"].isin(known_drug_ids)]
-    
-    print(f"Found {len(candidate_drugs)} candidate drugs to evaluate.")
-    
-    # Prepare edge_label_index for inference
+
+    known_drug_ids = set(treats[treats["target_id"].astype(str) == target_disease_id]["source_id"].astype(str))
+    known_mask = drugs["drug_id"].astype(str).isin(known_drug_ids)
+    known_drugs_smiles = drugs[known_mask]["smiles"].dropna().tolist()
+    candidate_drugs = drugs[~known_mask & drugs["smiles"].notna()].copy()   # no SMILES -> zero fingerprint, skip
+    print(f"{known_mask.sum()} known treatments excluded; {len(candidate_drugs)} candidate drugs to evaluate.")
+
     drug_node_indices = torch.tensor(candidate_drugs.index.values, dtype=torch.long, device=device)
-    disease_idx = int(diseases[diseases["id"] == target_disease_id].index[0])
     disease_node_indices = torch.full((len(drug_node_indices),), disease_idx, dtype=torch.long, device=device)
-    
     inference_edge_index = torch.stack([drug_node_indices, disease_node_indices], dim=0)
-    
-    # Predict Probabilities
+
     print("Running GNN Inference...")
     with torch.no_grad():
-        with torch.cuda.amp.autocast(enabled=device.type == 'cuda'):
-            pred_proba = model(data.x_dict, data.edge_index_dict, inference_edge_index).cpu().numpy()
-            
-    # Add probabilities to candidates
-    candidate_drugs = candidate_drugs.copy()
+        pred_proba = model(data.x_dict, data.edge_index_dict, inference_edge_index).cpu().numpy()
     candidate_drugs["ml_probability"] = pred_proba
-    
-    # Filter by threshold (e.g. Youden Index, let's assume 0.5 for now)
-    THRESHOLD = 0.5
-    filtered_candidates = candidate_drugs[candidate_drugs["ml_probability"] > THRESHOLD].copy()
-    print(f"Filtering candidates > {THRESHOLD}: {len(filtered_candidates)} remain.")
-    
-    if len(filtered_candidates) == 0:
-        print("No candidates passed the ML threshold.")
-        return
-        
+
+    # Only the top-K by ML probability get the (slow, networked) secondary scores
+    filtered_candidates = candidate_drugs.sort_values("ml_probability", ascending=False).head(top_k).copy()
+    print(f"Keeping top {len(filtered_candidates)} candidates by ML probability.")
+
     # Calculate Secondary Scores
     print("Calculating NDPI Scores...")
     results = []
@@ -143,16 +126,17 @@ def run_pipeline(config_path: str):
     for _, row in tqdm(filtered_candidates.iterrows(), total=len(filtered_candidates)):
         drug_name = row["name"]
         smiles = row.get("smiles", "")
-        mw = float(row.get("molecular_weight", 300.0))
-        atc_code = row.get("atc_code", "")
-        is_eml = bool(row.get("is_eml", False))
+        mol = Chem.MolFromSmiles(smiles) if isinstance(smiles, str) else None
+        mw = Descriptors.MolWt(mol) if mol is not None else float("nan")
+        atc_code = ""       # no ATC data in the Hetionet pipeline
+        is_eml = False      # no WHO EML data wired in yet
         
         # 1. Similarity
         sim_scores = compute_similarity_scores(smiles, known_drugs_smiles, top_k=3)
         sim_score = sim_scores["max_sim"] # Or use mean_sim
         
         # 2. Literature
-        lit_score = compute_literature_score(drug_name, target_disease_name)
+        lit_score = compute_literature_score(drug_name, target_disease_name) if use_literature else 0.0
         
         # 3. Equity
         equity_score = compute_equity_score(is_eml, daly_burden, mw, atc_code)
@@ -162,7 +146,7 @@ def run_pipeline(config_path: str):
         ndpi = calculate_ndpi(row["ml_probability"], sim_score, lit_score, equity_score, weights=ndpi_weights)
         
         results.append({
-            "drug_id": row["id"],
+            "drug_id": row["drug_id"],
             "drug_name": drug_name,
             "disease_name": target_disease_name,
             "ml_probability": round(row["ml_probability"], 4),
@@ -186,5 +170,8 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Run full NDPI Inference Pipeline")
     parser.add_argument("--config", type=str, default="configs/baseline_morgan.yaml", help="Path to config")
+    parser.add_argument("--disease", type=str, default=None, help="Disease id or name substring (default: most-treated)")
+    parser.add_argument("--top-k", type=int, default=50, help="Candidates that get similarity/literature/equity scores")
+    parser.add_argument("--no-literature", action="store_true", help="Skip PubMed lookups (offline / fast)")
     args = parser.parse_args()
-    run_pipeline(args.config)
+    run_pipeline(args.config, disease=args.disease, top_k=args.top_k, use_literature=not args.no_literature)

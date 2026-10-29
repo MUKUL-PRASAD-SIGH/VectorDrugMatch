@@ -183,6 +183,24 @@ def train_evaluate_baselines(selected_models, config_path):
             
             mlflow.log_metrics({f"avg_{k}": v for k,v in avg_metrics.items() if isinstance(v, (int, float))})
             
+            # Cold-start evaluation: fit on the drug-disjoint train split, score on the held-out test split.
+            # Threshold comes from the val split so the test split is never used for tuning.
+            if all(k in splits for k in ("X_train", "X_val", "X_test")):
+                cs_model = ModelClass(**model_kwargs)
+                if key in ["rf", "xgb", "logistic"] and hasattr(cs_model, "model"):
+                    cs_cal = CalibratedClassifierCV(estimator=cs_model.model, method="sigmoid", cv=3)
+                    cs_cal.fit(splits["X_train"], splits["y_train"])
+                    cs_model.model = cs_cal
+                else:
+                    cs_model.train(splits["X_train"], splits["y_train"])
+                val_fpr, val_tpr, val_thr = roc_curve(splits["y_val"], cs_model.predict_proba(splits["X_val"]))
+                cs_threshold = val_thr[np.argmax(val_tpr - val_fpr)]
+                cs_metrics = compute_all_metrics(splits["y_test"], cs_model.predict_proba(splits["X_test"]),
+                                                 threshold=cs_threshold)
+                avg_metrics.update({f"coldstart_{k}": v for k, v in cs_metrics.items()})
+                mlflow.log_metrics({f"coldstart_{k}": v for k, v in cs_metrics.items()})
+                print(f"  Cold-start test ROC-AUC: {cs_metrics['roc_auc']:.4f}  PR-AUC: {cs_metrics['pr_auc']:.4f}")
+
             # Save final full model
             final_model = ModelClass(**model_kwargs)
             if key in ["rf", "xgb", "logistic"] and hasattr(final_model, "model"):
@@ -200,8 +218,10 @@ def train_evaluate_baselines(selected_models, config_path):
             if key in ["rf", "xgb"]:
                 if hasattr(final_model.model, "estimator"):
                     # Extract from calibrated classifier
-                    fi = final_model.model.estimator.feature_importances_
-                    base_estimator = final_model.model.estimator
+                    # CalibratedClassifierCV fits clones, so the wrapped estimator itself is unfitted
+                    fitted = [c.estimator for c in final_model.model.calibrated_classifiers_]
+                    fi = np.mean([e.feature_importances_ for e in fitted], axis=0)
+                    base_estimator = fitted[0]
                 else:
                     fi = final_model.model.feature_importances_
                     base_estimator = final_model.model
@@ -215,7 +235,6 @@ def train_evaluate_baselines(selected_models, config_path):
                 # SHAP Support
                 print(f"Computing SHAP values for {name}...")
                 try:
-                    explainer = shap.TreeExplainer(base_estimator)
                     # Use a random subset of 5000 instances to save time
                     sample_size = min(5000, len(X_all))
                     np.random.seed(random_seed)
@@ -227,8 +246,14 @@ def train_evaluate_baselines(selected_models, config_path):
                     np.save(idx_path, idx)
                     mlflow.log_artifact(str(idx_path))
                     
-                    shap_values = explainer.shap_values(X_sample)
-                    
+                    if key == "xgb":
+                        # shap.TreeExplainer chokes on xgboost>=3 base_score strings; use native contributions
+                        import xgboost as xgb
+                        contribs = base_estimator.get_booster().predict(xgb.DMatrix(X_sample), pred_contribs=True)
+                        shap_values = contribs[:, :-1]  # last column is the bias term
+                    else:
+                        shap_values = shap.TreeExplainer(base_estimator).shap_values(X_sample)
+
                     shap_path = outputs_dir / f"{key}_shap_values.npy"
                     np.save(shap_path, shap_values)
                     mlflow.log_artifact(str(shap_path))
