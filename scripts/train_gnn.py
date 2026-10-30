@@ -17,6 +17,7 @@ Pipeline:
 """
 
 import sys
+import time
 from pathlib import Path
 import json
 import yaml
@@ -26,6 +27,7 @@ import torch.nn.functional as F
 import pandas as pd
 import numpy as np
 import mlflow
+from sklearn.metrics import roc_curve, confusion_matrix
 
 try:
     import torch_geometric.transforms as T
@@ -87,6 +89,13 @@ def evaluate_model(model, data):
     
     metrics = compute_all_metrics(edge_label, pred_proba)
     return metrics
+
+
+@torch.no_grad()
+def predict_proba(model, data):
+    model.eval()
+    eli = data['drug', 'treats', 'disease'].edge_label_index
+    return model(data.x_dict, data.edge_index_dict, eli).cpu().numpy()
 
 
 def train_evaluate_gnns(config_path: str, epochs: int = 100):
@@ -216,6 +225,8 @@ def train_evaluate_gnns(config_path: str, epochs: int = 100):
         best_epoch = 0
         patience = 20
         epochs_no_improve = 0
+        history = []
+        t_start = time.time()
         
         # Training loop
         for epoch in range(1, EPOCHS + 1):
@@ -223,6 +234,8 @@ def train_evaluate_gnns(config_path: str, epochs: int = 100):
             val_metrics = evaluate_model(model, val_data)
             
             scheduler.step(val_metrics["roc_auc"])
+            history.append({"epoch": epoch, "train_loss": loss, "val_roc_auc": val_metrics["roc_auc"],
+                            "val_pr_auc": val_metrics["pr_auc"]})
             
             # Checkpointing based on Validation ROC-AUC
             if val_metrics["roc_auc"] > best_val_auc:
@@ -244,10 +257,23 @@ def train_evaluate_gnns(config_path: str, epochs: int = 100):
         if best_model_state is not None:
             model.load_state_dict(best_model_state)
             
-        best_metrics = evaluate_model(model, test_data)
-            
+        train_seconds = time.time() - t_start
+
+        # Youden threshold from the validation split, applied to test (same protocol as the baseline cold-start)
+        y_val = val_data['drug', 'treats', 'disease'].edge_label.cpu().numpy()
+        v_fpr, v_tpr, v_thr = roc_curve(y_val, predict_proba(model, val_data))
+        threshold = float(v_thr[np.argmax(v_tpr - v_fpr)])
+        y_test = test_data['drug', 'treats', 'disease'].edge_label.cpu().numpy()
+        test_proba = predict_proba(model, test_data)
+        best_metrics = compute_all_metrics(y_test, test_proba, threshold=threshold)
+        tn, fp, fn, tp = confusion_matrix(y_test, test_proba >= threshold, labels=[0, 1]).ravel()
+
         best_metrics["name"] = name
         best_metrics["type"] = "gnn"
+        best_metrics.update({"threshold": threshold, "tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp),
+                             "best_epoch": best_epoch, "epochs_run": len(history),
+                             "train_seconds": round(train_seconds, 1), "seed": random_seed})
+        pd.DataFrame(history).to_csv(outputs_dir / f"gnn_{name}_history.csv", index=False)
         
         feature_dim = data['drug'].x.shape[1] if hasattr(data['drug'], 'x') else None
         
@@ -295,7 +321,7 @@ def train_evaluate_gnns(config_path: str, epochs: int = 100):
                     "drug_id": edge_label_index[0].cpu().numpy(),
                     "disease_id": edge_label_index[1].cpu().numpy(),
                     "label": y_true,
-                    "prediction": (pred_proba >= 0.5).astype(int),
+                    "prediction": (pred_proba >= threshold).astype(int),
                     "probability": pred_proba,
                     "experiment": config.get("experiment", {}).get("name", "baseline"),
                     "model": name

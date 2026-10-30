@@ -7,6 +7,7 @@ MLflow tracking, Probability Calibration, and Threshold Optimization (Youden Ind
 """
 
 import sys
+import time
 import argparse
 from pathlib import Path
 import yaml
@@ -18,7 +19,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import roc_curve, precision_recall_curve
+from sklearn.metrics import roc_curve, precision_recall_curve, confusion_matrix
 import mlflow
 import mlflow.sklearn
 import shap
@@ -135,6 +136,7 @@ def train_evaluate_baselines(selected_models, config_path):
         
         model_kwargs = config.get("models", {}).get(key, {})
         
+        t_model = time.time()
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_seed)
         fold_metrics = []
         best_threshold = 0.5
@@ -180,6 +182,8 @@ def train_evaluate_baselines(selected_models, config_path):
             avg_metrics["name"] = name
             avg_metrics["type"] = "baseline"
             avg_metrics["best_threshold"] = float(best_threshold)
+            avg_metrics["seed"] = random_seed
+            avg_metrics["train_seconds"] = round(time.time() - t_model, 1)
             
             mlflow.log_metrics({f"avg_{k}": v for k,v in avg_metrics.items() if isinstance(v, (int, float))})
             
@@ -195,8 +199,13 @@ def train_evaluate_baselines(selected_models, config_path):
                     cs_model.train(splits["X_train"], splits["y_train"])
                 val_fpr, val_tpr, val_thr = roc_curve(splits["y_val"], cs_model.predict_proba(splits["X_val"]))
                 cs_threshold = val_thr[np.argmax(val_tpr - val_fpr)]
-                cs_metrics = compute_all_metrics(splits["y_test"], cs_model.predict_proba(splits["X_test"]),
-                                                 threshold=cs_threshold)
+                cs_proba = cs_model.predict_proba(splits["X_test"])
+                cs_metrics = compute_all_metrics(splits["y_test"], cs_proba, threshold=cs_threshold)
+                tn, fp, fn, tp = confusion_matrix(splits["y_test"], cs_proba >= cs_threshold, labels=[0, 1]).ravel()
+                cs_metrics.update({"threshold": float(cs_threshold), "tn": int(tn), "fp": int(fp),
+                                   "fn": int(fn), "tp": int(tp)})
+                pd.DataFrame({"y_true": splits["y_test"], "probability": cs_proba}).to_csv(
+                    outputs_dir / f"baseline_{key}_coldstart_predictions.csv", index=False)
                 avg_metrics.update({f"coldstart_{k}": v for k, v in cs_metrics.items()})
                 mlflow.log_metrics({f"coldstart_{k}": v for k, v in cs_metrics.items()})
                 print(f"  Cold-start test ROC-AUC: {cs_metrics['roc_auc']:.4f}  PR-AUC: {cs_metrics['pr_auc']:.4f}")
