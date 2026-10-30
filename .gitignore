@@ -23,3 +23,19 @@ outputs/
 
 # Jupyter notebooks
 .ipynb_checkpoints/
+
+# MLflow tracking (local runs / sqlite stores)
+mlruns/
+mlflow.db
+*.db
+
+# Scratch folder and model weights
+ignore/
+*.pth
+*.zip
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
