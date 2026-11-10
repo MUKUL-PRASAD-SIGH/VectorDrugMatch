@@ -1,6 +1,6 @@
 # Data and pipeline readiness report
 
-Generated 2026-11-11 01:30 by `scripts/make_readiness_report.py` from the files on disk. Numbers are read from data/report files; validator lines are from running the validators during generation. Section 6 (unresolved issues) is curated text.
+Generated 2026-11-11 01:43 by `scripts/make_readiness_report.py` from the files on disk. Numbers are read from data/report files; validator lines are from running the validators during generation. Section 6 (unresolved issues) is curated text.
 
 ## 1. Datasets
 

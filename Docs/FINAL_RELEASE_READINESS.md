@@ -1,6 +1,6 @@
 # Final release readiness
 
-Generated 2026-11-11 01:31 by `scripts/make_final_docs.py`. Statuses: DONE AND VALIDATED, IMPLEMENTED BUT NOT VALIDATED, BLOCKED ON MY INPUT, NOT STARTED, NOT APPLICABLE.
+Generated 2026-11-11 01:43 by `scripts/make_final_docs.py`. Statuses: DONE AND VALIDATED, IMPLEMENTED BUT NOT VALIDATED, BLOCKED ON MY INPUT, NOT STARTED, NOT APPLICABLE.
 
 ## Task registry
 | area | task | status | evidence / note |
@@ -86,7 +86,7 @@ Counts: {'DONE AND VALIDATED': 24, 'IMPLEMENTED BUT NOT VALIDATED': 9, 'BLOCKED 
 ```
 
 ## 3. Commit / pin / manifest reconciliation (state at generation)
-HEAD `d26a77f711`; local commits ahead of `origin/mukul`: 17; working tree has uncommitted changes. The notebook pins code commit `d26a77f711`. Test: after the pinned commit only `notebooks/` and `Docs/` may change. Result: **PASS**. The release manifest `Docs/release/vdm_v1_candidate_manifest.json` records the data checksums, versions and the commit at freeze time; rename it `vdm_v1` after H1 data arrive.
+HEAD `4384957918`; local commits ahead of `origin/mukul`: 19; working tree has uncommitted changes. The notebook pins code commit `4384957918`. Test: after the pinned commit only `notebooks/` and `Docs/` may change. Result: **PASS**. The release manifest `Docs/release/vdm_v1_candidate_manifest.json` records the data checksums, versions and the commit at freeze time; rename it `vdm_v1` after H1 data arrive.
 
 ## Final Colab-readiness gate
 | gate | status |
