@@ -104,18 +104,19 @@ src/models/     baseline/ (5 classical) and gnn/ (GCN, GraphSAGE, GAT, RGCN, HGT
 src/explainability/  SHAP and GNNExplainer helpers          src/scoring/    NDPI, EML status, similarity, literature
 src/utils/      metrics, ranking, results I/O
 tests/          unit and static tests (leakage, features, EML extraction, resume, explainability)
-notebooks/      colab_final_run.ipynb (final run, pinned to a commit)
-Docs/           paper draft, provenance, licence audit, data dictionary, handoff documents, release manifest
+notebooks/      colab_final_run.ipynb (the final run, pinned to a commit)
+Docs/           paper draft, provenance, licence audit, data dictionary, handoff documents, release manifest (index: Docs/README.md)
+legacy/         earlier-phase scripts, notebooks and planning documents, kept for history and NOT used by the final pipeline (legacy/README.md)
 data/ outputs/  git-ignored; produced locally or in Colab
 ```
-Early-phase helper scripts at the repository root (`featurize_pubchem.py`, `fix_proc.py`, `process_pubchem_bulk.py`) and `scripts/preprocess.py` / `scripts/train_benchmark.py` belong to the earlier Hetionet-based track and are not used by the final pipeline; their results must not be reported as cold-start results.
+Earlier-phase scripts (`main_pipeline.py`, `train_benchmark.py`, `run_ablations.py`, `optuna_gnn.py`, `validate_pipeline.py`, `evaluate.py`, `export_codebase.py`, `validate_negatives.py`), the three root helper scripts, two old notebooks and the early planning documents were moved with `git mv` into `legacy/` (history preserved, nothing deleted). Their results must not be reported as cold-start results. `scripts/preprocess.py` and `config.yaml` remain because other scripts reference them.
 
 ## 12. Limitations and future work
 * No trained-model results yet; the disease-profile variant's effect is unknown; NTD evaluation rests on very few positives; a single seed.
 * Sampled negatives are unlabelled pairs, not proven non-treatments; 996 drugs lack a structure; 9,089 disease nodes lack a DOID.
 * Open Targets overlap with PrimeKG is **not** independent validation (shared upstream sources); the `UNVALIDATED_INDICATION` flag semantics are undocumented upstream.
 * Equity layer limits as in section 9; seven NTD groups have no burden value.
-* Future work (not started): multi-seed study, a model-score by NDPI candidate ranking over unseen drug-disease pairs, further external validation. There is no deployed API or web application in this repository (`Docs/API.md` is a design note only).
+* Future work (not started): multi-seed study, a model-score by NDPI candidate ranking over unseen drug-disease pairs, further external validation. There is no deployed API or web application in this repository (`legacy/docs/API.md` is an early design note only).
 
 ## 13. Licence and data
 No code licence file is included yet; choose one before release. Third-party data carry their own terms (`Docs/LICENCE_AUDIT.md`); DrugBank-derived, IHME, WHO EML and Open Targets-derived files must not be redistributed through this repository. Three small DrugBank-derived files exist in the **history** of the `mukul` branch (not in the current tree); see `Docs/RELEASE_AUDIT.md`.

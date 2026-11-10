@@ -28,7 +28,7 @@ Generated 2026-11-11 02:40 by `scripts/make_readiness_report.py` from the files 
 
 | check | result |
 |---|---|
-| PrimeKG dataset + leakage (validate_primekg_dataset.py) | === RESULT === all hard checks passed / report: C:\Users\Mukul Prasad\Desktop\PROJECTS\Vector Drug Match\VectorDrugMatch\outputs\primekg\validation_report.md |
+| PrimeKG dataset + leakage (validate_primekg_dataset.py) | === RESULT === all hard checks passed / report: <REPO>\outputs\primekg\validation_report.md |
 | Open Targets (validate_open_targets.py) | === RESULT === all hard checks passed |
 | IHME processor self-test | selftest ok: stub rejected, duplicates rejected, partial/missing groups handled, no zero filling |
 | Paper structure (check_paper.py) | === RESULT === all paper checks passed |

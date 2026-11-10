@@ -53,7 +53,7 @@ def get_available_models():
     return models
 
 
-def train_evaluate_baselines(selected_models, config_path):
+def train_evaluate_baselines(selected_models, config_path, coldstart_only=False):
     print("==========================================================")
     print("   VectorDrugMatch - Baseline Models Training Pipeline    ")
     print("==========================================================")
@@ -148,7 +148,8 @@ def train_evaluate_baselines(selected_models, config_path):
         with mlflow.start_run(run_name=f"{name}_CV"):
             mlflow.log_params(model_kwargs)
             
-            for fold, (train_idx, test_idx) in enumerate(skf.split(X_all, y_all)):
+            # coldstart_only: skip the pooled 5-fold CV (no reported number is read from it; see Docs/COLAB_TRAINING_HANDOFF.md section 10)
+            for fold, (train_idx, test_idx) in enumerate([] if coldstart_only else skf.split(X_all, y_all)):
                 X_train, y_train = X_all[train_idx], y_all[train_idx]
                 X_test, y_test = X_all[test_idx], y_all[test_idx]
                 
@@ -176,8 +177,8 @@ def train_evaluate_baselines(selected_models, config_path):
                 mlflow.log_metrics({f"fold_{fold}_{k}": v for k,v in metrics.items()})
                 
             # Aggregate fold metrics
-            avg_metrics = {k: np.mean([m[k] for m in fold_metrics]) for k in fold_metrics[0].keys()}
-            std_metrics = {k: np.std([m[k] for m in fold_metrics]) for k in fold_metrics[0].keys()}
+            avg_metrics = {k: np.mean([m[k] for m in fold_metrics]) for k in fold_metrics[0].keys()} if fold_metrics else {}
+            std_metrics = {k: np.std([m[k] for m in fold_metrics]) for k in fold_metrics[0].keys()} if fold_metrics else {}
             
             for k in list(avg_metrics.keys()):
                 if isinstance(avg_metrics[k], float):
@@ -187,12 +188,15 @@ def train_evaluate_baselines(selected_models, config_path):
             avg_metrics["type"] = "baseline"
             avg_metrics["best_threshold"] = float(best_threshold)
             avg_metrics["seed"] = random_seed
+            avg_metrics["coldstart_only"] = bool(coldstart_only)
             avg_metrics["train_seconds"] = round(time.time() - t_model, 1)
             
             mlflow.log_metrics({f"avg_{k}": v for k,v in avg_metrics.items() if isinstance(v, (int, float))})
             
             # Cold-start evaluation: fit on the drug-disjoint train split, score on the held-out test split.
             # Threshold comes from the val split so the test split is never used for tuning.
+            if coldstart_only and not all(k in splits for k in ("X_train", "X_val", "X_test")):
+                sys.exit("--coldstart-only needs the saved drug-disjoint split (dataset.presplit in the config)")
             if all(k in splits for k in ("X_train", "X_val", "X_test")):
                 cs_model = ModelClass(**model_kwargs)
                 if key in ["rf", "xgb", "logistic"] and hasattr(cs_model, "model"):
@@ -214,6 +218,12 @@ def train_evaluate_baselines(selected_models, config_path):
                 avg_metrics.update({f"coldstart_{k}": v for k, v in cs_metrics.items()})
                 mlflow.log_metrics({f"coldstart_{k}": v for k, v in cs_metrics.items()})
                 print(f"  Cold-start test ROC-AUC: {cs_metrics['roc_auc']:.4f}  PR-AUC: {cs_metrics['pr_auc']:.4f}")
+
+            if coldstart_only:      # no pooled all-data model, pooled feature importance or pooled SHAP: none of them is a held-out result
+                with open(models_dir / f"baseline_{key}_metrics.json", "w") as f:
+                    json.dump(avg_metrics, f, indent=4)
+                results.append(avg_metrics)
+                continue
 
             # Save final full model
             final_model = ModelClass(**model_kwargs)
@@ -299,7 +309,11 @@ def train_evaluate_baselines(selected_models, config_path):
     print("\n" + "="*80)
     print("Baseline Comparison Summary (5-Fold CV Average)")
     print("="*80)
-    print(format_metrics_table(results))
+    if coldstart_only:
+        for r in results:
+            print(f"{r['name']:<25} cold-start test ROC-AUC {r.get('coldstart_roc_auc', float('nan')):.4f}  PR-AUC {r.get('coldstart_pr_auc', float('nan')):.4f}")
+    else:
+        print(format_metrics_table(results))
     
     results_df = pd.DataFrame(results)
     csv_path = outputs_dir / "baseline_comparison.csv"
@@ -325,6 +339,8 @@ if __name__ == "__main__":
         help="Path to the experiment configuration YAML file."
     )
     
+    parser.add_argument("--coldstart-only", action="store_true",
+                        help="skip the pooled 5-fold CV and the pooled all-data model; reported cold-start numbers are unchanged")
     args = parser.parse_args()
     
     if "all" in args.model:
@@ -336,4 +352,4 @@ if __name__ == "__main__":
         selected = args.model
         
     config_path = REPO_ROOT / args.config
-    train_evaluate_baselines(selected, config_path)
+    train_evaluate_baselines(selected, config_path, coldstart_only=args.coldstart_only)
