@@ -2,7 +2,7 @@
 
 Written for someone who has never used Google Colab. Follow it in order. Nothing here needs programming: you click, wait, and check. Button names in Colab change slightly over time; if a label differs a little, look for the closest match.
 
-**The version to use:** the code commit **`b86df0d`** (full value is in the notebook, in the line `PIN = '...'`). **Time needed:** the run is long and its length is **not known in advance**; Step 6 (smoke test) measures speed so you can judge. You can stop and resume.
+**The version to use:** the code commit **`b86df0d`** (full value is in the notebook, in the line `PIN = '...'`). **Authoritative guides:** this handbook, plus `Docs/GOOGLE_DRIVE_UPLOAD_GUIDE.md` for the Drive upload. **Time needed:** the run is long and its length is **not known in advance**; Step 6 (smoke test) measures speed so you can judge. You can stop and resume.
 
 **Words you will meet**
 * *Notebook*: a document made of **cells**. A *code cell* is a grey box with a small **play button (▶)** on its left; pressing it runs the cell. A *text cell* is just explanation.
@@ -22,49 +22,19 @@ You need about **0.5 GB free for the upload** and a few GB for results. Use the 
 3. Click **New** → **Folder** → name it exactly `VDM_Outputs` → Create. **Leave it empty.**
 4. Both folders must stay **private**: do not click *Share*, do not make links public (they will hold restricted data).
 
-### A3. Upload the files (drag and drop onto the folder in Drive)
-`<PROJECT>` means the folder on your computer that contains `README.md`. Open `VDM_Data` in Drive and create the structure below, uploading each item from the path shown.
-
-| Upload to (in Drive) | From (on your computer) | Size |
-|---|---|---|
-| `VDM_Data/mondo.obo` | `<PROJECT>/data/external/mondo.obo` | 53 MB |
-| `VDM_Data/drugbank_smiles_cache.json` | `<PROJECT>/data/external/drugbank_smiles_cache.json` | 0.5 MB |
-| `VDM_Data/drugbank_cid_map.json` | `<PROJECT>/data/external/drugbank_cid_map.json` | 0.2 MB |
-| `VDM_Data/B09474-eng.pdf` | `<PROJECT>/data/external/B09474-eng.pdf` | 1.4 MB |
-| `VDM_Data/downloads/hai_price_surveys/` (the whole folder) | `<PROJECT>/data/external/downloads/hai_price_surveys/` | 0.4 MB |
-| `VDM_Data/downloads/open_targets/` (3 `.parquet` files) | `<PROJECT>/data/external/downloads/open_targets/` | 12 MB |
-| `VDM_Data/downloads/open_targets_release_26.09/` (4 `.parquet` files) | `<PROJECT>/data/external/downloads/open_targets_release_26.09/` | 85 MB |
-| `VDM_Data/downloads/ihme_gbd/` (3 files) | `<PROJECT>/data/external/downloads/ihme_gbd/` | 13 KB |
-| `VDM_Data/frozen_processed/primekg/` (whole folder) | `<PROJECT>/data/processed/primekg/` | 94 MB |
-| `VDM_Data/frozen_processed/primekg_structcov/` (whole folder) | `<PROJECT>/data/processed/primekg_structcov/` | 95 MB |
-
-How: in Drive open `VDM_Data`, **New → New folder** for `downloads` and `frozen_processed`; open a folder and use **New → Folder upload** (for folders) or **New → File upload** (for single files). The total is about **340 MB**; it can take several minutes.
+### A3. Upload the files (one folder, one upload)
+The exact list of 46 files, their source paths on your computer, Drive destinations, sizes and purposes is in **`Docs/GOOGLE_DRIVE_UPLOAD_GUIDE.md` (sections 2-4)**. Short version:
+1. In a terminal in the project folder (the one containing `README.md`) run `python Docs/make_upload_folder.py VDM_FINAL_FOLDER/UPLOAD_THIS` (a ready-made copy may already exist there). It only copies; it uploads and deletes nothing.
+2. Run `python Docs/check_drive_folder.py VDM_FINAL_FOLDER/UPLOAD_THIS/VDM_Data`. It must end with `RESULT: PASS`.
+3. In Drive click **New -> Folder upload** and choose the folder named `VDM_Data` inside `UPLOAD_THIS` (about 341 MB; several minutes).
 
 ### A4. Check the upload is complete
-Open `VDM_Data` in Drive and compare with this picture (names must match exactly, including capital letters; the Open Targets file names contain spaces and brackets, that is normal):
-```
-VDM_Data/
-  mondo.obo
-  drugbank_smiles_cache.json
-  drugbank_cid_map.json
-  B09474-eng.pdf
-  downloads/
-    hai_price_surveys/   delhi_2011-07/  karnataka_2004-11/  maharashtra_2005-01/
-    open_targets/        00000000.parquet  00000000 (1).parquet  00000000 (2).parquet
-    open_targets_release_26.09/   clinical_indication.parquet  clinical_report.parquet  drug_mechanism_of_action.parquet  drug_molecule.parquet
-    ihme_gbd/            ihme_ntd_dalys_2023.csv  ihme_ntd_dalys_2023_citation.txt  IHME-GBD_2023_DATA-9feb184e-1.zip
-  frozen_processed/
-    primekg/             (8 files and a `splits` folder)
-    primekg_structcov/   (8 files and a `splits` folder)
-```
-Quick size check: right-click `VDM_Data` → **File information → Details** (or *Get info*): about 340 MB. If a folder is missing or has far fewer files, upload it again.
+Open `VDM_Data` in Drive. It must look like the tree in `Docs/GOOGLE_DRIVE_UPLOAD_GUIDE.md` section 3 (names exact, including capitals; the HAI file names contain spaces and brackets, that is normal). Right-click `VDM_Data` -> **File information -> Details**: about 341 MB. The notebook's **Step 3a** then checks every file's size and SHA-256 and prints `RESULT: PASS`; do not continue after a `FAIL`.
 
 ### A5. What NOT to upload
-* **No** `primekg_kg.csv` (the notebook downloads it, 1 GB).
-* **No** other DrugBank files (`drug_target_drugbank.tsv`, `drugs_enriched.csv`, ...), nothing from `data/raw/`, nothing from `outputs/`, `mlruns/`, `.git/`.
-* **No** `ihme_gbd_source_2023/` folder and no IHME ZIP from the project root (not needed).
-* **Never** share the Drive folders. **Never** upload any of these files to GitHub.
-* Do not put passwords, keys or `.env` files anywhere.
+* **No** `primekg_kg.csv` (the notebook downloads it, 1 GB). **No** other DrugBank files, nothing from `data/raw/`, `outputs/`, `mlruns/`, `.git/`. **No** `ihme_gbd_source_2023/` and no IHME ZIP from the project root.
+* **Do not upload the whole repository**: the code comes from GitHub.
+* **Never** share the Drive folders and never upload any of these files to GitHub. No passwords, keys or `.env` files anywhere.
 
 ### A6. Make sure the code is on GitHub
 Colab downloads the code from GitHub. The commit above must have been **pushed** (published on `mukul` and `main` on 2026-11-11, after your approval). To check: open https://github.com/MUKUL-PRASAD-SIGH/VectorDrugMatch/commits/mukul and look for a commit starting with `b86df0d`. If it is not there, stop: the run cannot start yet.
@@ -110,6 +80,7 @@ Only this notebook session gets access; you can revoke it later at https://myacc
 |---|---|---|---|
 | 1 GPU | checks the graphics card | `GPU available: True` and a table naming a Tesla T4 | seconds |
 | 2 Drive, code, libraries (3 cells) | mounts Drive, downloads the code at the pinned commit, installs libraries | `Mounted at /content/drive`; a line starting `b86df0d`; `ok: ... torch_cluster available` | a few minutes |
+| 3a Upload check | checks every expected Drive file (existence, size, SHA-256) | `RESULT: PASS`; on `FAIL` fix the upload and re-run this cell | short |
 | 3 Inputs | copies your Drive files into the session | `copied` lines for `mondo.obo`, `drugbank_*`, `B09474-eng.pdf`, `downloads/`; **no** error | short |
 | 4 Prepare | downloads PrimeKG (about 1 GB) and rebuilds the benchmark | no `[FAIL]` anywhere; ends with `pipeline stage complete` | includes a 1 GB download |
 | 4b Frozen-data check | proves the rebuilt data are identical to the frozen benchmark | `FROZEN BENCHMARK VERIFIED: 16 files match` (if it first says `MISMATCH` and then verifies after restoring the frozen copy, that is acceptable; an `AssertionError` is a **stop**) | short |

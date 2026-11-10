@@ -1,0 +1,282 @@
+{
+ "root": "MyDrive/VDM_Data",
+ "note": "expected files of the Drive data folder (size in bytes, SHA-256). Hashes only; no data.",
+ "files": [
+  {
+   "path": "mondo.obo",
+   "size": 53442278,
+   "sha256": "b5a3d848578694601dffb1c2866798d4f6f4b4a12c315030c4d4c62ffe4e7e22",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "drugbank_smiles_cache.json",
+   "size": 546885,
+   "sha256": "31826e050a9b8f31584a194eca2dffbe78873adf0b4fa22dd95e9ae13211b3bc",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "drugbank_cid_map.json",
+   "size": 153352,
+   "sha256": "1d036a3f15632e52293faf2fa1d0747be9f3bfa7b48370c35fec793c1a3b4a16",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "B09474-eng.pdf",
+   "size": 1364687,
+   "sha256": "69daf7c8399b85978ba85e143d3af34e6ccf7f3d493b1e056daa7ef909d64eb2",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/delhi_2011-07/affordability_excel.xls",
+   "size": 31388,
+   "sha256": "fa38ac42d2c9e92d4e0a93ffe8474f9540fe4538a60705379b2ea7cd0c146c97",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/delhi_2011-07/median_price_by_medicine_excel.xls",
+   "size": 35436,
+   "sha256": "30ac3f147bbde4781ffaf371737a78283ba6a3692b1291ea5554b412324a222c",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/delhi_2011-07/price_availability_survey_detail_excel (1).php",
+   "size": 14861,
+   "sha256": "decbe86e5717914e38d19188bb2ef2a05745df6b578859e27b6a6ba739ae7d0e",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/delhi_2011-07/price_availability_survey_detail_excel (2).php",
+   "size": 15095,
+   "sha256": "3568934f3fcb5e91da60f3053cbcebf8344f9376b20189af92aceed351b027a5",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/delhi_2011-07/price_availability_survey_detail_excel.php",
+   "size": 14558,
+   "sha256": "1a8155f75ece38246a9b8ac50e29dd6516cfe0580997b55082b95cf0b2d964f0",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/karnataka_2004-11/affordability_excel (2).xls",
+   "size": 28826,
+   "sha256": "a35979eed83ac7b38b59e6b33f7fe47a4377a948f1cf2662ee459dfeb8b18755",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/karnataka_2004-11/median_price_by_medicine_excel (2).xls",
+   "size": 31679,
+   "sha256": "f264dbe13ea6cdbcd885360f204d01f051a25e69cf58776dd1a2b5093d13f51a",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/karnataka_2004-11/price_availability_survey_detail_excel (6).php",
+   "size": 16753,
+   "sha256": "f02e923721b2ccbe94cbbc1bb8b0d4f6488ae9cfb21c9c4d1e78316c71369fa0",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/karnataka_2004-11/price_availability_survey_detail_excel (7).php",
+   "size": 17159,
+   "sha256": "68562b18a173698fb74de7a35ba3cbbe49ef30546742eb5f41402511c1debdc4",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/karnataka_2004-11/price_availability_survey_detail_excel (8).php",
+   "size": 18013,
+   "sha256": "df47283e8a851b9e4244ff429e99dd8838abde6f27e206467fab01cf22b2d690",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/maharashtra_2005-01/affordability_excel (1).xls",
+   "size": 30506,
+   "sha256": "131a88c01d08aaeb4f9d034faf590311dfe1f4bf5878ac1859549371edab5ce7",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/maharashtra_2005-01/median_price_by_medicine_excel (1).xls",
+   "size": 30137,
+   "sha256": "1097885b7332fd5b451cc530c2a341f5421e025fab33b0939bc4868de4f42a8e",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/maharashtra_2005-01/price_availability_survey_detail_excel (3).php",
+   "size": 15962,
+   "sha256": "37085b78444f087750b435735d74af58065032e27b27e9687765b79d253bd722",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/maharashtra_2005-01/price_availability_survey_detail_excel (4).php",
+   "size": 16365,
+   "sha256": "d36b8906cd74e70ce0629a23440fb69e144d6128c13c47112e2f5657ed537bdb",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/hai_price_surveys/maharashtra_2005-01/price_availability_survey_detail_excel (5).php",
+   "size": 17180,
+   "sha256": "bc2304a195b8247d9ed3579aa1e8e26062d01e4c426a4ae73316d47af617e515",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/ihme_gbd/IHME-GBD_2023_DATA-9feb184e-1.zip",
+   "size": 870,
+   "sha256": "fcbabec0eee2a201f75279506275d62b132353ba96ad321f8de544b81e73edce",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/ihme_gbd/ihme_ntd_dalys_2023.csv",
+   "size": 3155,
+   "sha256": "1922a4cdf30d585a1d50bddb7144fe837011de2e4b3a639b50fd93fcb8d954f5",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/ihme_gbd/ihme_ntd_dalys_2023_citation.txt",
+   "size": 327,
+   "sha256": "339dc2be55e1576d87c0a9640ee20865e222e4f7d19e6d30a7731a0f8e476874",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/open_targets_release_26.09/clinical_indication.parquet",
+   "size": 4989955,
+   "sha256": "e10ced7ce09495cd3fa6e7cb94e81e083aed78ee399424730d567243b49a38d8",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/open_targets_release_26.09/clinical_report.parquet",
+   "size": 75924085,
+   "sha256": "ba0ea48b129182de119f5d676bb1483e6225ba65857a31b7319b65c0e6b8fa25",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/open_targets_release_26.09/drug_mechanism_of_action.parquet",
+   "size": 322830,
+   "sha256": "8484accd3383837e0eaac2164eed89991daf58dc93f0a599072fb7e5ef4f6c28",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "downloads/open_targets_release_26.09/drug_molecule.parquet",
+   "size": 6867467,
+   "sha256": "be65749aa1dbcc68d0930f8ac18126cec5c2bc2c0f232f11e8530dad4ba0585c",
+   "level": "RECOMMENDED"
+  },
+  {
+   "path": "frozen_processed/primekg/disease_features.npy",
+   "size": 205088,
+   "sha256": "c7a222863c6d833faded670de6718bd2b395768c29ac2eb3ec4fae0603f61032",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg/diseases.csv",
+   "size": 2072360,
+   "sha256": "4d29b7baa3ce238d1c7e384680e93dfcf12ebc9d4bf4faeef16cea65f1fdc464",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg/drug_features.npy",
+   "size": 65183872,
+   "sha256": "b03ccc4eaf5a83458fb9e1165a79b24d093b719a6e1b6c237911063b322d69ca",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg/drugs.csv",
+   "size": 778957,
+   "sha256": "6fdd280a32eb3fc377907a316ae5fe325aa6c2cdb77e4e83ea4a4c0970d460ab",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg/edges.csv",
+   "size": 29038960,
+   "sha256": "19cb372c2cab1bcf9e0ee472d32c613609476f6a69337096af0b72a405b53442",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg/genes.csv",
+   "size": 350597,
+   "sha256": "ad20206067029a5b96046973defcdb38d91e1341eb2bc35550a0e138a8714ef0",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg/graph_metadata.json",
+   "size": 258,
+   "sha256": "fbf323fa476555c21ee016b61f1ade1d4dc68260c42e1cf0c184dc9bcc2fc5c3",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg/primekg_provenance.json",
+   "size": 2745,
+   "sha256": "66d26e9e25fcb1a9ac670fe7c675ed2cf71dd2311864a12cfb29e425d26f8556",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg/splits/seed42.manifest.json",
+   "size": 3176,
+   "sha256": "9493dc5bdb515eea8f9e9ea6c6251e910eafd616433ef92d4fd84a6487eb72b2",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg/splits/seed42.npz",
+   "size": 313153,
+   "sha256": "1475cdf93b24a91ff67b7c822e821a2688bdb3605d334fe06977e19b9299934b",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg_structcov/disease_features.npy",
+   "size": 205088,
+   "sha256": "c7a222863c6d833faded670de6718bd2b395768c29ac2eb3ec4fae0603f61032",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg_structcov/diseases.csv",
+   "size": 2072360,
+   "sha256": "4d29b7baa3ce238d1c7e384680e93dfcf12ebc9d4bf4faeef16cea65f1fdc464",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg_structcov/drug_features.npy",
+   "size": 65183872,
+   "sha256": "b03ccc4eaf5a83458fb9e1165a79b24d093b719a6e1b6c237911063b322d69ca",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg_structcov/drugs.csv",
+   "size": 778957,
+   "sha256": "6fdd280a32eb3fc377907a316ae5fe325aa6c2cdb77e4e83ea4a4c0970d460ab",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg_structcov/edges.csv",
+   "size": 29038960,
+   "sha256": "19cb372c2cab1bcf9e0ee472d32c613609476f6a69337096af0b72a405b53442",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg_structcov/genes.csv",
+   "size": 350597,
+   "sha256": "ad20206067029a5b96046973defcdb38d91e1341eb2bc35550a0e138a8714ef0",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg_structcov/graph_metadata.json",
+   "size": 258,
+   "sha256": "fbf323fa476555c21ee016b61f1ade1d4dc68260c42e1cf0c184dc9bcc2fc5c3",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg_structcov/primekg_provenance.json",
+   "size": 2745,
+   "sha256": "66d26e9e25fcb1a9ac670fe7c675ed2cf71dd2311864a12cfb29e425d26f8556",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg_structcov/splits/seed42.manifest.json",
+   "size": 1078,
+   "sha256": "049792c4e0b0e5c3471ce18e4a330a5e69ee1666749424d72f38c52c474165de",
+   "level": "REQUIRED"
+  },
+  {
+   "path": "frozen_processed/primekg_structcov/splits/seed42.npz",
+   "size": 1417940,
+   "sha256": "1704266b94029fc085218b9733225f6507a887e6a46a8afafe5885de12451842",
+   "level": "REQUIRED"
+  }
+ ]
+}

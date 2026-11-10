@@ -27,25 +27,7 @@ Prepared 2026-11-11. No model was trained, no Colab run was made, nothing was pu
 | Public-repo hygiene | no data, DrugBank file, IHME table or EML list is tracked; tracked docs/scripts no longer contain IHME values (two example values in the data dictionary and one number in a code comment were removed). Three small DrugBank-derived blobs remain in the **existing remote history** (not added by a push; no history rewrite done) |
 
 ## 3. Google Drive upload checklist
-Create `MyDrive/VDM_Data/` and upload exactly (total about 340 MB):
-```
-MyDrive/VDM_Data/
-  mondo.obo                                  53 MB   REQUIRED  data/external/mondo.obo (frozen MONDO release 2026-11-03)
-  drugbank_smiles_cache.json                 0.5 MB  REQUIRED  data/external/drugbank_smiles_cache.json
-  drugbank_cid_map.json                      0.2 MB  REQUIRED  data/external/drugbank_cid_map.json
-  B09474-eng.pdf                             1.4 MB  REQUIRED for the EML component  data/external/B09474-eng.pdf
-  downloads/
-    hai_price_surveys/   (3 sub-folders)     0.4 MB  data/external/downloads/hai_price_surveys/
-    open_targets/        (3 parquet files)   12 MB   data/external/downloads/open_targets/
-    open_targets_release_26.09/ (4 parquet)  85 MB   data/external/downloads/open_targets_release_26.09/
-    ihme_gbd/            (csv + citation txt + old stub zip)  13 KB  data/external/downloads/ihme_gbd/
-  frozen_processed/                          SAFETY COPY (used only if Step 4b finds a difference)
-    primekg/             94 MB   data/processed/primekg/
-    primekg_structcov/   95 MB   data/processed/primekg_structcov/
-```
-Create `MyDrive/VDM_Outputs/` (empty; the notebook writes results there).
-* Optional: `who_eml.csv` (regenerated from the PDF, not needed), `primekg_kg.csv` (981 MB; Step 4 downloads it from Harvard Dataverse and Step 4b checks its hash, so do not upload it unless the download fails).
-* Keep file names exactly (including `00000000 (1).parquet`). Folder `downloads/` must contain the four sub-folders above and nothing is required beyond them.
+The authoritative, file-by-file list (46 files, 341 MB, sizes and SHA-256) is `Docs/GOOGLE_DRIVE_UPLOAD_GUIDE.md` with `Docs/drive_upload_expected.json`; tools: `Docs/make_upload_folder.py`, `Docs/check_drive_folder.py` and notebook Step 3a. `downloads/open_targets/` is no longer uploaded (byte-identical duplicate of three files in `open_targets_release_26.09/`; Step 3 recreates it). `primekg_kg.csv` is downloaded in Step 4. Create an empty `MyDrive/VDM_Outputs/`.
 
 **Do NOT upload / do not share**
 * Do not make the Drive folder public or shared by link: it holds DrugBank-derived SMILES caches, IHME data (their agreement forbids third-party downloads), the WHO EML PDF and Open Targets files. Private to your account only.
