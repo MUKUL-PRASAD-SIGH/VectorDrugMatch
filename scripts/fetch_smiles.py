@@ -102,23 +102,36 @@ def query_pubchem(cid_by_db: dict, chunk: int = 100) -> dict:
     return out
 
 
+def resolve_smiles(ids: list, cache_dir: Path = EXTERNAL) -> dict:
+    """Return {drugbank_id: smiles} for `ids`, MERGING into data/external caches (existing entries are kept).
+
+    Only ids missing from the cache are queried (MyChem -> PubChem CID -> PubChem REST). Safe to call for any
+    DrugBank id list (Hetionet compounds, PrimeKG drugs, ...).
+    """
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    sp, cp = cache_dir / "drugbank_smiles_cache.json", cache_dir / "drugbank_cid_map.json"
+    smiles = json.loads(sp.read_text()) if sp.exists() else {}
+    cids = json.loads(cp.read_text()) if cp.exists() else {}
+    todo = [i for i in dict.fromkeys(ids) if i not in smiles]
+    if todo:
+        print(f"  resolving {len(todo)} DrugBank ids not in the cache ...")
+        new_s, new_c = query_mychem(todo)
+        smiles.update(new_s)
+        cids.update(new_c)
+        need = {d: cids[d] for d in todo if d not in smiles and d in cids}
+        print(f"  MyChem: {len(new_s)} SMILES, {len(new_c)} PubChem CIDs; PubChem REST for {len(need)}")
+        smiles.update(query_pubchem(need))
+        sp.write_text(json.dumps(smiles, indent=2))
+        cp.write_text(json.dumps(cids, indent=2))
+    return {i: smiles[i] for i in ids if i in smiles}
+
+
 def main():
     ids = load_compound_ids()
     print(f"{len(ids)} Hetionet compounds")
-
-    smiles, cids = query_mychem(ids)
-    print(f"MyChem: {len(cids)} with PubChem CID, {len(smiles)} with SMILES")
-
-    need = {d: c for d, c in cids.items() if d not in smiles}
-    print(f"PubChem REST lookup for {len(need)} compounds")
-    smiles.update(query_pubchem(need))
-
-    missing = [d for d in ids if d not in smiles]
-    print(f"Resolved {len(smiles)}/{len(ids)}; {len(missing)} missing")
-
-    EXTERNAL.mkdir(parents=True, exist_ok=True)
-    (EXTERNAL / "drugbank_smiles_cache.json").write_text(json.dumps(smiles, indent=2))
-    (EXTERNAL / "drugbank_cid_map.json").write_text(json.dumps(cids, indent=2))
+    got = resolve_smiles(ids)
+    missing = [d for d in ids if d not in got]
+    print(f"Resolved {len(got)}/{len(ids)}; {len(missing)} missing")
     if missing:
         pd.DataFrame({"drug_id": missing}).to_csv(EXTERNAL / "fetch_smiles_missing.csv", index=False)
         print("Missing IDs written to data/external/fetch_smiles_missing.csv")

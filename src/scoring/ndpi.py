@@ -23,7 +23,7 @@ def calculate_ndpi(
         ml_probability: Raw probability output from the ML model [0.0, 1.0].
         similarity_score: Max or Mean Tanimoto similarity to known drugs [0.0, 1.0].
         literature_score: Normalized PubMed co-occurrence score [0.0, 1.0].
-        equity_score: Combined EML, DALY, Affordability score [0.0, 1.0].
+        equity_score: Combined EML / DALY / Access score [0.0, 1.0]; NaN/None = unknown (dropped).
         weights: Dictionary of weights for the composite score. 
                  Defaults to 40% ML, 20% Sim, 20% Lit, 20% Equity.
                  
@@ -42,14 +42,13 @@ def calculate_ndpi(
     if "gnn" in weights and "ml" not in weights:
         weights = {**weights, "ml": weights["gnn"]}
 
-    # Normalise by the total of the weights actually used
-    total_weight = sum(weights.get(k, 0) for k in ("ml", "similarity", "literature", "equity"))
-    
-    score = (
-        (ml_probability * weights.get("ml", 0)) +
-        (similarity_score * weights.get("similarity", 0)) +
-        (literature_score * weights.get("literature", 0)) +
-        (equity_score * weights.get("equity", 0))
-    ) / total_weight
-    
+    # Unknown (None/NaN) components are dropped and the remaining weights renormalised
+    comps = {"ml": ml_probability, "similarity": similarity_score,
+             "literature": literature_score, "equity": equity_score}
+    used = {k: v for k, v in comps.items()
+            if v is not None and v == v and weights.get(k, 0) > 0}
+    total_weight = sum(weights[k] for k in used)
+    if total_weight == 0:
+        return float("nan")
+    score = sum(used[k] * weights[k] for k in used) / total_weight
     return float(score)

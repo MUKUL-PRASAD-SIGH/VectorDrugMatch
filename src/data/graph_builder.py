@@ -55,7 +55,15 @@ EDGE_TYPE_MAP = {
     "GiG": ("gene", "interacts", "gene"),
     "GrG": ("gene", "regulates", "gene"),
     "DaG_disgenet": ("gene", "disgenet_associates", "disease"),
+    # PrimeKG (Track B). Contra/off-label are separate relations, never negative labels.
+    "PK_contra": ("drug", "contraindicated_for", "disease"),
+    "PK_offlabel": ("drug", "offlabel_for", "disease"),
+    "PK_DisDis": ("disease", "related_to", "disease"),
+    "PK_DDI": ("drug", "interacts_with", "drug"),
 }
+
+# Drug<->disease label-bearing relations: never used to compute node features (label leakage)
+LABEL_RELATIONS = {"CtD", "CpD", "PK_contra", "PK_offlabel"}
 
 
 def build_hetero_data(processed_dir: str | Path,
@@ -118,26 +126,34 @@ def build_hetero_data(processed_dir: str | Path,
         data["drug"].x = torch.zeros((len(drug_ids), 3246), dtype=torch.float32)
 
     data["drug"].num_nodes = len(drug_ids)
+    data["drug"].node_ids = drug_ids          # string IDs, used to map curated labels
 
-    # Compute node degrees to use as basic topological features
-    disease_degrees = edges_df[edges_df["target_type"] == "Disease"]["target_id"].value_counts().to_dict()
-    disease_degrees.update(edges_df[edges_df["source_type"] == "Disease"]["source_id"].value_counts().to_dict())
+    # Degrees ignore drug<->disease label relations (CtD/CpD/contra/off-label); otherwise a
+    # disease's degree would encode how many held-out positives it has.
+    deg_edges = edges_df[~edges_df["relation"].isin(LABEL_RELATIONS)]
+    def _degree(node_type):   # in-degree + out-degree (the old dict.update() overwrote one with the other)
+        t = deg_edges[deg_edges["target_type"] == node_type]["target_id"].value_counts()
+        s_ = deg_edges[deg_edges["source_type"] == node_type]["source_id"].value_counts()
+        return t.add(s_, fill_value=0).to_dict()
+
+    disease_degrees = _degree("Disease")
     
-    gene_degrees = edges_df[edges_df["target_type"] == "Gene"]["target_id"].value_counts().to_dict()
-    gene_degrees.update(edges_df[edges_df["source_type"] == "Gene"]["source_id"].value_counts().to_dict())
+    gene_degrees = _degree("Gene")
 
     # Disease features: [is_ntd, daly_rate, degree]
     # In a real publication, add sentence-transformers or MeSH embeddings here.
     disease_feats = []
     for _, row in diseases_df.iterrows():
         did = str(row["disease_id"])
+        daly = pd.to_numeric(row.get("daly_rate", 0.0), errors="coerce")
         disease_feats.append([
             float(row.get("is_ntd", 0)),
-            float(row.get("daly_rate", 0.0)),
+            0.0 if pd.isna(daly) else float(daly),   # unknown DALY -> 0
             float(disease_degrees.get(did, 0.0)),
         ])
     data["disease"].x = torch.tensor(disease_feats, dtype=torch.float32)
     data["disease"].num_nodes = len(disease_ids)
+    data["disease"].node_ids = disease_ids
 
     # Gene features: topological degree representation
     # Removed memory-bloating Identity matrix (torch.eye). 
@@ -162,20 +178,14 @@ def build_hetero_data(processed_dir: str | Path,
         if len(rel_edges) == 0:
             continue
 
-        src_indices = []
-        dst_indices = []
         src_map = id2idx_map.get(src_type, {})
         dst_map = id2idx_map.get(dst_type, {})
-
-        for _, row in rel_edges.iterrows():
-            src_id = str(row["source_id"])
-            dst_id = str(row["target_id"])
-
-            if src_id in src_map and dst_id in dst_map:
-                src_indices.append(src_map[src_id])
-                dst_indices.append(dst_map[dst_id])
-            else:
-                skipped_edges += 1
+        si = rel_edges["source_id"].astype(str).map(src_map)
+        di = rel_edges["target_id"].astype(str).map(dst_map)
+        ok = si.notna() & di.notna()
+        skipped_edges += int((~ok).sum())
+        src_indices = si[ok].astype(np.int64).tolist()
+        dst_indices = di[ok].astype(np.int64).tolist()
 
         if src_indices:
             edge_index = torch.tensor([src_indices, dst_indices], dtype=torch.long)

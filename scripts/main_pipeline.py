@@ -97,7 +97,14 @@ def run_pipeline(config_path: str, disease: str = None, top_k: int = 50, use_lit
 
     target_disease_id = str(diseases.loc[disease_idx, "disease_id"])
     target_disease_name = diseases.loc[disease_idx, "disease_name"]
-    daly_burden = float(diseases.loc[disease_idx].get("daly_rate", 0.0) or 0.0)
+    # DALY: min-max normalised over all diseases that have data; None when unknown
+    daly_col = pd.to_numeric(diseases.get("daly_rate"), errors="coerce") if "daly_rate" in diseases else None
+    daly_burden = None
+    if daly_col is not None and daly_col.notna().any() and pd.notna(daly_col.loc[disease_idx]):
+        lo, hi = daly_col.min(), daly_col.max()
+        daly_burden = 0.0 if hi == lo else float((daly_col.loc[disease_idx] - lo) / (hi - lo))
+    if daly_burden is None:
+        print("  [INFO] No DALY data for this disease -> DALY term skipped in equity score.")
     print(f"Targeting Disease: {target_disease_name} ({target_disease_id})")
 
     known_drug_ids = set(treats[treats["target_id"].astype(str) == target_disease_id]["source_id"].astype(str))
@@ -128,9 +135,9 @@ def run_pipeline(config_path: str, disease: str = None, top_k: int = 50, use_lit
         smiles = row.get("smiles", "")
         mol = Chem.MolFromSmiles(smiles) if isinstance(smiles, str) else None
         mw = Descriptors.MolWt(mol) if mol is not None else float("nan")
-        atc_code = ""       # no ATC data in the Hetionet pipeline
-        is_eml = False      # no WHO EML data wired in yet
-        
+        eml_raw = row.get("on_who_eml", float("nan"))
+        is_eml = None if pd.isna(eml_raw) else bool(eml_raw == 1)   # None = unknown (no EML file)
+
         # 1. Similarity
         sim_scores = compute_similarity_scores(smiles, known_drugs_smiles, top_k=3)
         sim_score = sim_scores["max_sim"] # Or use mean_sim
@@ -139,7 +146,7 @@ def run_pipeline(config_path: str, disease: str = None, top_k: int = 50, use_lit
         lit_score = compute_literature_score(drug_name, target_disease_name) if use_literature else 0.0
         
         # 3. Equity
-        equity_score = compute_equity_score(is_eml, daly_burden, mw, atc_code)
+        equity_score = compute_equity_score(is_eml, daly_burden)   # NaN if nothing known
         
         # 4. NDPI
         ndpi_weights = config.get("ndpi_weights", None)

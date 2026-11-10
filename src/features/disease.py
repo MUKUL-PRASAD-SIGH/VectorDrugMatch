@@ -2,14 +2,15 @@
 src/features/disease.py - Disease Feature Engineering
 
 Encodes disease metadata into numerical features:
-  - DALY burden (normalised [0,1])
-  - WHO NTD classification flag
+  - DALY burden (normalised [0,1]); missing DALY stays NaN until the final matrix
+  - WHO NTD classification flag (DOID join preferred, whole-word name match fallback)
   - Disease category encoding
 """
 
+import re
+
 import numpy as np
 import pandas as pd
-from typing import Tuple
 from sklearn.preprocessing import RobustScaler
 
 
@@ -35,105 +36,91 @@ WHO_NTD_NAMES = {
     "foodborne trematodiases",
     "mycetoma",
     "chromoblastomycosis",
+    "noma",
+    "scabies",
     "snakebite envenoming",
 }
 
+_NTD_PATTERNS = [re.compile(r"\b" + re.escape(n) + r"\b") for n in sorted(WHO_NTD_NAMES)]
+
 
 def is_ntd(disease_name: str) -> int:
-    """Check if a disease name matches a WHO NTD.
+    """Name-based WHO NTD check (fallback when no DOID list is available).
 
-    Returns:
-        1 if the disease is classified as an NTD, 0 otherwise.
+    Uses whole-word matching in one direction only (NTD term inside the disease name),
+    so "melanoma" no longer matches "noma".
     """
-    name_lower = disease_name.lower().strip()
-    for ntd in WHO_NTD_NAMES:
-        if ntd in name_lower or name_lower in ntd:
-            return 1
-    return 0
+    name_lower = str(disease_name).lower().strip()
+    return int(any(p.search(name_lower) for p in _NTD_PATTERNS))
 
 
 def normalize_daly(daly_values: pd.Series) -> pd.Series:
-    """Min-max normalise DALY values to [0, 1].
+    """Min-max normalise DALY values to [0, 1], ignoring NaN (kept as NaN).
 
-    Args:
-        daly_values: Series of raw DALY rates.
-
-    Returns:
-        Normalised Series. Returns 0 if all values are equal.
+    Returns all-NaN if no value is known, so callers can tell "unknown" from "zero".
     """
-    min_val = daly_values.min()
-    max_val = daly_values.max()
+    known = daly_values.dropna()
+    if known.empty:
+        return pd.Series(np.nan, index=daly_values.index)
+    min_val, max_val = known.min(), known.max()
     if max_val == min_val:
-        return pd.Series(np.zeros(len(daly_values)), index=daly_values.index)
+        return daly_values.where(daly_values.isna(), 0.0)
     return (daly_values - min_val) / (max_val - min_val)
 
 
 def featurize_diseases_df(diseases_df: pd.DataFrame) -> pd.DataFrame:
     """Add numerical features to a diseases DataFrame.
 
-    Adds/updates columns:
-      - is_ntd: 1 if WHO NTD, 0 otherwise
-      - daly_normalized: normalised DALY rate [0, 1]
-
-    Args:
-        diseases_df: DataFrame with disease_name and optionally daly_rate columns.
-
-    Returns:
-        Updated DataFrame with feature columns.
+    - is_ntd: kept as-is if the column already exists (set from the WHO DOID join in
+      preprocess.py); otherwise derived from the disease name.
+    - daly_normalized: min-max of daly_rate; NaN where DALY is unknown.
     """
     result = diseases_df.copy()
 
-    # NTD flag
-    if "disease_name" in result.columns:
-        result["is_ntd"] = result["disease_name"].apply(is_ntd)
+    if "is_ntd" not in result.columns:
+        if "disease_name" in result.columns:
+            result["is_ntd"] = result["disease_name"].apply(is_ntd)
+        else:
+            result["is_ntd"] = 0
 
-    # Normalised DALY
     if "daly_rate" in result.columns:
-        result["daly_normalized"] = normalize_daly(result["daly_rate"].fillna(0))
+        result["daly_rate"] = pd.to_numeric(result["daly_rate"], errors="coerce")
+        result["daly_normalized"] = normalize_daly(result["daly_rate"])
     else:
-        result["daly_rate"] = 0.0
-        result["daly_normalized"] = 0.0
+        result["daly_rate"] = np.nan
+        result["daly_normalized"] = np.nan
 
     return result
 
 
 def disease_feature_vector(disease_row: pd.Series) -> np.ndarray:
-    """Produce a feature vector for a single disease.
-
-    Layout: [is_ntd, daly_normalized, daly_rate_log]
-
-    Args:
-        disease_row: A row from the diseases DataFrame.
-
-    Returns:
-        1D numpy array of shape (3,).
-    """
+    """Feature vector [is_ntd, daly_normalized, daly_rate_log] (unknown DALY -> 0)."""
     is_ntd_val = float(disease_row.get("is_ntd", 0))
-    daly_norm = float(disease_row.get("daly_normalized", 0.0))
-    daly_raw = float(disease_row.get("daly_rate", 0.0))
-    daly_log = np.log1p(daly_raw)
-
+    daly_norm = disease_row.get("daly_normalized", np.nan)
+    daly_raw = disease_row.get("daly_rate", np.nan)
+    daly_norm = 0.0 if pd.isna(daly_norm) else float(daly_norm)
+    daly_log = 0.0 if pd.isna(daly_raw) else float(np.log1p(daly_raw))
     return np.array([is_ntd_val, daly_norm, daly_log], dtype=np.float32)
 
+
 def build_disease_feature_matrix(diseases_df: pd.DataFrame, config_flags: dict) -> np.ndarray:
-    """
-    Builds the final disease feature matrix based on configuration flags.
-    If SapBERT is requested, it concatenates (or replaces) basic features.
-    """
-    # Always generate basic features first
+    """Build the final disease feature matrix based on configuration flags."""
     df = featurize_diseases_df(diseases_df)
     basic_feats = np.vstack([disease_feature_vector(row) for _, row in df.iterrows()])
-    
-    # Scale disease features for linear/MLP models
+
+    # Constant columns (e.g. DALY all unknown) must not be scaled into NaN/inf
     scaler = RobustScaler()
-    basic_feats = scaler.fit_transform(basic_feats).astype(np.float32)
-    
+    scaled = scaler.fit_transform(basic_feats)
+    scaled = np.nan_to_num(scaled, nan=0.0, posinf=0.0, neginf=0.0)
+    basic_feats = scaled.astype(np.float32)
+
     if config_flags.get("use_sapbert", False):
         sapbert_feats = compute_sapbert_embeddings(diseases_df, name_col="disease_name")
         print("    Replacing basic disease features with 768-dim SapBERT embeddings.")
         return sapbert_feats
-        
+
     return basic_feats
+
 
 def compute_sapbert_embeddings(diseases_df: pd.DataFrame, name_col: str = "name") -> np.ndarray:
     raise NotImplementedError("Implemented in Phase 4")

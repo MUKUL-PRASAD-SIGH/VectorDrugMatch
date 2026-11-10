@@ -61,6 +61,121 @@ HETIONET_RELATIONS = {
 
 
 # ============================================================================
+# 0. EXTERNAL ENRICHMENT (DALY burden, WHO EML, ATC)  - all optional, never zero-filled
+# ============================================================================
+
+def _first_col(df: pd.DataFrame, candidates: list):
+    lower = {c.lower(): c for c in df.columns}
+    return next((lower[c] for c in candidates if c in lower), None)
+
+
+_DALY_DIMS = ["year", "sex", "age", "age_group", "location", "country", "region", "metric", "measure"]
+
+
+def load_daly_table(path: Path, filters: dict | None = None) -> pd.DataFrame | None:
+    """Load data/external/daly_burden.csv -> DataFrame[by_id, by_name, val].
+
+    Required: a value column in {daly_rate, val, value, dalys}, and an id column in
+    {disease_id, doid, doid_code} and/or a name column in {disease_name, cause_name,
+    cause, name}.
+
+    DALY records are NOT comparable across year / sex / age / location / metric, so values
+    are never averaged across them. Optional dimension columns ({year, sex, age, age_group,
+    location, country, region, metric, measure}) must be reduced to ONE value each, either
+    by `filters` (config `daly:` block, e.g. {"location": "Global", "year": 2021,
+    "sex": "Both", "metric": "Rate"}) or because the file already has a single value.
+    After filtering there must be exactly one row per disease, otherwise this raises.
+    Returns None when the file is absent.
+    """
+    if not path.exists():
+        return None
+    df = pd.read_csv(path)
+    for col, want in (filters or {}).items():
+        real = _first_col(df, [col.lower()])
+        if real is None:
+            raise ValueError(f"{path.name}: filter column '{col}' not found (columns: {list(df.columns)})")
+        df = df[df[real].astype(str).str.lower().str.strip() == str(want).lower().strip()]
+    for dim in _DALY_DIMS:
+        real = _first_col(df, [dim])
+        if real is not None and df[real].nunique(dropna=True) > 1:
+            raise ValueError(
+                f"{path.name}: column '{real}' has {df[real].nunique()} distinct values; refusing to "
+                f"average heterogeneous DALY records. Pin it in config under `daly:` "
+                f"(e.g. daly: {{{real.lower()}: <value>}}) or pre-filter the file.")
+    val_col = _first_col(df, ["daly_rate", "val", "value", "dalys"])
+    id_col = _first_col(df, ["disease_id", "doid", "doid_code"])
+    name_col = _first_col(df, ["disease_name", "cause_name", "cause", "name"])
+    if val_col is None or (id_col is None and name_col is None):
+        raise ValueError(f"{path.name}: need a DALY value column and a disease_id/name column.")
+    out = pd.DataFrame({"val": pd.to_numeric(df[val_col], errors="coerce")})
+    out["by_id"] = df[id_col].astype(str).str.strip().values if id_col else None
+    out["by_name"] = df[name_col].astype(str).str.lower().str.strip().values if name_col else None
+    out = out.dropna(subset=["val"])
+    key = "by_id" if id_col else "by_name"
+    dup = out[key].duplicated(keep=False)
+    if dup.any():
+        raise ValueError(f"{path.name}: {out.loc[dup, key].nunique()} diseases have several rows after "
+                         f"filtering (e.g. {out.loc[dup, key].iloc[0]}); add filters so each has one.")
+    return out
+
+
+def attach_daly(diseases: pd.DataFrame, daly: pd.DataFrame | None) -> pd.DataFrame:
+    """Fill diseases['daly_rate'] from the DALY table (one value per disease); unknown stays NaN."""
+    diseases = diseases.copy()
+    diseases["daly_rate"] = np.nan
+    if daly is None or daly.empty:
+        print("  [INFO] No data/external/daly_burden.csv -> daly_rate left empty (DALY term disabled in NDPI).")
+        return diseases
+    if daly["by_id"].notna().any():
+        m = daly.dropna(subset=["by_id"]).set_index("by_id")["val"]
+        diseases["daly_rate"] = diseases["disease_id"].astype(str).map(m)
+    if daly["by_name"].notna().any():
+        m = daly.dropna(subset=["by_name"]).set_index("by_name")["val"]
+        by_name = diseases["disease_name"].astype(str).str.lower().str.strip().map(m)
+        diseases["daly_rate"] = diseases["daly_rate"].fillna(by_name)
+    print(f"  DALY burden matched for {diseases['daly_rate'].notna().sum()}/{len(diseases)} diseases.")
+    return diseases
+
+
+def attach_drug_enrichment(drugs: pd.DataFrame) -> pd.DataFrame:
+    """Add atc_codes (DrugBank-derived) and on_who_eml (if data/external/who_eml.csv exists).
+
+    on_who_eml is NaN when no EML file is present (unknown), not False.
+    who_eml.csv may contain any of: drugbank_id / drug_id, atc_code, name / medicine.
+    Row order is preserved so the feature matrix rows stay aligned.
+    """
+    drugs = drugs.copy()
+    enr_path = EXTERNAL / "drugs_enriched.csv"
+    if enr_path.exists() and "atc_codes" not in drugs.columns:
+        enr = pd.read_csv(enr_path, usecols=lambda c: c in {"drug_id", "atc_codes", "drug_type", "groups"})
+        enr = enr.drop_duplicates("drug_id")
+        drugs = drugs.merge(enr, on="drug_id", how="left")
+        print(f"  ATC codes attached for {drugs['atc_codes'].notna().sum()}/{len(drugs)} drugs.")
+
+    eml_path = EXTERNAL / "who_eml.csv"
+    drugs["on_who_eml"] = np.nan
+    if eml_path.exists():
+        eml = pd.read_csv(eml_path)
+        id_col = _first_col(eml, ["drugbank_id", "drug_id"])
+        atc_col = _first_col(eml, ["atc_code", "atc"])
+        name_col = _first_col(eml, ["name", "medicine", "drug_name"])
+        hit = pd.Series(False, index=drugs.index)
+        if id_col:
+            hit |= drugs["drug_id"].astype(str).isin(set(eml[id_col].dropna().astype(str)))
+        if name_col:
+            hit |= drugs["name"].astype(str).str.lower().isin(set(eml[name_col].dropna().astype(str).str.lower()))
+        if atc_col and "atc_codes" in drugs.columns:
+            eml_atc = set(eml[atc_col].dropna().astype(str).str.upper())
+            hit |= drugs["atc_codes"].fillna("").astype(str).apply(
+                lambda v: any(c.strip().upper() in eml_atc for c in v.replace(";", "|").split("|") if c.strip()))
+        drugs["on_who_eml"] = hit.astype(int)
+        print(f"  WHO EML flag set for {int(hit.sum())} drugs.")
+    else:
+        print("  [INFO] No data/external/who_eml.csv -> on_who_eml left empty (EML term unknown).")
+    return drugs
+
+
+# ============================================================================
 # 1. DRUGS - PubChem + Hetionet compounds
 # ============================================================================
 
@@ -276,6 +391,9 @@ def build_drugs(config_flags: dict, proc_dir: Path, hetionet_nodes: pd.DataFrame
     # 3. Featurize
     print("  Computing config-driven RDKit features...")
     final_df, fp_matrix = featurize_drugs_df(drugs_df, config_flags, smiles_col="smiles")
+    n_before = len(final_df)
+    final_df = attach_drug_enrichment(final_df)
+    assert len(final_df) == n_before, "enrichment must not change drug row order/count"
     
     final_df.to_csv(proc_dir / "drugs.csv", index=False)
     np.save(proc_dir / "drug_features.npy", fp_matrix)
@@ -289,7 +407,8 @@ def build_drugs(config_flags: dict, proc_dir: Path, hetionet_nodes: pd.DataFrame
 # 2. DISEASES - DisGeNET + Hetionet
 # ============================================================================
 
-def build_diseases(config_flags: dict, proc_dir: Path, hetionet_nodes: pd.DataFrame | None = None) -> pd.DataFrame:
+def build_diseases(config_flags: dict, proc_dir: Path, hetionet_nodes: pd.DataFrame | None = None,
+                   daly_filters: dict | None = None) -> pd.DataFrame:
     """Build diseases.csv and disease_features.npy from DisGeNET and/or Hetionet."""
     print("\n" + "=" * 60)
     print("2. BUILDING DISEASES")
@@ -373,17 +492,19 @@ def build_diseases(config_flags: dict, proc_dir: Path, hetionet_nodes: pd.DataFr
     diseases = pd.DataFrame(disease_rows).drop_duplicates("disease_id")
     diseases = diseases[["disease_id", "disease_name"]].copy()
     diseases["node_type"] = "disease"
-    diseases["is_ntd"] = 0
-    diseases["daly_rate"] = 0.0
-
-    # Enrich with NTD flags if external file exists
+    # NTD flag: DOID join against the WHO list (exact), else whole-word name match
     ntd_path = EXTERNAL / "who_ntd_list.csv"
-    if ntd_path.exists():
-        ntd_df = pd.read_csv(ntd_path)
-        if "disease_id" in ntd_df.columns:
-            ntd_ids = set(ntd_df["disease_id"].astype(str))
-            diseases["is_ntd"] = diseases["disease_id"].isin(ntd_ids).astype(int)
-            print(f"  Enriched with NTD flags: {diseases['is_ntd'].sum()} NTDs.")
+    ntd_df = pd.read_csv(ntd_path) if ntd_path.exists() else None
+    if ntd_df is not None and "disease_id" in ntd_df.columns:
+        ntd_ids = set(ntd_df["disease_id"].astype(str))
+        diseases["is_ntd"] = diseases["disease_id"].astype(str).isin(ntd_ids).astype(int)
+    else:
+        from src.features.disease import is_ntd as _is_ntd_name
+        diseases["is_ntd"] = diseases["disease_name"].apply(_is_ntd_name)
+    print(f"  NTD flags: {diseases['is_ntd'].sum()} of {len(diseases)} diseases are WHO NTDs.")
+
+    # DALY burden: real data only (data/external/daly_burden.csv); unknown stays NaN
+    diseases = attach_daly(diseases, load_daly_table(EXTERNAL / "daly_burden.csv", daly_filters))
 
     diseases.to_csv(proc_dir / "diseases.csv", index=False)
     
@@ -433,8 +554,9 @@ def build_genes(proc_dir: Path, hetionet_nodes: pd.DataFrame | None = None) -> p
             })
         print(f"  Loaded {len(gene_rows)} genes from Hetionet nodes TSV.")
 
-    # --- DisGeNET genes ---
-    disgenet_paths = [
+    # --- DisGeNET genes (only used when Hetionet gene nodes are unavailable; otherwise
+    #     the graph keeps Hetionet's node set and DisGeNET only contributes edges) ---
+    disgenet_paths = [] if gene_rows else [
         RAW / "curated_gene_disease_associations.tsv",
         RAW / "curated_gene_disease_associations.tsv.gz",
     ]
@@ -581,6 +703,16 @@ def build_edges(proc_dir: Path) -> pd.DataFrame:
                 gene_disease["source_type"] = "Gene"
                 gene_disease["target_type"] = "Disease"
                 gene_disease = gene_disease.drop_duplicates()
+
+                # keep only edges whose endpoints exist as nodes (genes.csv / diseases.csv)
+                gp, dp = proc_dir / "genes.csv", proc_dir / "diseases.csv"
+                if gp.exists() and dp.exists():
+                    known_g = set(pd.read_csv(gp, usecols=["gene_id"])["gene_id"].astype(str))
+                    known_d = set(pd.read_csv(dp, usecols=["disease_id"])["disease_id"].astype(str))
+                    n0 = len(gene_disease)
+                    gene_disease = gene_disease[gene_disease["source_id"].isin(known_g)
+                                                & gene_disease["target_id"].isin(known_d)]
+                    print(f"  DisGeNET edges restricted to known nodes: {len(gene_disease):,}/{n0:,}")
 
                 all_edges.append(gene_disease)
                 print(f"  [OK] DisGeNET gene-disease edges: {len(gene_disease):,}")
@@ -828,7 +960,8 @@ def main():
     proc_exp.mkdir(parents=True, exist_ok=True)
     
     drugs = build_drugs(drug_flags, proc_exp, hetionet_nodes, pubchem_limit=args.pubchem_limit)
-    diseases = build_diseases(disease_flags, proc_exp, hetionet_nodes)
+    diseases = build_diseases(disease_flags, proc_exp, hetionet_nodes,
+                              daly_filters=config_dict.get("daly"))
     genes = build_genes(proc_exp, hetionet_nodes)
     edges = build_edges(proc_exp)
 

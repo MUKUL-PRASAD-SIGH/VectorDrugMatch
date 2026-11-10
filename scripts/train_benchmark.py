@@ -109,7 +109,8 @@ def train_node2vec_baseline(config_path):
     splits = build_tabular_dataset(data, neg_ratio=dataset_cfg.get("neg_ratio", 5.0), 
                                    test_size=dataset_cfg.get("test_size", 0.15), 
                                    val_size=dataset_cfg.get("val_size", 0.15), 
-                                   random_state=random_seed)
+                                   random_state=random_seed,
+                                   presplit=dataset_cfg.get("presplit"))
     
     # Extract the exact edges used by the ML baselines
     all_u, all_v, y_all = [], [], []

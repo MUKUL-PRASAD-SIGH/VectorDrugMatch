@@ -2,8 +2,12 @@
 data/raw/
 data/processed/
 
-# Keep external metadata trackable
-!data/external/
+# Third-party / downloaded data under data/external is never committed (licences + size).
+# Everything there is re-creatable: python scripts/fetch_public_data.py --primekg
+data/external/*
+!data/external/.gitkeep
+!data/external/README.md
+
 
 # Python environment & cache
 __pycache__/
@@ -39,3 +43,6 @@ ignore/
 Thumbs.db
 .vscode/
 .idea/
+
+# Raw third-party data bundle (DrugBank/DisGeNET-derived)
+vdm_real_data/

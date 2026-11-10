@@ -41,7 +41,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(REPO_ROOT))
 
 from src.data.graph_builder import build_hetero_data
-from src.data.dataset import build_tabular_dataset
+from src.data.dataset import build_tabular_dataset, build_message_passing_graph
 from src.utils.metrics import compute_all_metrics, format_metrics_table, print_metrics
 from src.utils.experiment_logger import log_experiment
 
@@ -155,15 +155,12 @@ def train_evaluate_gnns(config_path: str, epochs: int = 100):
     # 2. Train/Val/Test split: same drug-disjoint (cold-start) split and hard negatives as the baselines
     print(f"\nSplitting (cold-start drug split, hard negatives, ratio {neg_ratio})...")
     splits = build_tabular_dataset(data, target_edge=target_edge, neg_ratio=neg_ratio,
-                                   test_size=test_size, val_size=val_size, random_state=random_seed)
+                                   test_size=test_size, val_size=val_size, random_state=random_seed,
+                                   presplit=dataset_cfg.get("presplit"))
 
     # Message-passing graph with every drug->disease "treats" edge (and its reverse) removed, so no
     # label can reach a prediction through message passing. Supervision comes only from edge_label_index.
-    rev_target = ('disease', 'rev_treats', 'drug')
-    mp_data = data.clone()
-    for et in (target_edge, rev_target):
-        if et in mp_data.edge_types:
-            mp_data[et].edge_index = torch.empty((2, 0), dtype=torch.long)
+    mp_data = build_message_passing_graph(data, dataset_cfg.get("presplit"), target_edge)
 
     def make_split(name):
         d = mp_data.clone()

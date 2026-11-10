@@ -95,7 +95,8 @@ def train_evaluate_baselines(selected_models, config_path):
         neg_ratio=neg_ratio, 
         test_size=test_size, 
         val_size=val_size,
-        random_state=random_seed
+        random_state=random_seed,
+        presplit=dataset_cfg.get("presplit")
     )
     
     X_all = np.vstack([splits.get("X_train", np.empty((0,0))), 
