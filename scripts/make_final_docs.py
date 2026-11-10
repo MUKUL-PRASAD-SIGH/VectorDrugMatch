@@ -133,7 +133,7 @@ prim = pd.DataFrame([
      "raw path": "data/external/B09474-eng.pdf", "processed": "data/external/who_eml.csv; data/processed/eml/*", "verified how": "tests/test_who_eml_extraction.py; eml_mapping_audit.csv"},
     {"dataset": "WHO NTD list", "source / version": "WHO health-topic page, accessed 2026-11-10", "sha256": sh("who_ntd_topic", 16), "raw path": "(web page; hash in evidence log)", "processed": "data/processed/ntd/*", "verified how": "direct fetch; build_ntd_mapping.py asserts"},
     {"dataset": "HAI price surveys (3)", "source / version": "Karnataka Nov 2004, Maharashtra Jan 2005, Delhi Jul 2011", "sha256": "per-file SHA-1 in Docs/HAI_DOWNLOAD_MANIFEST.md", "raw path": "data/external/downloads/hai_price_surveys/", "processed": "data/processed/hai/*", "verified how": "audit_hai_parsing.py"},
-    {"dataset": "IHME GBD 2023 export", "source / version": "IHME-GBD_2023_DATA-9feb184e-1.zip (6 rows, cause 'All causes' only)", "sha256": "SHA-1 70aea470 (manifest)", "raw path": "data/external/downloads/ihme_gbd/", "processed": "(none: rejected by process_ihme_daly.py)", "verified how": "process_ihme_daly.py rejects it"},
+    {"dataset": "IHME GBD 2023 export", "source / version": "IHME-GBD_2023_DATA-028a73a1-1.zip (17 causes; DALYs, Rate, Global, Both, All ages, 2023); the earlier 6-row all-cause stub 9feb184e is kept and ignored", "sha256": "zip cb39fff2e1ce6eaa68c4e0f138e578ab3f48638ec951cf989db0a720d046df71", "raw path": "data/external/downloads/ihme_gbd/ihme_ntd_dalys_2023.csv (original ZIP + citation.txt in data/external/downloads/ihme_gbd_source_2023/ and the project root)", "processed": "data/processed/ihme/daly_by_ntd_group.csv (15 of 22 groups with data)", "verified how": "process_ihme_daly.py validation; hashes of ZIP and extracted CSV match"},
     {"dataset": "SMILES / fingerprints", "source / version": "resolved at build time via MyChem.info then PubChem PUG REST (scripts/fetch_smiles.py); Morgan radius 2, 2048 bits (RDKit)", "sha256": "freeze manifest", "raw path": "data/external/drugbank_smiles_cache.json (cache)", "processed": "drugs.csv, drug_features.npy",
      "verified how": f"{man['splits']['train']['drugs'] + man['splits']['val']['drugs'] + man['splits']['test']['drugs']} split drugs; 996 drugs without SMILES, 997 zero-fingerprint rows"},
 ])
@@ -155,7 +155,7 @@ Structure-covered variant: {manc['rule']}; positives {manc['splits']['train']['p
 {eml['eml_entries']} entries ({eml['single_entries']} single, {eml['combination_entries']} combination); single status {eml['single_status']}; mapped by tier {eml['single_mapped_by_tier']}; {eml['distinct_primekg_drugs_flagged']} distinct PrimeKG drugs flagged; combination components {eml['combination_components']}.
 
 ## Equity table
-{eqr['pairs']:,} indication pairs; inputs present {eqr['inputs_present']}; component coverage (all pairs) {eqr['component_coverage_pct_all_pairs']}; NDPI available for {eqr['pairs_with_ndpi']:,} pairs. DALY is absent, so NDPI is not burden-aware.
+{eqr['pairs']:,} indication pairs; inputs present {eqr['inputs_present']}; component coverage (all pairs) {eqr['component_coverage_pct_all_pairs']}; NDPI available for {eqr['pairs_with_ndpi']:,} pairs. DALY exists only for NTD diseases whose group maps to an exported GBD cause: {eqr['burden_aware_pairs']} pairs ({eqr['burden_aware_ntd_pairs']} of {eqr['denominators']['ntd_pairs']} NTD pairs); NDPI is burden-aware only for those, and {eqr['ntd_pairs_without_burden']} NTD pairs have no burden value.
 """
 (R / "Docs/DATA_PROVENANCE.md").write_text(doc, encoding="utf-8")
 
@@ -168,10 +168,10 @@ Generated {pd.Timestamp.now().strftime('%Y-%m-%d')}. All processors refuse bad i
 |---|---|---|---|
 | WHO EML (24th list, 2025) | **DONE**: extracted from `data/external/B09474-eng.pdf` ({eml['single_entries']} single + {eml['combination_entries']} combination entries); mapped to PrimeKG ({eml['single_status']['mapped']} single entries -> {eml['distinct_primekg_drugs_flagged']} drugs) | `data/external/who_eml.csv`, `data/processed/eml/` | `tests/test_who_eml_extraction.py`; `eml_mapping_audit.csv` |
 | HAI price/availability (3 Indian surveys) | **DONE** (regional pilot) | `data/processed/hai/` | `scripts/audit_hai_parsing.py` |
-| IHME DALY | **BLOCKED**: the file in `data/external/downloads/ihme_gbd/` has only the cause 'All causes' (6 rows: Deaths and DALYs; Number/Percent/Rate; Global, Both, All ages, 2023) | `data/processed/ihme/` (not created) | `scripts/process_ihme_daly.py` rejects it |
+| IHME DALY (GBD 2023) | **DONE**: `ihme_ntd_dalys_2023.csv` (17 causes) validated and processed; 15 of 22 project groups have a DALY rate, 7 are missing (scabies, Buruli ulcer, mycetoma, chromoblastomycosis, noma, snakebite envenoming, yaws); unit of 'Rate' not verified against IHME documentation | `data/processed/ihme/` | `scripts/process_ihme_daly.py` (self-test + real file); mapping notes in `daly_by_ntd_group.csv` |
 
-## IHME export that is needed (the existing file cannot be used)
-GBD Results tool (https://vizhub.healthdata.org/gbd-results/). The dimensions of the existing file are already right; **only the cause selection is missing**.
+## IHME export: received and processed (settings kept for reference)
+GBD Results tool (https://vizhub.healthdata.org/gbd-results/). The exported file `IHME-GBD_2023_DATA-028a73a1-1` (17 causes) used the settings below; **only the cause selection is missing**.
 | setting | value |
 |---|---|
 | Base | Single |
@@ -184,10 +184,10 @@ GBD Results tool (https://vizhub.healthdata.org/gbd-results/). The dimensions of
 | Metric units | **Not verified from IHME documentation** (the Appendix 3 metric definitions could not be read). The usual GBD convention is DALY rate = per 100,000 population; the processor records the metric name and treats the values as relative burden only. |
 | Cause availability | **Not verified.** The IHME tool is interactive and the cause-list page could not be fetched. Secondary GBD 2021 papers (found by search, not read in full) name Chagas disease, cutaneous/mucocutaneous and visceral leishmaniasis, food-borne trematodiases, Guinea worm disease and an 'other NTDs' category as separate causes; the rest of the list below is expected, not confirmed. Check each name in the tool's cause picker; `process_ihme_daly.py` prints unmatched names. |
 | Cause | the NTD causes the tool offers, expected names: Visceral leishmaniasis; Cutaneous and mucocutaneous leishmaniasis; Chagas disease; African trypanosomiasis; Schistosomiasis; Cystic echinococcosis; Lymphatic filariasis; Onchocerciasis; Leprosy; Trachoma; Dengue; Rabies; Ascariasis; Trichuriasis; Hookworm disease; Food-borne trematodiases; Guinea worm disease; Scabies |
-Expected columns (as in the existing file): `measure_id, measure_name, location_id, location_name, sex_id, sex_name, age_id, age_name, cause_id, cause_name, metric_id, metric_name, year, val, upper, lower` (+ population-group columns). Destination: `data/external/downloads/ihme_gbd/` (keep the old zip; add the new one). The cause names above are our expectation and were **not** verified against the GBD tool; the processor prints any unmatched names. GBD may not offer causes for every WHO group (e.g. snakebite, noma, mycetoma, yaws); those groups will have no DALY value and are reported as missing.
+Columns in the file: `measure_id, measure_name, location_id, location_name, sex_id, sex_name, age_id, age_name, cause_id, cause_name, metric_id, metric_name, year, val, upper, lower` (+ population-group columns). Placed as `data/external/downloads/ihme_gbd/ihme_ntd_dalys_2023.csv`; original ZIP and `citation.txt` preserved in `data/external/downloads/ihme_gbd_source_2023/` (and the project root). **Reconciliation with the real export (17 causes).** Requested but not exported: Visceral leishmaniasis and Cutaneous/mucocutaneous leishmaniasis (the export has the parent 'Leishmaniasis', id 347, treated as covering both; the id gap 347 -> 350 suggests the children were omitted: an inference, the hierarchy was not read) and Scabies (group stays missing). Exported but not requested: Cysticercosis (id 352), mapped to the project group taeniasis/cysticercosis (cysticercosis only; taeniasis is not a separate cause there). Cystic echinococcosis covers only part of the WHO echinococcosis group. Six project groups have no GBD cause at all (Buruli ulcer, mycetoma, chromoblastomycosis, noma, snakebite envenoming, yaws) and stay missing, never 0. The unit of 'Rate' is not stated in the file (usual GBD convention: per 100,000).
 The IHME agreement forbids providing third parties the ability to download the data: keep the files out of git and out of any public hosting.
 
-## Processing order after the export arrives
+## Processing order (already run on 2026-11-11)
 1. `python scripts/process_ihme_daly.py` -> `data/processed/ihme/daly_by_ntd_group.csv`, `daly_report.json`
 2. `python scripts/build_equity_features.py` -> `data/processed/equity/*` (EML + DALY + HAI; weights 0.45/0.45/0.10 are a proposal; the sensitivity grid becomes meaningful once DALY exists)
 3. `python scripts/make_readiness_report.py`, `python scripts/make_final_docs.py`, `python scripts/freeze_release.py --tag vdm_v1`
@@ -199,9 +199,9 @@ The IHME agreement forbids providing third parties the ability to download the d
 
 # =============================== HUMAN_ACTION_CHECKLIST.md ===============================
 H = [
-    ("H1", "MANDATORY (blocks NDPI burden component; does not block the prediction benchmark)", "Re-export IHME GBD with disease-specific DALYs",
-     "The existing export has only the cause 'All causes' (verified: 6 rows), so no NTD burden can be computed.", "https://vizhub.healthdata.org/gbd-results/ (login)", "Settings table in `Docs/EQUITY_DATA_SPECS.md`", "`data/external/downloads/ihme_gbd/`",
-     "columns as in the existing file; `cause_name` must include the NTD causes", "DALY component, NDPI, equity figures"),
+    ("H1", "DONE 2026-11-11: export received, validated and processed - nothing further needed from you", "IHME GBD disease-specific DALYs",
+     "IHME-GBD_2023_DATA-028a73a1-1: 17 causes, DALYs/Rate/Global/Both/All ages/2023; 15 of 22 groups mapped, 7 missing (see EQUITY_DATA_SPECS.md).", "https://vizhub.healthdata.org/gbd-results/ (login)", "Settings table in `Docs/EQUITY_DATA_SPECS.md`", "`data/external/downloads/ihme_gbd/`",
+     "done", "nothing"),
     ("H2", "DECIDED 2026-11-11: option B approved and implemented - nothing further needed from you", "Baselines get a second, drug + disease-profile variant",
      "PrimeKG disease features are `is_ntd` plus two constant columns (DALY absent): one informative feature. The baselines are effectively drug-only and cannot model drug-disease specificity; GNNs and Node2Vec see disease neighbourhoods. A like-for-like comparison would give baselines a disease representation.",
      "n/a", "Done: configs/primekg_morgan_dp.yaml and primekg_morgan_structcov_dp.yaml (block = src/features/disease_profile.py, built from TRAIN edges/labels only, leave-one-out); the drug-only configs are unchanged; both variants run in the Colab train stage. Tests: tests/test_disease_profile.py (8). Not run on any model.",
@@ -233,7 +233,7 @@ Generated {pd.Timestamp.now().strftime('%Y-%m-%d')}. Everything that needs you p
 {md(hc[hc['mandatory?'].str.startswith('OPTIONAL')])}
 
 ## Is anything still pending for the preparation phase?
-Yes: **H1** (IHME export; H2 is decided). Everything else mandatory is either needed only at Colab time (H3, H4), only before a public release (H5, H6) or only before submission (H7).
+Yes, but none for the preparation phase (H1 and H2 are done). Everything else mandatory is either needed only at Colab time (H3, H4), only before a public release (H5, H6) or only before submission (H7).
 """
 (R / "Docs/HUMAN_ACTION_CHECKLIST.md").write_text(doc, encoding="utf-8")
 
@@ -267,11 +267,11 @@ T = [
     ("Models", "Results exporter (tables + figures)", I_, "run on one real baseline file only; multi-model / GNN figures untested"),
     ("Models", "Explainability (SHAP trees, GNNExplainer)", I_, "synthetic API tests pass (tests/test_explainability.py); real models need Colab"),
     ("Models", "Trained-model performance", N, "Colab by design"),
-    ("Equity", "IHME file inspected", D, "finding: only 'All causes'; processor rejects it"),
-    ("Equity", "IHME DALY processing", B, "H1"),
+    ("Equity", "IHME file inspected", D, "17 causes, one row each, DALYs/Rate/Global/Both/All ages/2023, no missing values; ZIP and CSV hashes match"),
+    ("Equity", "IHME DALY processing", D, "process_ihme_daly.py: 15 groups complete, 7 missing; mapping reconciliation documented; unit of 'Rate' not verified against IHME documentation"),
     ("Equity", "WHO EML extracted from the official PDF and mapped", I_, "automated structure checks + tests only; NOT manually validated entry by entry (spot checks on a few entries only); corrections in Docs/EML_EXTRACTION_CORRECTIONS.md"),
-    ("Equity", "Equity table + NDPI code", I_, "EML + HAI only; no burden component"),
-    ("Equity", "NDPI evaluation and sensitivity", B, "H1"),
+    ("Equity", "Equity table + NDPI code", D, "EML + HAI + DALY; burden-aware only for 50 NTD pairs (DALY missing for 32 NTD pairs and all non-NTD pairs); missing never 0 (tests)"),
+    ("Equity", "NDPI evaluation and sensitivity", I_, "computed on real EML + HAI + DALY inputs; weights are an unvalidated proposal; on 49 burden-aware pairs the ranking is weight-sensitive (Spearman -0.42 to 0.87 median); NDPI has no external validation"),
     ("Paper", "Bibliography metadata verified (15 references)", D, "Crossref / arXiv / WHO page"),
     ("Paper", "Claim-to-reference support", I_, "abstract/documentation-level; full text pending (H7)"),
     ("Paper", "Structure, citation order, figures, tables, numbers vs metrics.json", D, "scripts/check_paper.py passed"),
@@ -309,7 +309,7 @@ Counts: {cnt}.
 ## Questions answered explicitly
 **A. Percentage complete and how it was calculated.** {pct}% of applicable preparation tasks are {D} ({cnt.get(D, 0)} of {den}; {NA} items excluded); {pct_any}% are at least implemented. Method: equal weighting of the {len(tt)} registry tasks above, so the figure is crude. It excludes Colab results and the paper's results sections by design, and a high percentage does **not** mean the research is finished.
 
-**B. Datasets.** Complete: PrimeKG full benchmark, structure-covered variant, NTD mapping tables, HAI tables (regional pilot), Open Targets tables (with provenance), WHO EML flags. Incomplete: equity feature table (no burden component). Unusable as it stands: the IHME export (only 'All causes').
+**B. Datasets.** Complete: PrimeKG full benchmark, structure-covered variant, NTD mapping tables, HAI tables (regional pilot), Open Targets tables (with provenance), WHO EML flags. IHME DALY export (15 of 22 NTD groups). Incomplete by nature: burden exists for 50 of 82 NTD pairs only; seven groups have no GBD cause.
 
 **C. Mappings.** Complete: WHO->MONDO->PrimeKG (with documented differences, nested roots and 6 WHO entries without indications); Open Targets drug (tier 1: {otm['drugs']['drugs_by_tier'].get('1_exact_xref', 0):,} ChEMBL ids) and disease mapping; HAI medicines 55/60; EML {eml['single_status']['mapped']}/{eml['single_entries']} single entries. Ambiguous or missing: {eml['single_status']['unmapped']} EML single entries unmapped; 5 HAI medicines unmapped; ~{otm['diseases']['by_status(ids)'].get('unmapped_no_xref', 0)} Open Targets disease ids without a MONDO xref and {otm['diseases']['by_status(ids)'].get('non_disease_ontology', 0)} phenotype/GO ids; MONDO->DOID unmapped for 9,089 PrimeKG disease nodes.
 
@@ -317,15 +317,15 @@ Counts: {cnt}.
 
 **E. Paper tables and figures the final pipeline can generate** (from actual outputs): dataset statistics, split statistics, model comparison, cold-start metrics, ablation, structure sensitivity, NTD-specific performance, NDPI prioritisation and equity coverage (needs DALY for a meaningful NDPI), ROC/PR, confusion matrices, calibration, training curves, embedding PCA, SHAP and GNN-explanation tables. Figures 1-7 already exist from real data. **Not yet generated by any script:** a drug-disease candidate network figure, a molecular-feature analysis figure, an NDPI ranking figure and an equity-component contribution figure (they need DALY/EML-based NDPI and, for the network, final model outputs); no synthetic figure is presented as a result.
 
-**F. Unresolved issues.** `Docs/DATA_AND_PIPELINE_READINESS.md` section 6 lists 24; the main ones: IHME export; the effect of the disease-profile baseline variant (known only after Colab); legal questions (`Docs/LICENCE_AUDIT.md` section 4); Open Targets flag semantics; small NTD test set (15 positives); full-text reference checks; unvalidated trained behaviour.
+**F. Unresolved issues.** `Docs/DATA_AND_PIPELINE_READINESS.md` section 6 lists 24; the main ones: burden missing for 7 NTD groups and for all non-NTD pairs; weight-sensitivity of NDPI; the effect of the disease-profile baseline variant (known only after Colab); legal questions (`Docs/LICENCE_AUDIT.md` section 4); Open Targets flag semantics; small NTD test set (15 positives); full-text reference checks; unvalidated trained behaviour.
 
-**G. What you must provide or approve.** See `Docs/HUMAN_ACTION_CHECKLIST.md`: H1 (IHME re-export), H3 (push approval), H4 (Drive upload), H5-H7 before release/submission.
+**G. What you must provide or approve.** See `Docs/HUMAN_ACTION_CHECKLIST.md`: H3 (push approval), H4 (Drive upload), H5-H7 before release/submission.
 
-**H. Is human-dependent work still pending?** **Yes.** H1 (IHME export) for the preparation phase; H3-H4 at Colab time. H2 is decided (B).
+**H. Is human-dependent work still pending?** Not for the preparation phase (H1, H2 done); H3-H4 at Colab time; H5-H7 before release/submission.
 
-**I. Can you freeze and move to Colab?** Not yet for the *complete* single-run goal: the equity/NDPI burden component cannot be completed without H1. The core prediction benchmark (full + structure-covered, both baseline variants, Node2Vec, five GNNs, ablation, explanations) is technically ready after H3 and H4; running it now would be valid but NDPI would stay an EML-flag score and not burden-aware.
+**I. Can you freeze and move to Colab?** Yes, once H3 (push) and H4 (Drive upload) are done. The IHME data are in place; the NDPI is burden-aware for 50 NTD pairs only.
 
-**J. Single next action.** Export the IHME disease-specific DALYs (**H1**) and place them in `data/external/downloads/ihme_gbd/`.
+**J. Single next action.** Approve the push (**H3**) and upload the git-ignored inputs to Drive (**H4**), then run the Colab notebook.
 
 ## Colab commands (do not run yet; the notebook `notebooks/colab_final_run.ipynb` contains them)
 ```
@@ -349,7 +349,7 @@ HEAD `{head[:10]}`; local commits ahead of `origin/mukul`: {ahead}; working tree
 ## Final Colab-readiness gate
 | gate | status |
 |---|---|
-| required raw/processed datasets exist locally | yes (except IHME DALY) |
+| required raw/processed datasets exist locally | yes |
 | mandatory mappings validated | yes |
 | both benchmark variants reproducible (config + split files + scripts) | yes |
 | model, evaluation, ablation, exporter, explainability scripts implemented | yes (see D) |

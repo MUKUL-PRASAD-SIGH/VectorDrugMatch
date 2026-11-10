@@ -32,7 +32,7 @@ Full status table with evidence: `Docs/FINAL_RELEASE_READINESS.md` (24 DONE AND 
 | Results exporter (`make_results_package.py`) | validated on one real baseline prediction file only |
 | Explainability (`explain_models.py`: SHAP for RF/XGBoost, GNNExplainer for HGT/RGCN) | synthetic API tests only; the GNNExplainer step is optional in the pipeline |
 | WHO EML extraction | automated structure tests and spot checks only; **not manually reviewed entry by entry**; limitations below |
-| NDPI | EML flag + HAI pilot only; **not burden-aware** until IHME data exist; weights 0.45/0.45/0.10 are a proposal; sensitivity grid not meaningful yet |
+| NDPI | burden-aware for **50 of 82 NTD pairs only** (0.53% of all pairs); elsewhere EML flag + HAI pilot; weights 0.45/0.45/0.10 are an unvalidated proposal; ranking is weight-sensitive (section 5) |
 | Open Targets quality flag `UNVALIDATED_INDICATION` | filter implemented; flag meaning undocumented upstream |
 | Citations | metadata and abstract-level claim support checked; full-text verification pending |
 | Licensing | evidence log built; legal conclusions deliberately not drawn |
@@ -46,38 +46,32 @@ Full status table with evidence: `Docs/FINAL_RELEASE_READINESS.md` (24 DONE AND 
 ## 3. What requires your input
 | id | action | needed for | when |
 |---|---|---|---|
-| A1 | **IHME disease-specific DALY export** (section 4) | burden component, NDPI, equity figures | before the `external` stage if you want NDPI burden-aware; not needed for the prediction benchmark |
+| A1 | ~~IHME export~~ **done** (section 4). Nothing further | - | - |
 | A2 | **Essential manual EML decision: none.** Optional only: review `eml_unmatched.csv` (93 rows) if you want a stricter claim than "documented, not manually verified" | EML wording in the paper | optional |
 | A3 | **Licensing and redistribution approvals**: (i) confirm DrugBank and IHME entitlements and decide on the three small DrugBank-derived blobs in the history of `origin/mukul` (no rewrite was done); (ii) read ClinicalTrials.gov/AACT, TTD and PMDA terms in a browser (JavaScript pages that could not be fetched) before publishing Open Targets-derived tables; (iii) legal judgement on ShareAlike for derived EML/ChEMBL tables and on CC0 over non-commercial constituents | any public release or submission; **not needed for Colab** | before release |
 | A4 | **Push approval** (all local commits to `origin/mukul`) and the **Drive upload** of git-ignored inputs: `data/external/downloads/` (Open Targets, HAI, IHME), and `data/external/who_eml.csv` or `data/external/B09474-eng.pdf`, to `MyDrive/VDM_Data/` | the Colab run (the notebook clones the pinned commit; the `external` stage uses the Drive files) | Colab time |
 | A5 | **Colab execution and result review**: run the notebook, then read results against section 8 | all results | after A4 |
 | A6 | Approve final claims and full-text reference verification | submission | before submission |
 
-## 4. Exact IHME export instructions
-Tool: GBD Results (https://vizhub.healthdata.org/gbd-results/). The existing file `data/external/downloads/ihme_gbd/` (one zip, 6 rows) has the right dimensions but only the cause "All causes", so the processor rejects it; keep it, add the new zip beside it.
+## 4. IHME data: received, validated and processed (2026-11-11)
+The export `IHME-GBD_2023_DATA-028a73a1-1.zip` (SHA-256 `cb39fff2e1ce6eaa68c4e0f138e578ab3f48638ec951cf989db0a720d046df71`) was found in the project root and placed by me:
+* CSV -> `data/external/downloads/ihme_gbd/ihme_ntd_dalys_2023.csv` (hash identical to the file inside the ZIP);
+* original ZIP and `citation.txt` preserved in `data/external/downloads/ihme_gbd_source_2023/` (a separate folder the processor does not read, to avoid double-loading); the ZIP in the project root was left in place; citation copy next to the CSV. All git-ignored.
+* the earlier 6-row all-cause stub (`...9feb184e-1.zip`) stays in `ihme_gbd/`; the processor reads it too and lists its row "All causes" as an unmatched cause (no effect).
 
-| setting | value |
-|---|---|
-| Base | Single |
-| Measure | DALYs (Disability-Adjusted Life Years) |
-| Metric | Rate |
-| Location | Global |
-| Sex | Both |
-| Age | All ages (or Age-standardized, then run `python scripts/process_ihme_daly.py --age "Age-standardized"`) |
-| Year | 2023 (single year) |
-| Cause | Visceral leishmaniasis; Cutaneous and mucocutaneous leishmaniasis; Chagas disease; African trypanosomiasis; Schistosomiasis; Cystic echinococcosis; Lymphatic filariasis; Onchocerciasis; Leprosy; Trachoma; Dengue; Rabies; Ascariasis; Trichuriasis; Hookworm disease; Food-borne trematodiases; Guinea worm disease; Scabies |
+Validation: 17 rows, one per cause, no missing values; measure DALYs, metric Rate, Global, Both, All ages, 2023. Citation (from `citation.txt`): Global Burden of Disease Collaborative Network. GBD 2023 Results. IHME, 2024. https://vizhub.healthdata.org/gbd-results/.
 
-Expected columns: `measure_id, measure_name, location_id, location_name, sex_id, sex_name, age_id, age_name, cause_id, cause_name, metric_id, metric_name, year, val, upper, lower`.
+Reconciliation with the intended mapping (`process_ihme_daly.py`, `MAPPING_NOTES`; details in `Docs/EQUITY_DATA_SPECS.md`):
+| intended | exported | handling |
+|---|---|---|
+| Visceral + Cutaneous/mucocutaneous leishmaniasis | parent **Leishmaniasis** (id 347) | used for the leishmaniasis group, treated as covering both forms (inference from the id gap 347 -> 350; hierarchy not read) |
+| Scabies | not exported | group missing (never 0) |
+| (not requested) | **Cysticercosis** (id 352) | mapped to taeniasis/cysticercosis; cysticercosis only, understates the WHO group |
+| Cystic echinococcosis | present | covers only part of the WHO echinococcosis group |
+| Ascariasis + Trichuriasis + Hookworm | present | summed for soil-transmitted helminthiases (other species absent) |
+| Buruli ulcer, mycetoma, chromoblastomycosis, noma, snakebite, yaws | no GBD cause | missing |
 
-**Not verified by me:** the cause names (the tool is interactive; I could not read its cause list, and only some names appear in secondary GBD 2021 papers) and the unit of "Rate" (per 100,000 population is the usual GBD convention; the IHME metric definitions were not read). Check each name in the tool's cause picker and the unit in its metric definition; GBD may lack causes for snakebite, noma, mycetoma or yaws, which will then be reported as missing, never as 0. `process_ihme_daly.py` prints unmatched names. The IHME agreement forbids providing third parties the ability to download the data: keep the files out of git and out of any public hosting. After the file is in place, locally:
-```
-python scripts/process_ihme_daly.py
-python scripts/build_equity_features.py
-python scripts/make_readiness_report.py
-python scripts/make_final_docs.py
-python scripts/freeze_release.py --tag vdm_v1_candidate
-```
-(then commit and re-pin, since the manifest and docs change; or simply upload the zip to Drive and let the Colab `external` stage process it).
+Result: 15 of 22 project groups have a DALY rate; 7 are missing. The unit of "Rate" is not stated in the file (per 100,000 population is the usual GBD convention; not verified against IHME documentation). The IHME agreement forbids providing third parties the ability to download the data: keep the files out of git and out of any public hosting. **Nothing further is needed from you for IHME.** Commands that were run: `python scripts/process_ihme_daly.py` then `python scripts/build_equity_features.py` (the Colab `external` stage repeats both).
 
 ## 5. Reconciled data counts (from the generated CSV/JSON files)
 EML: 646 entries = 590 single + 56 combination; singles 497 mapped + 93 unmapped; 378 PrimeKG drugs flagged, 297 of them with an indication pair.
@@ -89,7 +83,7 @@ EML: 646 entries = 590 single + 56 combination; singles 497 mapped + 93 unmapped
 | combination component only | 132 | 33 | 0 | 0 |
 | no candidate entry found | 5,975 | 1,416 | 30 | 18 |
 
-The "EML component coverage" figure in `equity_report.json` counts the zeros and is not evidence coverage. HAI access covers 6.58% of pairs (17.07% of NTD pairs). DALY coverage is 0% until A1. NDPI exists for 8,935 pairs (81 NTD).
+The "EML component coverage" figure in `equity_report.json` counts the zeros and is not evidence coverage. HAI access covers 6.58% of pairs (17.07% of NTD pairs). DALY covers 0.53% of all pairs (50 of 82 NTD pairs); 32 NTD pairs and all non-NTD pairs have no burden. NDPI exists for 8,936 pairs (all 82 NTD). Weight sensitivity (66-point grid, Spearman vs default weights): over the 641 pairs with >= 2 components min 0.46 / median 0.86; over the 49 burden-aware pairs with >= 2 components min -0.42 / median 0.87, i.e. the ranking of burden-aware pairs depends materially on the weights (`ndpi_weight_sensitivity*.csv`).
 
 ## 6. Exact final Colab execution sequence
 Prerequisites: A4 done (pushed; Drive populated). Open `notebooks/colab_final_run.ipynb` in Colab with a T4 GPU and run cells top to bottom:
@@ -128,7 +122,7 @@ If Colab disconnects: re-run steps 1-3 and the interrupted step; finished predic
 5. GNN prediction rows are deterministic: evaluation twice on the same checkpoint gives identical numbers (the dropout bug was fixed; regression test `tests/test_gnn_eval_determinism.py`).
 6. Report only `coldstart_*` baseline numbers and the `all` subset first; NTD rows rest on ~15 test positives (exploratory). Never report the pooled 5-fold CV or the legacy `train_benchmark.py` / `run_ablations.py` outputs as cold-start results.
 7. Report both baseline variants side by side and never pooled. A difference between them is a statement about the disease-profile block, not about the benchmark.
-8. NDPI and equity results are described as burden-aware only if the IHME export was processed (`data/processed/ihme/daly_report.json` exists and `equity_report.json` shows DALY coverage > 0).
+8. NDPI is described as burden-aware only for pairs with a DALY value (`equity_report.json`: `burden_aware_pairs` = 50), never for the rest; report its weight sensitivity alongside any ranking.
 
 ## 9. Remaining publication and licensing restrictions
 Detailed evidence: `Docs/LICENCE_AUDIT.md`, `Docs/DATA_PROVENANCE.md`, `Docs/OPEN_TARGETS_PROVENANCE.md`, `Docs/source_evidence/`. No legal conclusion is drawn here.

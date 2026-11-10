@@ -33,7 +33,7 @@ GBD_CAUSES = {
     "echinococcosis": ["Cystic echinococcosis"],
     "foodborne trematodiases": ["Food-borne trematodiases"],
     "human African trypanosomiasis": ["African trypanosomiasis"],
-    "leishmaniasis": ["Visceral leishmaniasis", "Cutaneous and mucocutaneous leishmaniasis"],
+    "leishmaniasis": ["Leishmaniasis"],                      # the export has the parent cause (id 347); see MAPPING_NOTES
     "leprosy": ["Leprosy"],
     "lymphatic filariasis": ["Lymphatic filariasis"],
     "onchocerciasis": ["Onchocerciasis"],
@@ -43,7 +43,19 @@ GBD_CAUSES = {
     "trachoma": ["Trachoma"],
     "dracunculiasis": ["Guinea worm disease"],
     "scabies": ["Scabies"],
+    "taeniasis/cysticercosis": ["Cysticercosis"],
 }
+# Reconciliation with the real export IHME-GBD_2023_DATA-028a73a1-1 (17 causes). Groups not listed here map one-to-one by name.
+MAPPING_NOTES = {
+    "leishmaniasis": "export has the parent cause 'Leishmaniasis' (id 347), not the visceral/cutaneous split requested; the id gap 347 -> 350 is consistent with the two child causes being omitted, which is an inference (the hierarchy was not read); treated as covering both forms",
+    "taeniasis/cysticercosis": "GBD 'Cysticercosis' (id 352) only; taeniasis is not a separate cause in the export, so the rate understates the WHO group (an extra cause that was not in the requested list)",
+    "echinococcosis": "GBD 'Cystic echinococcosis' only; the WHO group also includes alveolar echinococcosis (no separate cause in the export)",
+    "soil-transmitted helminthiases": "sum of Ascariasis + Trichuriasis + Hookworm disease (rates over one population add); other STH species are not in the export",
+    "foodborne trematodiases": "GBD 'Food-borne trematodiases'; the project members are clonorchiasis, opisthorchiasis, fascioliasis, paragonimiasis",
+    "scabies": "requested but absent from the export: stays missing (never 0)",
+    "dracunculiasis": "GBD 'Guinea worm disease' (id 936); the rate is essentially zero (3e-6 per 100,000 if the unit is per 100,000) so its percentile rank is the lowest, which is real, not missing",
+}
+NO_GBD_CAUSE = ["Buruli ulcer", "mycetoma", "chromoblastomycosis", "noma", "snakebite envenoming", "yaws"]   # no requested cause; stay missing
 DALY_NAMES = ("DALYs (Disability-Adjusted Life Years)", "DALYs")
 
 
@@ -94,13 +106,16 @@ def to_groups(d):
         found = [c for c in causes if c in by.index]
         if not found:
             rows.append({"ntd_group": g, "daly_rate": np.nan, "lower": np.nan, "upper": np.nan, "gbd_causes_found": "", "gbd_causes_expected": "|".join(causes),
-                         "status": "missing"})
+                         "status": "missing", "mapping_note": MAPPING_NOTES.get(g, "")})
             continue
         vals = by.loc[found]
         rows.append({"ntd_group": g, "daly_rate": float(vals.val.sum()),
                      "lower": float(vals.lower.sum()) if "lower" in vals else np.nan, "upper": float(vals.upper.sum()) if "upper" in vals else np.nan,
                      "gbd_causes_found": "|".join(found), "gbd_causes_expected": "|".join(causes),
-                     "status": "complete" if len(found) == len(causes) else "partial"})
+                     "status": "complete" if len(found) == len(causes) else "partial", "mapping_note": MAPPING_NOTES.get(g, "")})
+    for g in NO_GBD_CAUSE:
+        rows.append({"ntd_group": g, "daly_rate": np.nan, "lower": np.nan, "upper": np.nan, "gbd_causes_found": "", "gbd_causes_expected": "",
+                     "status": "missing", "mapping_note": "no GBD cause was requested/exported for this group"})
     return pd.DataFrame(rows)
 
 
@@ -121,6 +136,10 @@ def selftest():
             assert msg in str(e), e
         else:
             raise AssertionError("validator accepted a bad export")
+    parent = pd.DataFrame([{**base, "cause_name": "Leishmaniasis", "val": 5.0}, {**base, "cause_name": "Cysticercosis", "val": 7.0}])
+    gp = to_groups(validate_and_pivot(parent)).set_index("ntd_group")
+    assert gp.loc["leishmaniasis", "daly_rate"] == 5.0 and gp.loc["taeniasis/cysticercosis", "daly_rate"] == 7.0 and gp.loc["scabies", "status"] == "missing"
+    assert len(gp) == 22, "one row per project group"
     print("selftest ok: stub rejected, duplicates rejected, partial/missing groups handled, no zero filling")
 
 

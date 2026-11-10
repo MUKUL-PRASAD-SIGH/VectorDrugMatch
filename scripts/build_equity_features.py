@@ -130,19 +130,29 @@ def main():
     cand.to_csv(out / "ndpi_ntd_candidates.csv", index=False)
 
     # ---- sensitivity ----
-    sens = {"computable": False}
+    def _grid(sub, fname):
+        """Spearman of every alternative weight triple (0.1 grid) vs the default weights, over `sub` (pairs with >= 2 components)."""
+        if len(sub) < 10:
+            return {"computable": False, "pairs": int(len(sub)), "reason": "fewer than 10 pairs"}
+        base = ndpi(sub, W)
+        rows = []
+        for a_, b_ in itertools.product(range(11), range(11)):
+            if a_ + b_ > 10:
+                continue
+            we, wd, wa = a_ / 10, b_ / 10, (10 - a_ - b_) / 10
+            rows.append({"w_eml": we, "w_daly": wd, "w_access": wa, "spearman_vs_default": float(base.corr(ndpi(sub, {"eml": we, "daly": wd, "access": wa}), method="spearman"))})
+        c = pd.DataFrame(rows)
+        c.to_csv(out / fname, index=False)
+        v = c.spearman_vs_default.dropna()
+        return {"computable": True, "pairs": int(len(sub)), "grid_points": int(len(c)), "grid_points_undefined": int(c.spearman_vs_default.isna().sum()),
+                "min_spearman": float(v.min()), "median_spearman": float(v.median())}
+
     two = df[df.n_components >= 2]
-    if len(two) >= 10:
-        base = ndpi(two, W)
-        corr = []
-        grid = [(a / 10, b / 10, (10 - a - b) / 10) for a, b in itertools.product(range(11), range(11)) if a + b <= 10]
-        for we, wd, wa in grid:
-            alt = ndpi(two, {"eml": we, "daly": wd, "access": wa})
-            corr.append({"w_eml": we, "w_daly": wd, "w_access": wa, "spearman_vs_default": float(base.corr(alt, method="spearman"))})
-        c = pd.DataFrame(corr)
-        c.to_csv(out / "ndpi_weight_sensitivity.csv", index=False)
-        sens = {"computable": True, "pairs": int(len(two)), "grid_points": len(c), "min_spearman": float(c.spearman_vs_default.min()),
-                "median_spearman": float(c.spearman_vs_default.median())}
+    sens = _grid(two, "ndpi_weight_sensitivity.csv")                                         # all pairs with >= 2 components (mostly EML + access, no burden)
+    # burden-aware subset: only pairs that have a DALY score can say anything about the burden weight
+    burden_pairs = two[two.daly_score.notna()]
+    sens_burden = _grid(burden_pairs, "ndpi_weight_sensitivity_burden_pairs.csv")
+    sens_burden["note"] = "pairs with a DALY score and >= 2 components; all are NTD pairs"
     n = len(df)
     rep = {"pairs": n, "ntd_pairs": int((df.is_ntd == 1).sum()), "inputs_present": avail, "weights_default": W,
            "component_coverage_pct_all_pairs": {k: round(100 * df[f"{k}_score"].notna().mean(), 2) for k in W},
@@ -157,10 +167,12 @@ def main():
            "eml_confirmed_positive_pct": round(100 * (df.eml_evidence == "confirmed_positive_single_entry").mean(), 2),
            "eml_unresolved_pct": round(100 * (df.eml_evidence == "unresolved_possible_unmapped_entry").mean(), 2),
            "eml_unmapped_single_entries_possible_false_zeros": int(len(pd.read_csv(PR / "eml" / "eml_unmatched.csv"))) if (PR / "eml" / "eml_unmatched.csv").exists() else None,
+           "burden_aware_pairs": int(df.daly_score.notna().sum()), "burden_aware_ntd_pairs": int(df.loc[df.is_ntd == 1, "daly_score"].notna().sum()),
+           "ntd_pairs_without_burden": int(df.loc[df.is_ntd == 1, "daly_score"].isna().sum()), "sensitivity_burden_pairs": sens_burden,
            "pairs_with_ndpi": int(df.ndpi_score.notna().sum()), "ntd_pairs_with_ndpi": int(df.loc[df.is_ntd == 1, "ndpi_score"].notna().sum()),
            "n_components_distribution": df.n_components.value_counts().sort_index().to_dict(), "sensitivity": sens,
-           "caveats": ["DALY (burden) is absent until a disease-specific IHME export is supplied: NDPI then reduces to the EML flag (+ the HAI pilot where available), "
-                       "i.e. it is NOT a burden-aware equity ranking and must not be reported as one",
+           "caveats": ["DALY (burden) exists only for NTD diseases whose group maps to an exported GBD cause (see daly_by_ntd_group.csv); NDPI is burden-aware ONLY for pairs with a DALY score (burden_aware_pairs); for every other pair it reduces to the EML flag (+ HAI where available) and must not be called burden-aware",
+                       "DALY score = percentile rank of the group rate among the groups with data (15 groups); for a disease in several groups the group with the highest rate is used",
                        "EML: 1 = confirmed positive; 0 = no candidate entry found after all mapping tiers (not a proof of absence); empty = combination-only or unresolved (name overlaps an unmapped WHO entry). "
                        "'component_coverage_pct' for EML counts 0s, so see eml_evidence_counts_all_pairs and eml_confirmed_positive_pct for real evidence",
                        "access = regional historical availability (India 2004-2011), not global access",

@@ -1,6 +1,6 @@
 # Final release readiness
 
-Generated 2026-11-11 01:43 by `scripts/make_final_docs.py`. Statuses: DONE AND VALIDATED, IMPLEMENTED BUT NOT VALIDATED, BLOCKED ON MY INPUT, NOT STARTED, NOT APPLICABLE.
+Generated 2026-11-11 02:05 by `scripts/make_final_docs.py`. Statuses: DONE AND VALIDATED, IMPLEMENTED BUT NOT VALIDATED, BLOCKED ON MY INPUT, NOT STARTED, NOT APPLICABLE.
 
 ## Task registry
 | area | task | status | evidence / note |
@@ -32,11 +32,11 @@ Generated 2026-11-11 01:43 by `scripts/make_final_docs.py`. Statuses: DONE AND V
 | Models | Results exporter (tables + figures) | IMPLEMENTED BUT NOT VALIDATED | run on one real baseline file only; multi-model / GNN figures untested |
 | Models | Explainability (SHAP trees, GNNExplainer) | IMPLEMENTED BUT NOT VALIDATED | synthetic API tests pass (tests/test_explainability.py); real models need Colab |
 | Models | Trained-model performance | NOT STARTED | Colab by design |
-| Equity | IHME file inspected | DONE AND VALIDATED | finding: only 'All causes'; processor rejects it |
-| Equity | IHME DALY processing | BLOCKED ON MY INPUT | H1 |
+| Equity | IHME file inspected | DONE AND VALIDATED | 17 causes, one row each, DALYs/Rate/Global/Both/All ages/2023, no missing values; ZIP and CSV hashes match |
+| Equity | IHME DALY processing | DONE AND VALIDATED | process_ihme_daly.py: 15 groups complete, 7 missing; mapping reconciliation documented; unit of 'Rate' not verified against IHME documentation |
 | Equity | WHO EML extracted from the official PDF and mapped | IMPLEMENTED BUT NOT VALIDATED | automated structure checks + tests only; NOT manually validated entry by entry (spot checks on a few entries only); corrections in Docs/EML_EXTRACTION_CORRECTIONS.md |
-| Equity | Equity table + NDPI code | IMPLEMENTED BUT NOT VALIDATED | EML + HAI only; no burden component |
-| Equity | NDPI evaluation and sensitivity | BLOCKED ON MY INPUT | H1 |
+| Equity | Equity table + NDPI code | DONE AND VALIDATED | EML + HAI + DALY; burden-aware only for 50 NTD pairs (DALY missing for 32 NTD pairs and all non-NTD pairs); missing never 0 (tests) |
+| Equity | NDPI evaluation and sensitivity | IMPLEMENTED BUT NOT VALIDATED | computed on real EML + HAI + DALY inputs; weights are an unvalidated proposal; on 49 burden-aware pairs the ranking is weight-sensitive (Spearman -0.42 to 0.87 median); NDPI has no external validation |
 | Paper | Bibliography metadata verified (15 references) | DONE AND VALIDATED | Crossref / arXiv / WHO page |
 | Paper | Claim-to-reference support | IMPLEMENTED BUT NOT VALIDATED | abstract/documentation-level; full text pending (H7) |
 | Paper | Structure, citation order, figures, tables, numbers vs metrics.json | DONE AND VALIDATED | scripts/check_paper.py passed |
@@ -46,12 +46,12 @@ Generated 2026-11-11 01:43 by `scripts/make_final_docs.py`. Statuses: DONE AND V
 | Release | Commits, notebook pin and release manifest reconciled | DONE AND VALIDATED | see section 3 below |
 | Release | Push to GitHub | BLOCKED ON MY INPUT | H3 |
 
-Counts: {'DONE AND VALIDATED': 24, 'IMPLEMENTED BUT NOT VALIDATED': 9, 'BLOCKED ON MY INPUT': 4, 'NOT STARTED': 2, 'NOT APPLICABLE': 1}.
+Counts: {'DONE AND VALIDATED': 26, 'IMPLEMENTED BUT NOT VALIDATED': 9, 'BLOCKED ON MY INPUT': 2, 'NOT STARTED': 2, 'NOT APPLICABLE': 1}.
 
 ## Questions answered explicitly
-**A. Percentage complete and how it was calculated.** 61.5% of applicable preparation tasks are DONE AND VALIDATED (24 of 39; NOT APPLICABLE items excluded); 84.6% are at least implemented. Method: equal weighting of the 40 registry tasks above, so the figure is crude. It excludes Colab results and the paper's results sections by design, and a high percentage does **not** mean the research is finished.
+**A. Percentage complete and how it was calculated.** 66.7% of applicable preparation tasks are DONE AND VALIDATED (26 of 39; NOT APPLICABLE items excluded); 89.7% are at least implemented. Method: equal weighting of the 40 registry tasks above, so the figure is crude. It excludes Colab results and the paper's results sections by design, and a high percentage does **not** mean the research is finished.
 
-**B. Datasets.** Complete: PrimeKG full benchmark, structure-covered variant, NTD mapping tables, HAI tables (regional pilot), Open Targets tables (with provenance), WHO EML flags. Incomplete: equity feature table (no burden component). Unusable as it stands: the IHME export (only 'All causes').
+**B. Datasets.** Complete: PrimeKG full benchmark, structure-covered variant, NTD mapping tables, HAI tables (regional pilot), Open Targets tables (with provenance), WHO EML flags. IHME DALY export (15 of 22 NTD groups). Incomplete by nature: burden exists for 50 of 82 NTD pairs only; seven groups have no GBD cause.
 
 **C. Mappings.** Complete: WHO->MONDO->PrimeKG (with documented differences, nested roots and 6 WHO entries without indications); Open Targets drug (tier 1: 5,494 ChEMBL ids) and disease mapping; HAI medicines 55/60; EML 497/590 single entries. Ambiguous or missing: 93 EML single entries unmapped; 5 HAI medicines unmapped; ~470 Open Targets disease ids without a MONDO xref and 479 phenotype/GO ids; MONDO->DOID unmapped for 9,089 PrimeKG disease nodes.
 
@@ -59,15 +59,15 @@ Counts: {'DONE AND VALIDATED': 24, 'IMPLEMENTED BUT NOT VALIDATED': 9, 'BLOCKED 
 
 **E. Paper tables and figures the final pipeline can generate** (from actual outputs): dataset statistics, split statistics, model comparison, cold-start metrics, ablation, structure sensitivity, NTD-specific performance, NDPI prioritisation and equity coverage (needs DALY for a meaningful NDPI), ROC/PR, confusion matrices, calibration, training curves, embedding PCA, SHAP and GNN-explanation tables. Figures 1-7 already exist from real data. **Not yet generated by any script:** a drug-disease candidate network figure, a molecular-feature analysis figure, an NDPI ranking figure and an equity-component contribution figure (they need DALY/EML-based NDPI and, for the network, final model outputs); no synthetic figure is presented as a result.
 
-**F. Unresolved issues.** `Docs/DATA_AND_PIPELINE_READINESS.md` section 6 lists 24; the main ones: IHME export; the effect of the disease-profile baseline variant (known only after Colab); legal questions (`Docs/LICENCE_AUDIT.md` section 4); Open Targets flag semantics; small NTD test set (15 positives); full-text reference checks; unvalidated trained behaviour.
+**F. Unresolved issues.** `Docs/DATA_AND_PIPELINE_READINESS.md` section 6 lists 24; the main ones: burden missing for 7 NTD groups and for all non-NTD pairs; weight-sensitivity of NDPI; the effect of the disease-profile baseline variant (known only after Colab); legal questions (`Docs/LICENCE_AUDIT.md` section 4); Open Targets flag semantics; small NTD test set (15 positives); full-text reference checks; unvalidated trained behaviour.
 
-**G. What you must provide or approve.** See `Docs/HUMAN_ACTION_CHECKLIST.md`: H1 (IHME re-export), H3 (push approval), H4 (Drive upload), H5-H7 before release/submission.
+**G. What you must provide or approve.** See `Docs/HUMAN_ACTION_CHECKLIST.md`: H3 (push approval), H4 (Drive upload), H5-H7 before release/submission.
 
-**H. Is human-dependent work still pending?** **Yes.** H1 (IHME export) for the preparation phase; H3-H4 at Colab time. H2 is decided (B).
+**H. Is human-dependent work still pending?** Not for the preparation phase (H1, H2 done); H3-H4 at Colab time; H5-H7 before release/submission.
 
-**I. Can you freeze and move to Colab?** Not yet for the *complete* single-run goal: the equity/NDPI burden component cannot be completed without H1. The core prediction benchmark (full + structure-covered, both baseline variants, Node2Vec, five GNNs, ablation, explanations) is technically ready after H3 and H4; running it now would be valid but NDPI would stay an EML-flag score and not burden-aware.
+**I. Can you freeze and move to Colab?** Yes, once H3 (push) and H4 (Drive upload) are done. The IHME data are in place; the NDPI is burden-aware for 50 NTD pairs only.
 
-**J. Single next action.** Export the IHME disease-specific DALYs (**H1**) and place them in `data/external/downloads/ihme_gbd/`.
+**J. Single next action.** Approve the push (**H3**) and upload the git-ignored inputs to Drive (**H4**), then run the Colab notebook.
 
 ## Colab commands (do not run yet; the notebook `notebooks/colab_final_run.ipynb` contains them)
 ```
@@ -86,12 +86,12 @@ Counts: {'DONE AND VALIDATED': 24, 'IMPLEMENTED BUT NOT VALIDATED': 9, 'BLOCKED 
 ```
 
 ## 3. Commit / pin / manifest reconciliation (state at generation)
-HEAD `4384957918`; local commits ahead of `origin/mukul`: 19; working tree has uncommitted changes. The notebook pins code commit `4384957918`. Test: after the pinned commit only `notebooks/` and `Docs/` may change. Result: **PASS**. The release manifest `Docs/release/vdm_v1_candidate_manifest.json` records the data checksums, versions and the commit at freeze time; rename it `vdm_v1` after H1 data arrive.
+HEAD `9784375fa5`; local commits ahead of `origin/mukul`: 20; working tree has uncommitted changes. The notebook pins code commit `4384957918`. Test: after the pinned commit only `notebooks/` and `Docs/` may change. Result: **FAIL: files changed after the pin: scripts/build_equity_features.py, scripts/make_final_docs.py, scripts/make_readiness_report.py, scripts/process_ihme_daly.py, tests/test_process_ihme.py (commit them, then re-pin)**. The release manifest `Docs/release/vdm_v1_candidate_manifest.json` records the data checksums, versions and the commit at freeze time; rename it `vdm_v1` after H1 data arrive.
 
 ## Final Colab-readiness gate
 | gate | status |
 |---|---|
-| required raw/processed datasets exist locally | yes (except IHME DALY) |
+| required raw/processed datasets exist locally | yes |
 | mandatory mappings validated | yes |
 | both benchmark variants reproducible (config + split files + scripts) | yes |
 | model, evaluation, ablation, exporter, explainability scripts implemented | yes (see D) |
@@ -100,4 +100,4 @@ HEAD `4384957918`; local commits ahead of `origin/mukul`: 19; working tree has u
 | paths work in a clean clone | yes (clean-clone check) |
 | no untracked local-only dependency silently required | the external stage needs Drive uploads (H4) and says so |
 | no restricted raw data in git | yes (`data/` ignored; DrugBank-derived blobs remain in history: H5) |
-| notebook pins a commit containing all code | yes; it can only be cloned on Colab after the push (H3) |
+| notebook pins a commit containing all code | NO: see section 3; it can only be cloned on Colab after the push (H3) |
