@@ -1,45 +1,32 @@
-# Equity data: what to export, where to put it, how it is validated
+# Equity data: status, specifications and validation
 
-Three inputs are still needed for the equity-aware prioritisation (NDPI). All three have a processor that **refuses bad input and never fills gaps with 0**.
+Generated 2026-11-10. All processors refuse bad input and never fill gaps with 0.
 
-## 1. IHME GBD — disease-specific DALY rates  *(blocking; needs your IHME login)*
+| component | status | where | validation |
+|---|---|---|---|
+| WHO EML (24th list, 2025) | **DONE**: extracted from `data/external/B09474-eng.pdf` (592 single + 54 combination entries); mapped to PrimeKG (486 single entries -> 368 drugs) | `data/external/who_eml.csv`, `data/processed/eml/` | `tests/test_who_eml_extraction.py`; `eml_mapping_audit.csv` |
+| HAI price/availability (3 Indian surveys) | **DONE** (regional pilot) | `data/processed/hai/` | `scripts/audit_hai_parsing.py` |
+| IHME DALY | **BLOCKED**: the file in `data/external/downloads/ihme_gbd/` has only the cause 'All causes' (6 rows: Deaths and DALYs; Number/Percent/Rate; Global, Both, All ages, 2023) | `data/processed/ihme/` (not created) | `scripts/process_ihme_daly.py` rejects it |
 
-GBD Results tool → <https://vizhub.healthdata.org/gbd-results/>
-
-| Field | Value |
+## IHME export that is needed (the existing file cannot be used)
+GBD Results tool (https://vizhub.healthdata.org/gbd-results/). The dimensions of the existing file are already right; **only the cause selection is missing**.
+| setting | value |
 |---|---|
-| Measure | **DALYs (Disability-Adjusted Life Years)** |
-| Metric | **Rate** (per 100,000) |
-| Location | **Global** |
-| Sex | **Both** |
-| Age | **All ages** (or Age-standardized: then run the processor with `--age "Age-standardized"`) |
-| Year | one year, e.g. 2023 |
-| Cause | the NTD causes: Leishmaniasis (visceral; cutaneous and mucocutaneous), Chagas disease, African trypanosomiasis, Schistosomiasis, Cystic echinococcosis, Lymphatic filariasis, Onchocerciasis, Leprosy, Trachoma, Dengue, Rabies, Ascariasis, Trichuriasis, Hookworm disease, Food-borne trematodiases, Guinea worm disease, Scabies (and any other NTD causes the tool offers) |
+| Base | Single |
+| Measure | DALYs (Disability-Adjusted Life Years) |
+| Metric | Rate |
+| Location | Global |
+| Sex | Both |
+| Age | All ages (or Age-standardized: then run `process_ihme_daly.py --age "Age-standardized"`) |
+| Year | 2023 (one year) |
+| Cause | the NTD causes the tool offers, expected names: Visceral leishmaniasis; Cutaneous and mucocutaneous leishmaniasis; Chagas disease; African trypanosomiasis; Schistosomiasis; Cystic echinococcosis; Lymphatic filariasis; Onchocerciasis; Leprosy; Trachoma; Dengue; Rabies; Ascariasis; Trichuriasis; Hookworm disease; Food-borne trematodiases; Guinea worm disease; Scabies |
+Expected columns (as in the existing file): `measure_id, measure_name, location_id, location_name, sex_id, sex_name, age_id, age_name, cause_id, cause_name, metric_id, metric_name, year, val, upper, lower` (+ population-group columns). Destination: `data/external/downloads/ihme_gbd/` (keep the old zip; add the new one). The cause names above are our expectation and were **not** verified against the GBD tool; the processor prints any unmatched names. GBD may not offer causes for every WHO group (e.g. snakebite, noma, mycetoma, yaws); those groups will have no DALY value and are reported as missing.
+The IHME agreement forbids providing third parties the ability to download the data: keep the files out of git and out of any public hosting.
 
-The 2023 export currently in `data/external/downloads/ihme_gbd/` already has the right dimensions (Global, Both, All ages, 2023, DALYs and Rate) but contains **only the cause "All causes"**, so it is rejected. Re-export with the causes above and put the new zip/csv in the same folder.
+## Processing order after the export arrives
+1. `python scripts/process_ihme_daly.py` -> `data/processed/ihme/daly_by_ntd_group.csv`, `daly_report.json`
+2. `python scripts/build_equity_features.py` -> `data/processed/equity/*` (EML + DALY + HAI; weights 0.45/0.45/0.10 are a proposal; the sensitivity grid becomes meaningful once DALY exists)
+3. `python scripts/make_readiness_report.py`, `python scripts/make_final_docs.py`, `python scripts/freeze_release.py --tag vdm_v1`
 
-Run: `python scripts/process_ihme_daly.py [--year 2023]` → `data/processed/ihme/daly_by_ntd_group.csv`.
-The GBD cause-name table inside the script is our expectation; the processor prints any unmatched cause names so the table can be extended after the first real export. Groups with no matching cause stay empty; multi-cause groups (soil-transmitted helminthiases, leishmaniasis) are summed only when every part is present, otherwise marked `partial`.
-GBD does not have a clean cause for every WHO group (e.g. snakebite, noma, mycetoma, yaws, trachoma sub-types): those groups will have **no DALY value** and the report says so.
-
-## 2. WHO Essential Medicines List  *(you supply the file)*
-
-Create `data/external/who_eml.csv` from the WHO Model List of Essential Medicines (state the edition, e.g. 23rd list, 2023):
-
-| column | required | meaning |
-|---|---|---|
-| `name` | yes | generic medicine name as listed |
-| `drugbank_id` | no | if you know it |
-| `atc_code` | no | |
-| `section` | no | therapeutic section |
-| `edition` | no | e.g. `23rd List, 2023` |
-
-Run: `python scripts/process_who_eml.py` → `data/processed/eml/eml_drug_flags.csv`, `eml_unmatched.csv`. Mapping is DrugBank id, else exact normalised name; ambiguous names are not used. When a list is supplied, `build_equity_features.py` sets `eml_status = 0` for drugs not on it (the list is treated as complete for that edition); with no file, EML status is **unknown (empty)**.
-
-## 3. HAI price / availability surveys  *(done; regional pilot)*
-
-`python scripts/parse_hai_surveys.py` → `data/processed/hai/` (three surveys: Karnataka 2004-11, Maharashtra 2005-01, Delhi 2011-07). Medicine → DrugBank by exact normalised name, then 5 curated INN synonyms (tier 3, listed in `hai_medicines.csv`); combination products stay unmapped. This is historical Indian evidence, **not** a global access score.
-
-## Building the equity table
-
-`python scripts/build_equity_features.py` → `data/processed/equity/equity_features.csv`, `ndpi_ntd_candidates.csv`, `equity_report.json`, `ndpi_weight_sensitivity.csv` (once ≥ 2 components exist). NDPI = weighted mean over the components that have evidence (weights EML 0.45, DALY 0.45, ACCESS 0.10 are a *proposal*), with `evidence_coverage` and `n_components` on every row.
+## EML semantics
+`eml_status` = 1 listed as a single-ingredient entry; empty if the drug appears only inside fixed-dose combinations; 0 otherwise. A 0 can be a false 0 for any of the 106 single entries that could not be mapped (`data/processed/eml/eml_unmatched.csv`).

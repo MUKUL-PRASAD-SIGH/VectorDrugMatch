@@ -15,6 +15,9 @@ class GAT(torch.nn.Module):
         super().__init__()
         self.convs = torch.nn.ModuleList()
         self.norms = torch.nn.ModuleList()
+        # nn.Dropout MODULE, not F.dropout(training=self.training): to_hetero's FX tracing bakes the functional flag in as a constant (training=True),
+        # which left dropout ACTIVE in eval mode (non-deterministic validation/test predictions). Modules follow model.train()/eval().
+        self.dropout = torch.nn.Dropout(p=0.2)
         
         # Output of first layer is hidden_channels * heads
         self.convs.append(GATConv((-1, -1), hidden_channels, heads=heads, add_self_loops=False))
@@ -45,7 +48,7 @@ class GAT(torch.nn.Module):
             x = x_out
             if i < len(self.convs) - 1:
                 x = F.elu(x)
-                x = F.dropout(x, p=0.2, training=self.training)
+                x = self.dropout(x)
         return x
 
 def create_gat_model(metadata, hidden_channels=32, out_channels=64, num_layers=2, heads=4):

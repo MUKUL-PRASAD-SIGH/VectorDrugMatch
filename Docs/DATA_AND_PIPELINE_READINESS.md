@@ -1,6 +1,6 @@
 # Data and pipeline readiness report
 
-Generated 2026-11-10 22:52 by `scripts/make_readiness_report.py` from the files on disk. Numbers are read from data/report files; validator lines are from running the validators during generation. Section 6 (unresolved issues) is curated text.
+Generated 2026-11-10 23:36 by `scripts/make_readiness_report.py` from the files on disk. Numbers are read from data/report files; validator lines are from running the validators during generation. Section 6 (unresolved issues) is curated text.
 
 ## 1. Datasets
 
@@ -20,7 +20,7 @@ Generated 2026-11-10 22:52 by `scripts/make_readiness_report.py` from the files 
 | HAI hai_affordability | WHO/HAI price surveys: Karnataka 2004-11, Maharashtra 2005-01, Delhi 2011-07 | check HAI terms | data/external/downloads/hai_price_surveys/ | data/processed/hai/hai_affordability.csv | 108 | 22 |  | numeric blanks = not reported/free (kept as status) | parsed; regional pilot |
 | HAI hai_medicines | WHO/HAI price surveys: Karnataka 2004-11, Maharashtra 2005-01, Delhi 2011-07 | check HAI terms | data/external/downloads/hai_price_surveys/ | data/processed/hai/hai_medicines.csv | 60 | 55 |  | numeric blanks = not reported/free (kept as status) | parsed; regional pilot |
 | NTD mapping table | WHO NTD list (read 2026-11-10) + MONDO + PrimeKG | n/a | - | data/processed/ntd/ntd_disease_mapping.csv | 26 |  |  | none | built from files (rows = WHO entry x group) |
-| Equity feature table | PrimeKG pairs + HAI (+ IHME, EML when supplied) | derived | - | data/processed/equity/equity_features.csv | 9388 | 1801 | 1363 | ndpi empty 8770/9388 | built; access-only (EML, DALY absent) |
+| Equity feature table | PrimeKG pairs + HAI (+ IHME, EML when supplied) | derived | - | data/processed/equity/equity_features.csv | 9388 | 1801 | 1363 | ndpi empty 113/9388 | built; access-only (EML, DALY absent) |
 | IHME DALY by NTD group | IHME GBD 2023 export (must be re-exported) | IHME terms | data/external/downloads/ihme_gbd/ | data/processed/ihme/daly_by_ntd_group.csv (not created) | 0 |  |  | n/a | BLOCKED: export has only 'All causes' |
 | WHO EML flags | WHO Model List (file not supplied) | WHO terms | data/external/who_eml.csv (absent) | data/processed/eml/eml_drug_flags.csv (not created) | 0 |  |  | n/a | BLOCKED: file not supplied |
 
@@ -54,7 +54,7 @@ Generated 2026-11-10 22:52 by `scripts/make_readiness_report.py` from the files 
 
 **HAI medicines -> DrugBank:** {'mapped': 55, 'unmapped': 5} (tiers {'1_exact_name': 49, '3_curated_inn_synonym': 5, 'none': 5, '2_normalised_name': 1}); unmapped: Benzathine benzyl penicillin, Budesonide+Formeterol, Co-amoxiclav, Co-trimoxazole, Sulfadoxine+Pyrimethamine.
 
-**Equity component coverage (all pairs / NTD pairs):** {'eml': 0.0, 'daly': 0.0, 'access': 6.58} / {'eml': 0.0, 'daly': 0.0, 'access': 17.07} (%); NDPI available for 618 pairs (14 NTD).
+**Equity component coverage (all pairs / NTD pairs):** {'eml': 98.6, 'daly': 0.0, 'access': 6.58} / {'eml': 100.0, 'daly': 0.0, 'access': 17.07} (%); NDPI available for 9275 pairs (82 NTD).
 
 
 ## 3. Models
@@ -96,19 +96,26 @@ Loader audit: {"primekg": {"X_train": [40380, 2051], "X_val": [8382, 2051], "X_t
 | # | Issue | Blocks | Needs |
 |---|---|---|---|
 | 1 | IHME export contains only 'All causes' (right dimensions, no NTD causes) | DALY component, NDPI | re-export with NTD causes (Docs/EQUITY_DATA_SPECS.md) |
-| 2 | `data/external/who_eml.csv` not supplied | EML component, NDPI | WHO EML list in the documented CSV format |
-| 3 | NDPI currently rests on the HAI pilot only (6.6% of pairs); weights 0.45/0.45/0.10 unvalidated; sensitivity not computable until >= 2 components | equity claims | items 1-2 |
+| 2 | WHO EML: extracted from the official 24th-list PDF (646 entries: 592 single, 54 combination; automated checks in tests/test_who_eml_extraction.py); 486 of 592 single entries map to 368 distinct PrimeKG drugs by exact/alias/salt/curated-INN tiers; 106 single entries unmapped (vaccines, biologics, blood products, drugs absent from PrimeKG). EML 0 can be a false 0 for those | EML component accuracy | none (limitation documented); WHO text is CC BY-NC-SA 3.0 IGO |
+| 3 | NDPI has EML (98.6% of pairs) + HAI pilot (6.6%) but NO burden component: it reduces to the EML flag and is NOT a burden-aware equity ranking; weights 0.45/0.45/0.10 unvalidated; sensitivity grid not meaningful until DALY exists | equity claims | IHME re-export |
 | 4 | HAI = three Indian surveys 2004-2011; 5 medicines unmapped (combinations, benzathine penicillin) | any global access claim | broader access evidence |
 | 5 | WHO NTD list verified directly (21 groupings; 25 fact sheets; `Docs/NTD_MAPPING.md`). The 22 frozen project groups reconcile to it with documented differences (chikungunya, other deep mycoses, other ectoparasitoses not in the flag; WHO does not enumerate members of two groupings). Page says 'NTDs include', gives no dates; headline: new-NTD requests on hold pending a criteria review (article not read). Candidate extensions are NOT in the frozen flag (changing it would change the NTD stratification) | NTD framing | decide whether to run a separate extended-NTD analysis |
 | 6 | NTD test set is tiny (15 positives, 13 groups with any test pair); MONDO has only a generic term for lymphatic filariasis; noma has none | NTD performance claims | report as exploratory |
 | 7 | 996 drugs have no SMILES (mostly biologics); with/no-structure subsets and the structure-covered variant address the shortcut risk but do not remove it | interpretation | run both variants on Colab |
 | 8 | Open Targets licence/provenance (`Docs/LICENCE_AUDIT.md`, `Docs/OPEN_TARGETS_PROVENANCE.md`): CC0 is platform-level; six upstream source families feed clinical reports but only ChEMBL (CC BY-SA 3.0) is in the licence table; terms of AACT/ClinicalTrials.gov, TTD and PMDA unverified, EMA partial; which families feed OUR 86,451 records is unknown (needs the same-release clinical-report dataset; release number also unknown); stage order matches the documented list order but is our encoding; overlap with PrimeKG is not independent validation | external corroboration claims, any redistribution | per-source attribution + terms review |
 | 9 | PrimeKG upstream licence terms (DrugBank) unchecked; old DrugBank files remain in git history (commit 1829752 on origin/mukul) | public release | licence review; team decision on history cleanup |
-| 10 | `src/explainability` is empty: no SHAP / GNNExplainer code | explainability section | implementation |
+| 10 | Explainability: SHAP (RF/XGBoost) and GNNExplainer (per-link, k-hop) implemented in `src/explainability/explain.py` + `scripts/explain_models.py`, API-tested on synthetic inputs only; MLP/NB/Node2Vec intentionally NOT explained (documented); real-model explanations need the Colab run | explainability section | Colab run |
 | 11 | Legacy `scripts/run_ablations.py` and `scripts/train_benchmark.py` are not drug-disjoint / leak-prone; use `run_ablations_coldstart.py` and `train_node2vec.py` | ablation validity | do not report the legacy outputs |
-| 12 | `train_baselines.py` still prints pooled 5-fold CV numbers (easier than the real task) | misreporting risk | report only `coldstart_*` |
+| 12 | `train_baselines.py` prints pooled 5-fold CV numbers (easier than the real task), and its `mrr`/`hits_10`/`precision_10` (also in `compute_all_metrics`) are POOLED over the test set, not per disease: report only `coldstart_roc_auc/pr_auc/f1/mcc/brier`; ranking metrics come from `evaluate_primekg.py` (per disease). `evaluate_primekg.py` MCC is at a fixed 0.5, the results package uses validation-chosen thresholds | misreporting risk | report discipline |
 | 13 | Node2Vec training untested (needs torch_cluster); GNNs untested on GPU/real graph; one local CPU logistic smoke run exists in `outputs/primekg/` and is NOT a result | Colab run | smoke stage of run_full_pipeline.py |
 | 14 | `src/scoring/{equity,ndpi}.py` are the legacy Hetionet-era scorer; PrimeKG NDPI lives in `scripts/build_equity_features.py` | consistency | decide whether to retire the legacy modules |
 | 15 | Bibliography verified at metadata level; claim support checked against abstracts only (Docs/paper/CITATION_AUDIT.md) | submission | full-text check |
 | 16 | `notebooks/colab_primekg.ipynb` (pinned to 522deb3) predates the variants / results package / ablations; the final run uses `notebooks/colab_final_run.ipynb`, which drives `run_full_pipeline.py` and is pinned in its first code cell to the commit that contains those scripts | final Colab run | re-pin if code changes after the freeze |
-| 17 | Four+ local commits are unpushed by instruction | Colab clone | explicit approval to push |
+| 17 | Local commits are unpushed by instruction; the final notebook pin must point to a pushed commit | Colab clone | explicit approval to push |
+| 18 | Baseline disease representation: the PrimeKG disease features are `is_ntd` plus two columns that are constant (DALY absent) = ONE informative disease feature, so the classical baselines are effectively drug-only and cannot model drug-disease specificity; GNNs/Node2Vec see disease neighbourhoods. Interpret baseline-vs-GNN differences with this in mind | baseline comparison | decision H2 in Docs/HUMAN_ACTION_CHECKLIST.md |
+| 19 | Open Targets quality flag: the only flag is UNVALIDATED_INDICATION; 47,044 of 86,451 pairs have every supporting report flagged (mostly AACT trials) although the documentation says flagged reports do not feed clinical indications; semantics unresolved. Use pairs with >=1 unflagged report (or APPROVAL stage) for any corroboration | OT corroboration | optional: ask Open Targets |
+| 20 | HAI: 10 of 289 comparable MPR values differ between detail pages and the median-price file (all Delhi 2011, lowest-price generic, liquid/drop forms; 1.02-2.93x); cause not established; MPR is not used in the equity score | HAI MPR use | none |
+| 21 | Fixed 2026-11-10: GCN/GraphSAGE/GAT had dropout ACTIVE in eval mode (functional dropout frozen by to_hetero tracing); per-model reseeding added; baseline cold-start models are now saved; RF SHAP normalised to the positive class; regression tests added (tests/test_gnn_eval_determinism.py) | GNN/baseline validity | none (fixed) |
+| 22 | `requirements.txt` is open-ended (>=) and listed neither pyarrow, pymupdf, lxml, mlflow, tabulate nor optuna (added); exact versions used locally are in `requirements-validated-local.txt`; Colab versions are recorded at run time, not pinned | exact reproducibility | none |
+| 23 | Baselines hard-code random_state=42 (config seed not propagated): multi-seed variation needs a code change | optional multi-seed study | decision H10 |
+| 24 | Nested NTD roots: onchocerciasis (2 nodes, 3 pairs) and dracunculiasis (1 node) sit inside the generic lymphatic-filariasis root; sum over groups = 85 pairs vs 82 unique; LF-specific indication pairs = 3 (not 6) | NTD per-group claims | report LF as an upper bound |

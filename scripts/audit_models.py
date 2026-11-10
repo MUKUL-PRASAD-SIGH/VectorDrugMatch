@@ -85,8 +85,10 @@ def main():
                 m = GNNLinkPredictionModel(f(), in_channels=64, hidden_channels=32).eval()
                 with torch.no_grad():
                     p = m(d.x_dict, d.edge_index_dict, q)
-                ok = tuple(p.shape) == (12,) and bool(torch.isfinite(p).all()) and float(p.min()) >= 0 and float(p.max()) <= 1
-                res["gnn"][name] = {"status": "ok" if ok else f"bad output {tuple(p.shape)}", "params": int(sum(x.numel() for x in m.parameters())),
+                    p2 = m(d.x_dict, d.edge_index_dict, q)
+                deterministic = bool(torch.allclose(p, p2))        # eval mode must be deterministic (dropout bug found 2026-11-10 in GCN/GraphSAGE/GAT)
+                ok = tuple(p.shape) == (12,) and bool(torch.isfinite(p).all()) and float(p.min()) >= 0 and float(p.max()) <= 1 and deterministic
+                res["gnn"][name] = {"status": "ok" if ok else f"bad output {tuple(p.shape)} / deterministic={deterministic}", "eval_deterministic": deterministic, "params": int(sum(x.numel() for x in m.parameters())),
                                     "seconds": round(time.time() - t0, 2)}
             except Exception as e:
                 res["gnn"][name] = {"status": f"FAIL {type(e).__name__}: {e}"[:250]}

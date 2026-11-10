@@ -60,9 +60,19 @@ def main():
 
     # ---- EML ----
     f = PR / "eml" / "eml_drug_flags.csv"
+    df["eml_evidence"] = ""
     if f.exists():
         on = set(pd.read_csv(f).drug_id)
-        df["eml_status"] = df.drug_id.isin(on).astype(float)
+        comp_f = PR / "eml" / "eml_combination_components.csv"
+        combo_only = set()
+        if comp_f.exists():
+            cc = pd.read_csv(comp_f, keep_default_na=False)
+            combo_only = {i for ids in cc.drugbank_ids for i in str(ids).split("|") if i} - on
+        # 1 = listed as a single-ingredient entry; EMPTY = appears only inside a fixed-dose combination (not counted, not called 0);
+        # 0 = not on the list. A 0 can be wrong if the drug matches one of the EML single entries that could not be mapped (eml_unmatched.csv).
+        df["eml_status"] = np.where(df.drug_id.isin(on), 1.0, np.where(df.drug_id.isin(combo_only), np.nan, 0.0))
+        df["eml_evidence"] = np.where(df.drug_id.isin(on), "single_entry_on_list",
+                                      np.where(df.drug_id.isin(combo_only), "combination_component_only", "not_on_list_or_entry_unmapped"))
         avail["eml"] = True
     else:
         df["eml_status"] = np.nan
@@ -104,7 +114,7 @@ def main():
     df["evidence_coverage"] = sum(W[k] * df[f"{k}_score"].notna() for k in W)
     df["n_components"] = sum(df[f"{k}_score"].notna().astype(int) for k in W)
     df["ndpi_score"] = ndpi(df, W)
-    cols = ["drug_id", "drug_name", "disease_id", "disease_name", "ntd_group", "is_ntd", "split", "eml_status", "daly_rate", "daly_group_used",
+    cols = ["drug_id", "drug_name", "disease_id", "disease_name", "ntd_group", "is_ntd", "split", "eml_status", "eml_evidence", "daly_rate", "daly_group_used",
             "availability", "affordability_days_private", "n_hai_surveys", "eml_score", "daly_score", "access_score", "n_components",
             "evidence_coverage", "ndpi_score"]
     df[cols].to_csv(out / "equity_features.csv", index=False)
@@ -129,11 +139,15 @@ def main():
     rep = {"pairs": n, "ntd_pairs": int((df.is_ntd == 1).sum()), "inputs_present": avail, "weights_default": W,
            "component_coverage_pct_all_pairs": {k: round(100 * df[f"{k}_score"].notna().mean(), 2) for k in W},
            "component_coverage_pct_ntd_pairs": {k: round(100 * df.loc[df.is_ntd == 1, f"{k}_score"].notna().mean(), 2) for k in W},
+           "eml_evidence_counts_all_pairs": df.eml_evidence.value_counts().to_dict(),
+           "eml_unmapped_single_entries_possible_false_zeros": int(len(pd.read_csv(PR / "eml" / "eml_unmatched.csv"))) if (PR / "eml" / "eml_unmatched.csv").exists() else None,
            "pairs_with_ndpi": int(df.ndpi_score.notna().sum()), "ntd_pairs_with_ndpi": int(df.loc[df.is_ntd == 1, "ndpi_score"].notna().sum()),
            "n_components_distribution": df.n_components.value_counts().sort_index().to_dict(), "sensitivity": sens,
-           "caveats": ["EML and DALY inputs are absent until who_eml.csv and an IHME NTD export are supplied; NDPI then rests on the HAI pilot only",
+           "caveats": ["DALY (burden) is absent until a disease-specific IHME export is supplied: NDPI then reduces to the EML flag (+ the HAI pilot where available), "
+                       "i.e. it is NOT a burden-aware equity ranking and must not be reported as one",
+                       "EML status 0 means 'not on the list OR its entry could not be mapped' (see eml_unmapped_single_entries_possible_false_zeros); combination-only drugs are left empty",
                        "access = regional historical availability (India 2004-2011), not global access",
-                       "weights 0.45/0.45/0.10 are a proposal; see sensitivity file once >= 2 components exist"]}
+                       "weights 0.45/0.45/0.10 are a proposal; the sensitivity grid is computed only over pairs with >= 2 components and is not meaningful while DALY is absent"]}
     (out / "equity_report.json").write_text(json.dumps(rep, indent=2, default=int), encoding="utf-8")
     print(json.dumps(rep, indent=1, default=int))
 

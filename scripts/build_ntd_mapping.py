@@ -205,6 +205,33 @@ def main():
                     "in_frozen_benchmark_flag": 1})
     pd.DataFrame(rec).to_csv(out / "ntd_group_reconciliation.csv", index=False)
 
+    # ---- nested-root / double-counting audit across the 22 frozen groups ----
+    g_desc, g_nodes, g_pairs = {}, {}, {}
+    for g, roots in NTD_ROOTS.items():
+        ids = [m for m, _ in roots]
+        if not ids:
+            g_desc[g], g_nodes[g], g_pairs[g] = set(), set(), set()
+            continue
+        desc = descendants(children, ids)
+        hit = {node_ids[i] for i, cs in enumerate(comp) if any(c in desc for c in cs)}
+        g_desc[g], g_nodes[g] = desc, hit
+        g_pairs[g] = set(map(tuple, ind[ind.target_id.isin(hit)][["source_id", "target_id"]].values.tolist()))
+    keys = list(NTD_ROOTS)
+    ov = []
+    for i, g1 in enumerate(keys):
+        for g2 in keys[i + 1:]:
+            sd, sn, sp_ = g_desc[g1] & g_desc[g2], g_nodes[g1] & g_nodes[g2], g_pairs[g1] & g_pairs[g2]
+            if sd or sn or sp_:
+                ov.append({"group_a": g1, "group_b": g2, "shared_mondo_terms": len(sd), "shared_primekg_nodes": len(sn), "shared_indication_pairs": len(sp_),
+                           "a_contains_b_nodes": int(g_nodes[g2] <= g_nodes[g1] and bool(g_nodes[g2])), "b_contains_a_nodes": int(g_nodes[g1] <= g_nodes[g2] and bool(g_nodes[g1]))})
+    pd.DataFrame(ov, columns=["group_a", "group_b", "shared_mondo_terms", "shared_primekg_nodes", "shared_indication_pairs", "a_contains_b_nodes", "b_contains_a_nodes"]).to_csv(out / "ntd_group_overlaps.csv", index=False)
+    uni_nodes = set().union(*g_nodes.values())
+    uni_pairs = set().union(*g_pairs.values())
+    flag_nodes = set(dis.disease_id[dis.is_ntd == 1])
+    overlap_audit = {"groups_with_overlap": len(ov), "sum_over_groups_nodes": sum(len(v) for v in g_nodes.values()), "unique_nodes": len(uni_nodes),
+                     "sum_over_groups_indication_pairs": sum(len(v) for v in g_pairs.values()), "unique_indication_pairs": len(uni_pairs),
+                     "frozen_flag_nodes_equal_union_of_groups": bool(flag_nodes == uni_nodes), "frozen_flag_nodes": len(flag_nodes)}
+
     bench = df[df.scope == "benchmark_group"]
     summary = {
         "who_entries_in_list_footnote": len(WHO),
@@ -218,7 +245,8 @@ def main():
         "frozen_flag_is_ntd_nodes": int(dis.is_ntd.sum()),
         "who_source": {"url": WHO_URL, "accessed": WHO_ACCESSED,
                        "caveat": "list says 'NTDs include'; no inclusion dates or criteria on the page; WHO headline 2026-10-15: new-NTD requests on hold pending criteria review (article not read)"},
-        "note": "sum over groups can exceed unique pairs/positives because a pair can fall under several groups (e.g. nested roots)",
+        "overlap_audit": overlap_audit,
+        "note": "sum over groups can exceed unique pairs/positives because a pair can fall under several groups (e.g. nested roots); see ntd_group_overlaps.csv",
     }
     (out / "ntd_mapping_summary.json").write_text(json.dumps(summary, indent=2, default=int), encoding="utf-8")
     print(df[["who_entry", "group_key", "scope", "n_primekg_disease_nodes", "n_primekg_indication_pairs", "indication_pos_test", "status"]].to_string(index=False))

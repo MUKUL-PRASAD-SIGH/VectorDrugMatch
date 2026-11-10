@@ -1,28 +1,25 @@
-# Open Targets indication data: provenance
+# Open Targets indication data: provenance (resolved)
 
-Generated 2026-11-10. Evidence log: `Docs/source_evidence/fetch_log_2026-11-10.json`. See `Docs/LICENCE_AUDIT.md` for terms.
+Generated 2026-11-10 from `data/processed/open_targets/source_attribution_report.json`. Evidence: `Docs/source_evidence/fetch_log_2026-11-10.json`.
 
-## 1. What our files are
-Three parquet files from an Open Targets Platform download (SHA-1 in `Docs/HAI_DOWNLOAD_MANIFEST.md`): an **indication table** (`id`, `maxClinicalStage`, `clinicalReportIds`, `diseaseId`, `drugId`; 86,451 rows, one per drug-disease pair), a **molecule table** and a **mechanism table**.
-**The Open Targets release number is not recorded in the files and is unknown.** Consequence: we cannot say whether the AACT records were extracted with the LLM method that Open Targets documents from release 26.06.
-The indication table is the *aggregated* "Clinical indication" dataset described by Open Targets: reports for the same drug and disease are consolidated into one record, preserving traceability to each contributing report (`clinicalReportIds`).
-Consistency check supporting this: the stage values in our table contain **no `PHASE_4` and no withdrawal value**, exactly as the documented max-stage rule implies (a report of Phase IV or Withdrawal sets the maximum stage to Approval).
+## 1. Release identification
+Our three local files are **byte-identical (SHA-256) to release 26.09**: `00000000.parquet` = `clinical_indication`, `00000000 (1).parquet` = `drug_molecule`, `00000000 (2).parquet` = `drug_mechanism_of_action`
+(source: `https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/<dataset>/00000000.parquet`). Identification method: only release 26.09 names all four datasets `00000000.parquet`; the downloaded 26.09 files then matched ours exactly. The same-release `clinical_report` file (289,954 reports) was downloaded to `data/external/downloads/open_targets_release_26.09/` (git-ignored).
 
-## 2. How Open Targets builds these records (from its documentation, read 2026-11-10)
-* Clinical reports come from **six source families**: ClinicalTrials.gov via AACT; ChEMBL curated indications; ChEMBL drug warnings; Therapeutic Target Database (TTD); EMA Human Medicines; PMDA approvals. Pipeline: **Open Targets Mira** (repository formerly `clinical_mining`).
-* Drug and disease entities are mapped to ChEMBL and EFO identifiers. For AACT records, entities are extracted with a large language model "from release 26.06"; all other sources supply structured labels.
-* Quality filters exclude from downstream use: Phase IV reports for indications with no approval, and trials whose primary purpose is not to measure the effect of the intervention on the target condition.
-* Max stage: reports are ranked by harmonised stage with one explicit rule (Phase IV or Withdrawal -> Approval). The documentation lists the categories in this order: Withdrawal, Approval, Phase IV, Preapproval, Phase III, Phase II/III, Phase II, Phase I/II, Phase I, Early Phase I, IND, Preclinical, Unknown. It does not print a numeric ranking, but for every stage that occurs in our data this order agrees with the ordering used in `open_targets_indications.py`; the code comment calls it a project convention that matches the documented order.
+## 2. Identifiers
+`clinicalReportIds` in the indication table are keys to `clinical_report.id` (UUIDs): **321,785 references, 149,579 distinct reports, 100.0% resolved** in the 26.09 clinical-report dataset; every referenced report has type INDICATION (no safety reports). Each report carries `provider`, `source`, `origin`, `url`, `clinicalStage`, `qualityControls`, and for trials NCT-level fields.
 
 ## 3. Which upstream sources contribute to OUR records
-**Not determinable from our three files.** Each indication row carries only report identifiers: 321,785 report references across the 86,451 rows (149,579 distinct report ids; median 1 per row, max 856; every row has at least one). The source of each report lives in Open Targets' *clinical report* dataset, which we do not have.
-All six source families can contribute in principle; ChEMBL is the one we know is present in the platform's licence table. **Required to close this:** download the clinical-report dataset of the same release, join on `clinicalReportIds`, and count rows and pairs by source family (including pairs supported by a single source). Until then no per-source claim is made.
+Referenced reports by provider: {'AACT': 267087, 'ChEMBL': 39089, 'TTD': 10383, 'EMA': 3581, 'PMDA': 1645}. By source (top): {'ClinicalTrials.gov': 267087, 'DailyMed': 32650, 'TTD': 10383, 'EMA Human Drugs': 3581, 'ATC': 3245, 'USAN': 1825, 'PMDA': 1645, 'FDA': 724, 'INN': 644, 'EMA': 1}. By origin: {'CLINICAL_TRIAL': 267087, 'DRUG_LABEL': 32650, 'CURATED_RESOURCE': 16097, 'REGULATORY_AGENCY': 5951}.
+Pairs (n = 86,451): with AACT 74,546; ChEMBL 9,847; TTD 9,384; EMA 1,735; PMDA 1,344. Single-provider pairs: {'AACT': 67085, 'ChEMBL': 6006, 'TTD': 4582, 'EMA': 399, 'PMDA': 377}.
+APPROVAL-stage pairs (n = 10,952): with ChEMBL 7,604; TTD 2,997; AACT 4,238; EMA 1,614; PMDA 1,344.
+**All five providers contribute**, so none of the five licence questions in `Docs/LICENCE_AUDIT.md` can be ruled out for our data. AACT entities are LLM-extracted from release 26.06 per the Open Targets documentation (our release 26.09 is later).
 
-## 4. Mapping into PrimeKG identifiers (this project)
-Tier 1 (exact ChEMBL->DrugBank cross-reference + single MONDO id): **40,937** unique pairs; tier 2 (parent-molecule fallback, kept in a separate file): **5,901**. Drug tiers by ChEMBL id: {'1_exact_xref': 5494, 'none': 4697, '2_parent_fallback': 1187}. Disease status by Open Targets id: {'native': 2656, 'non_disease_ontology': 479, 'unmapped_no_xref': 470, 'xref_related_only': 12, 'xref_exact': 10, 'native_replaced': 3, 'native_obsolete_no_replacement': 1}.
-Overlap with PrimeKG indications: {'primekg_indication_pairs': 9388, 'ot_clean_pairs': 40937, 'ot_clean_pairs_with_primekg_drug': 33209, 'primekg_pairs_found_in_ot': 2451, 'primekg_pairs_found_in_ot_frac': 0.1446, 'primekg_pairs_with_ot_mappable_drug': 14044, 'primekg_pairs_found_in_ot_frac_among_mappable_drugs': 0.1745}. Because PrimeKG's indication labels and these records may rest on shared upstream sources (e.g. ChEMBL/DrugCentral-type curation, regulatory labels), overlap is **not** independent validation. The dataset is not merged into any training, validation or test data.
+## 4. Quality flags
+The only flag value is `UNVALIDATED_INDICATION`: 138,495 referenced reports carry it (51.5% of AACT references, 1.7% of ChEMBL, 4.7% of EMA, none of PMDA/TTD; shares measured 2026-11-10 from the referenced reports). **47,044 pairs have every supporting report flagged** (APPROVAL pairs: 43). The documentation pages read describe two exclusion criteria (Phase IV without approval; trials whose primary purpose is not to measure the effect on the condition) and say flagged reports do not contribute to clinical indications, yet flagged reports are referenced here: **semantics unresolved**. For any corroboration use pairs with >= 1 unflagged report (`all_reports_flagged = 0`: 39,407 pairs) or the APPROVAL stage.
 
-## 5. Open items
-1. Obtain the release number and the same-release clinical-report dataset; attribute records to sources.
-2. Per-source terms for AACT/ClinicalTrials.gov, TTD and PMDA are unverified (see licence audit).
-3. LLM-extracted AACT records may carry extraction errors; their share in our pairs is unknown until item 1.
+## 5. Mapping into PrimeKG identifiers
+Tier 1 (exact ChEMBL->DrugBank cross-reference + single MONDO id): 40,937 unique pairs; tier 2 (parent-molecule fallback, separate file): 5,901. Disease mapping by OT id: {'native': 2656, 'non_disease_ontology': 479, 'unmapped_no_xref': 470, 'xref_related_only': 12, 'xref_exact': 10, 'native_replaced': 3, 'native_obsolete_no_replacement': 1}. Pairs also PrimeKG indications: 2,453 (of which AACT supports 1,997, ChEMBL 939, TTD 687, EMA 337, PMDA 172); not PrimeKG: 38,491.
+
+## 6. Independence from PrimeKG
+**No independence claim is made.** PrimeKG's indication labels (DrugCentral/DrugBank-derived) and the ChEMBL/DailyMed/EMA/PMDA/TTD records can describe the same approvals; the overlap above is descriptive. Trial-derived (AACT) support is a different evidence type but is flagged UNVALIDATED for many pairs. Open Targets data are not merged into any PrimeKG training, validation or test split.

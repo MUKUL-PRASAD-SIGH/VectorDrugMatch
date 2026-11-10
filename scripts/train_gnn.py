@@ -41,7 +41,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(REPO_ROOT))
 
 from src.data.graph_builder import build_hetero_data
-from src.data.dataset import build_tabular_dataset, build_message_passing_graph
+from src.data.dataset import build_tabular_dataset, build_message_passing_graph, set_seeds
 from src.utils.metrics import compute_all_metrics, format_metrics_table, print_metrics
 from src.utils.experiment_logger import log_experiment
 
@@ -203,6 +203,7 @@ def train_evaluate_gnns(config_path: str, epochs: int = 100):
         print(f"Training {name}...")
         print("="*50)
         
+        set_seeds(random_seed)   # reseed per model: a model's initialisation must not depend on which models ran before it
         # Build GNN + Predictor
         gnn = factory()
         model = GNNLinkPredictionModel(gnn, in_channels=EMB_DIM, hidden_channels=32).to(device)

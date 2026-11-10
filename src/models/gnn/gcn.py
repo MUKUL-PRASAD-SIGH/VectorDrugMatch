@@ -14,6 +14,9 @@ class GCN(torch.nn.Module):
         super().__init__()
         self.convs = torch.nn.ModuleList()
         self.norms = torch.nn.ModuleList()
+        # nn.Dropout MODULE, not F.dropout(training=self.training): to_hetero's FX tracing bakes the functional flag in as a constant (training=True),
+        # which left dropout ACTIVE in eval mode (non-deterministic validation/test predictions). Modules follow model.train()/eval().
+        self.dropout = torch.nn.Dropout(p=0.2)
         
         self.convs.append(GraphConv(-1, hidden_channels))
         self.norms.append(BatchNorm1d(hidden_channels))
@@ -42,7 +45,7 @@ class GCN(torch.nn.Module):
             x = x_out
             if i < len(self.convs) - 1:
                 x = F.relu(x)
-                x = F.dropout(x, p=0.2, training=self.training)
+                x = self.dropout(x)
         return x
 
 def create_gcn_model(metadata, hidden_channels=64, out_channels=64, num_layers=2):

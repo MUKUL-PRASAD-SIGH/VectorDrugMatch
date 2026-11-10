@@ -20,7 +20,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 DIRS = ["primekg", "primekg_structcov", "open_targets", "ntd", "hai", "equity", "ihme", "eml"]
-EXTRA = ["data/external/primekg_kg.csv", "data/external/mondo.obo", "Docs/HAI_DOWNLOAD_MANIFEST.md"]
+EXTRA = ["data/external/primekg_kg.csv", "data/external/mondo.obo", "data/external/B09474-eng.pdf", "data/external/who_eml.csv", "Docs/HAI_DOWNLOAD_MANIFEST.md"]
 
 
 def sha256(p):

@@ -7,6 +7,7 @@ scripts/run_full_pipeline.py - one entry point for the final (Colab) experiment 
     python scripts/run_full_pipeline.py --stage train --variant full
     python scripts/run_full_pipeline.py --stage train --variant structcov
     python scripts/run_full_pipeline.py --stage report --variant full   # evaluation + paper results package
+    python scripts/run_full_pipeline.py --stage explain --variant full  # SHAP (RF, XGBoost) + GNNExplainer (HGT, RGCN) on TEST pairs, after training
     python scripts/run_full_pipeline.py --stage all                # prepare -> external -> train/report(full) -> train/report(structcov)
 
 Add --dry-run to print the commands without running them. Each step is logged to outputs/pipeline_log.jsonl (exit code, wall time).
@@ -42,8 +43,10 @@ def steps(stage, variant, epochs):
     if stage == "external":
         return [([PY, "scripts/build_ntd_mapping.py"], R),
                 ([PY, "scripts/open_targets_indications.py"], O), ([PY, "scripts/validate_open_targets.py"], O),
-                ([PY, "scripts/parse_hai_surveys.py"], O),
-                ([PY, "scripts/process_ihme_daly.py"], O), ([PY, "scripts/process_who_eml.py"], O),
+                ([PY, "scripts/open_targets_source_attribution.py"], O),
+                ([PY, "scripts/parse_hai_surveys.py"], O), ([PY, "scripts/audit_hai_parsing.py"], O),
+                ([PY, "scripts/process_ihme_daly.py"], O),
+                ([PY, "scripts/extract_who_eml_pdf.py"], O), ([PY, "scripts/process_who_eml.py"], O),
                 ([PY, "scripts/build_equity_features.py"], R)]
     if stage == "smoke":
         return [([PY, "-c", "import torch,torch_cluster;print('torch',torch.__version__,'cuda',torch.cuda.is_available(),'torch_cluster ok')"], R),
@@ -59,19 +62,22 @@ def steps(stage, variant, epochs):
         return s
     if stage == "report":
         return [([PY, "scripts/evaluate_primekg.py", "--config", c], R), ([PY, "scripts/make_results_package.py", "--config", c], R)]
+    if stage == "explain":
+        return [([PY, "scripts/explain_models.py", "--config", c, "--models", "rf", "xgb", "--n-shap", "1000"], R),
+                ([PY, "scripts/explain_models.py", "--config", c, "--gnn", "HGT", "RGCN", "--n-links", "20"], O)]
     raise ValueError(stage)
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", required=True, choices=["prepare", "external", "smoke", "train", "report", "all"])
+    ap.add_argument("--stage", required=True, choices=["prepare", "external", "smoke", "train", "report", "explain", "all"])
     ap.add_argument("--variant", default="full", choices=list(CFG))
     ap.add_argument("--epochs", type=int, default=100)
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
     if a.stage == "all":
         plan = (steps("prepare", "full", a.epochs) + steps("external", "full", a.epochs) + steps("train", "full", a.epochs)
-                + steps("report", "full", a.epochs) + steps("train", "structcov", a.epochs) + steps("report", "structcov", a.epochs))
+                + steps("report", "full", a.epochs) + steps("explain", "full", a.epochs) + steps("train", "structcov", a.epochs) + steps("report", "structcov", a.epochs))
     else:
         plan = steps(a.stage, a.variant, a.epochs)
     log = REPO / "outputs" / "pipeline_log.jsonl"

@@ -1,5 +1,5 @@
 {
- "purpose": "Evidence log for the WHO NTD list and Open Targets licence/provenance audit. Raw pages are not stored in git; hashes let the fetch be re-verified.",
+ "purpose": "Evidence log for the WHO NTD list, licence and provenance audits. Raw pages are not stored in git; hashes let each fetch be re-verified.",
  "fetched_with": "python urllib, direct HTTP GET, 2026-11-10",
  "sources": {
   "who_ntd_topic": {
@@ -9,7 +9,7 @@
    "content_type": "text/html; charset=utf-8",
    "fetched_utc": "2026-11-10T17:15:44+00:00",
    "sha256_full": "f5472b1665a5572392d14af5e9112320bd8f0b11d7f8c149f01604e6305742dc",
-   "what": "WHO NTD health-topic page: source of the 21 groupings (footnote 'NTDs include') and 25 fact-sheet links"
+   "what": "WHO NTD health-topic page: 21 groupings (footnote), 25 fact-sheet links"
   },
   "ot_licence": {
    "url": "https://platform-docs.opentargets.org/licence",
@@ -27,7 +27,7 @@
    "content_type": "text/markdown; charset=utf-8",
    "fetched_utc": "2026-11-10T17:15:45+00:00",
    "sha256_full": "1dc64d95df328593c85feea5742945678349daaf60eff0666497fa4822ebb11e",
-   "what": "Open Targets licence page (Markdown): CC0 statement + 45-row source licence table"
+   "what": "Open Targets licence page (Markdown): CC0 statement + 44-row source licence table"
   },
   "ot_clinical_report_md": {
    "url": "https://platform-docs.opentargets.org/drug/clinical-report.md",
@@ -110,7 +110,7 @@
    "bytes": 46247,
    "fetched_utc": "2026-11-10T17:16:50+00:00",
    "sha256_full": "98dd6e8aa266e8c7a0d408a43d1759bc5f86300a148c4802d89796a1b8f136aa",
-   "what": "PMDA page: footer '(c) PMDA All Rights Reserved' and a Site Policy link; policy text NOT retrieved"
+   "what": "PMDA landing page"
   },
   "chembl": {
    "url": "https://www.ebi.ac.uk/chembl/",
@@ -135,6 +135,151 @@
    "fetched_utc": "2026-11-10T17:17:00+00:00",
    "sha256_full": "96d0cd94074d95d035dbbb26f5cb5b21890b8a60139f4c2f54db2973bd3b286b",
    "what": "Open Targets datasets download page (does not name the clinical datasets)"
+  },
+  "drugbank_terms": {
+   "url": "https://go.drugbank.com/legal/terms_of_use",
+   "error": "HTTP Error 403: Forbidden",
+   "what": ""
+  },
+  "drugbank_academic": {
+   "url": "https://go.drugbank.com/releases/latest",
+   "http": 200,
+   "bytes": 179090,
+   "sha256_full": "5be146ac7358f48892b2c242fd5359fead35fa8bb00e486c7a4a9f8c2b70431a",
+   "fetched_utc": "2026-11-10T17:45:54+00:00",
+   "what": "DrugBank releases page: open datasets released under CC BY-NC 4.0; academic licence criteria (terms_of_use page returned HTTP 403, not read)"
+  },
+  "primekg_readme": {
+   "url": "https://raw.githubusercontent.com/mims-harvard/PrimeKG/main/README.md",
+   "http": 200,
+   "bytes": 18141,
+   "sha256_full": "c96ba7391a3ec935d01e757f8ea75ca01d30c1c90accacad930cd6ca51f82378",
+   "fetched_utc": "2026-11-10T17:45:54+00:00",
+   "what": "PrimeKG README: code MIT; dataset licences are separate ('refer to the respective dataset licenses'); lists primary sources incl. DrugBank, DrugCentral, DisGeNET, SIDER, UMLS"
+  },
+  "primekg_dataverse_api": {
+   "url": "https://dataverse.harvard.edu/api/datasets/:persistentId/?persistentId=doi:10.7910/DVN/IXA7BM",
+   "http": 200,
+   "bytes": 12458,
+   "sha256_full": "65b781b5d7d6c18f9455e6d56129155cb54cbdebac3436a0d13dd3867f857f7b",
+   "fetched_utc": "2026-11-10T17:45:55+00:00",
+   "what": "Harvard Dataverse API for doi:10.7910/DVN/IXA7BM: licence CC0 1.0, version 2.1, released 2022-05-02"
+  },
+  "ihme_terms": {
+   "url": "https://www.healthdata.org/data-tools-practices/data-practices/ihme-free-charge-non-commercial-user-agreement",
+   "http": 200,
+   "bytes": 134774,
+   "sha256_full": "65900159ffd7cc1c701762a9f8b0ddeeae0600325381e589a2b432b8ce7aa6ad",
+   "fetched_utc": "2026-11-10T17:45:57+00:00",
+   "what": "IHME Free-of-Charge Non-Commercial User Agreement: non-commercial use; results for internal research and publication; no third-party hosting of data sets"
+  },
+  "mondo_repo": {
+   "url": "https://raw.githubusercontent.com/monarch-initiative/mondo/master/README.md",
+   "http": 200,
+   "bytes": 4845,
+   "sha256_full": "687a99c4c18db682b716ef6a11324f8589611a016ae165111ab2bcfa28698559",
+   "fetched_utc": "2026-11-10T17:45:58+00:00",
+   "what": "MONDO repository README: License CC-BY 4.0"
+  },
+  "nlm_policies": {
+   "url": "https://www.nlm.nih.gov/web_policies.html",
+   "http": 200,
+   "bytes": 43526,
+   "sha256_full": "c8b7026b5c3fcfd1b0cb88755077f6a99a5f2159eecd42b0e7d1a5ad9b30ec55",
+   "fetched_utc": "2026-11-10T17:45:58+00:00",
+   "what": "NLM web policies: US-government works not subject to copyright; third-party content may be protected"
+  },
+  "aact_points": {
+   "url": "https://aact.ctti-clinicaltrials.org/points_to_consider",
+   "error": "HTTP Error 404: Not Found",
+   "what": ""
+  },
+  "ctgov_data_api": {
+   "url": "https://clinicaltrials.gov/data-api/about-api/api-migration",
+   "http": 200,
+   "bytes": 94251,
+   "sha256_full": "66ba04e716eacfbd0601c980c442969da345a33403ec67c077e993a22710c74a",
+   "fetched_utc": "2026-11-10T17:46:00+00:00",
+   "what": "ClinicalTrials.gov data-api page: JS shell, no terms text"
+  },
+  "ttd_download": {
+   "url": "https://db.idrblab.net/ttd/full-data-download",
+   "http": 200,
+   "bytes": 461,
+   "sha256_full": "4902fc7ad1c4f8a43566a070abb4bfb568effb34aa5a5fd7345bb42d9bb97dab",
+   "fetched_utc": "2026-11-10T17:46:03+00:00",
+   "what": ""
+  },
+  "haiweb": {
+   "url": "https://haiweb.org/what-we-do/price-availability-affordability/collecting-and-reporting-medicine-price-data/",
+   "error": "HTTP Error 404: Not Found",
+   "what": ""
+  },
+  "who_copyright": {
+   "url": "https://www.who.int/about/policies/publishing/copyright",
+   "http": 200,
+   "bytes": 89512,
+   "sha256_full": "81fb4a2b3ce24e149aca9f82fdcc290ce4111465ae8f1539ee99b92665c62dfc",
+   "fetched_utc": "2026-11-10T17:46:05+00:00",
+   "what": "WHO copyright page: WHO publications CC BY-NC-SA 3.0 IGO"
+  },
+  "pmda_site_policy": {
+   "url": "https://www.pmda.go.jp/english/0013.html",
+   "http": 200,
+   "bytes": 47280,
+   "sha256_full": "ab250b54805786b7e08647c3c6904e86c35765dfc6aa3ee1ad7a7876d6e750ce",
+   "fetched_utc": "2026-11-10T17:46:06+00:00",
+   "what": "PMDA Site Policy: content under Public Data License 1.0 (PDL 1.0) unless otherwise indicated; source citation required"
   }
+ },
+ "open_targets_release_identification": {
+  "conclusion": "release 26.09: our local indication, drug_molecule and drug_mechanism_of_action files are byte-identical (SHA-256) to the release-26.09 files",
+  "release_files": {
+   "clinical_indication": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/clinical_indication/00000000.parquet",
+    "bytes": 4989955,
+    "sha256_full": "e10ced7ce09495cd3fa6e7cb94e81e083aed78ee399424730d567243b49a38d8"
+   },
+   "clinical_report": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/clinical_report/00000000.parquet",
+    "bytes": 75924085,
+    "sha256_full": "ba0ea48b129182de119f5d676bb1483e6225ba65857a31b7319b65c0e6b8fa25"
+   },
+   "drug_molecule": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/drug_molecule/00000000.parquet",
+    "bytes": 6867467,
+    "sha256_full": "be65749aa1dbcc68d0930f8ac18126cec5c2bc2c0f232f11e8530dad4ba0585c"
+   },
+   "drug_mechanism_of_action": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/drug_mechanism_of_action/00000000.parquet",
+    "bytes": 322830,
+    "sha256_full": "8484accd3383837e0eaac2164eed89991daf58dc93f0a599072fb7e5ef4f6c28"
+   }
+  },
+  "local_files": {
+   "00000000 (1).parquet": {
+    "bytes": 6867467,
+    "sha256_full": "be65749aa1dbcc68d0930f8ac18126cec5c2bc2c0f232f11e8530dad4ba0585c"
+   },
+   "00000000 (2).parquet": {
+    "bytes": 322830,
+    "sha256_full": "8484accd3383837e0eaac2164eed89991daf58dc93f0a599072fb7e5ef4f6c28"
+   },
+   "00000000.parquet": {
+    "bytes": 4989955,
+    "sha256_full": "e10ced7ce09495cd3fa6e7cb94e81e083aed78ee399424730d567243b49a38d8"
+   }
+  },
+  "mapping": {
+   "00000000.parquet": "clinical_indication",
+   "00000000 (1).parquet": "drug_molecule",
+   "00000000 (2).parquet": "drug_mechanism_of_action"
+  }
+ },
+ "who_eml_pdf": {
+  "path": "data/external/B09474-eng.pdf",
+  "bytes": 1364687,
+  "sha256_full": "69daf7c8399b85978ba85e143d3af34e6ccf7f3d493b1e056daa7ef909d64eb2",
+  "licence_statement_in_pdf": "page 2: CC BY-NC-SA 3.0 IGO (https://creativecommons.org/licenses/by-nc-sa/3.0/igo); WHO DOI 10.2471/B09474; PDF metadata title says '23rd List (2023)' but page 1 states 24th list (2025)"
  }
 }

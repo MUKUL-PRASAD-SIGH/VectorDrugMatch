@@ -207,6 +207,7 @@ def train_evaluate_baselines(selected_models, config_path):
                                    "fn": int(fn), "tp": int(tp)})
                 pd.DataFrame({"y_true": splits["y_test"], "probability": cs_proba}).to_csv(
                     outputs_dir / f"baseline_{key}_coldstart_predictions.csv", index=False)
+                cs_model.save(models_dir / f"baseline_{key}_coldstart.pkl")   # the model that produced the reported cold-start test metrics
                 avg_metrics.update({f"coldstart_{k}": v for k, v in cs_metrics.items()})
                 mlflow.log_metrics({f"coldstart_{k}": v for k, v in cs_metrics.items()})
                 print(f"  Cold-start test ROC-AUC: {cs_metrics['roc_auc']:.4f}  PR-AUC: {cs_metrics['pr_auc']:.4f}")
@@ -242,8 +243,10 @@ def train_evaluate_baselines(selected_models, config_path):
                 fi_df.to_csv(fi_path, index=False)
                 mlflow.log_artifact(str(fi_path))
                 
-                # SHAP Support
-                print(f"Computing SHAP values for {name}...")
+                # SHAP Support. NOTE: this model is fit on train+val+test POOLED (final_model above), so these SHAP values describe a model that has
+                # seen the test pairs: use them for global feature importance only, never as evidence of held-out behaviour. For held-out
+                # explanations of the cold-start model use scripts/explain_models.py (SHAP on test pairs of baseline_<key>_coldstart.pkl).
+                print(f"Computing SHAP values for {name} (pooled all-data model; see comment)...")
                 try:
                     # Use a random subset of 5000 instances to save time
                     sample_size = min(5000, len(X_all))
@@ -264,6 +267,10 @@ def train_evaluate_baselines(selected_models, config_path):
                     else:
                         shap_values = shap.TreeExplainer(base_estimator).shap_values(X_sample)
 
+                    if isinstance(shap_values, list):               # old shap: [class0, class1]
+                        shap_values = shap_values[1]
+                    elif getattr(shap_values, "ndim", 2) == 3:        # new shap, sklearn RF: (n, features, 2) -> positive-class contributions
+                        shap_values = shap_values[:, :, 1]
                     shap_path = outputs_dir / f"{key}_shap_values.npy"
                     np.save(shap_path, shap_values)
                     mlflow.log_artifact(str(shap_path))
