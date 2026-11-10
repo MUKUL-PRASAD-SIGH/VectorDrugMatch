@@ -1,6 +1,6 @@
 # Final release readiness
 
-Generated 2026-11-10 23:36 by `scripts/make_final_docs.py`. Statuses: DONE AND VALIDATED, IMPLEMENTED BUT NOT VALIDATED, BLOCKED ON MY INPUT, NOT STARTED, NOT APPLICABLE.
+Generated 2026-11-10 23:38 by `scripts/make_final_docs.py`. Statuses: DONE AND VALIDATED, IMPLEMENTED BUT NOT VALIDATED, BLOCKED ON MY INPUT, NOT STARTED, NOT APPLICABLE.
 
 ## Task registry
 | area | task | status | evidence / note |
@@ -86,7 +86,7 @@ Counts: {'DONE AND VALIDATED': 25, 'IMPLEMENTED BUT NOT VALIDATED': 7, 'BLOCKED 
 ```
 
 ## 3. Commit / pin / manifest reconciliation (state at generation)
-HEAD `3586a3c3ff`; local commits ahead of `origin/mukul`: 9; working tree has uncommitted changes. The notebook pins code commit `c3deddce78`. Test: after the pinned commit only `notebooks/` and `Docs/` may change. Result: **FAIL: files changed after the pin: requirements.txt, scripts/audit_models.py, scripts/build_equity_features.py, scripts/build_ntd_mapping.py, scripts/freeze_release.py, scripts/make_readiness_report.py, scripts/process_who_eml.py, scripts/run_full_pipeline.py, scripts/train_baselines.py, scripts/train_gnn.py, src/models/gnn/gat.py, src/models/gnn/gcn.py (commit them, then re-pin)**. The release manifest `Docs/release/vdm_v1_candidate_manifest.json` records the data checksums, versions and the commit at freeze time; rename it `vdm_v1` after H1 data arrive.
+HEAD `aec76c1684`; local commits ahead of `origin/mukul`: 10; working tree has uncommitted changes. The notebook pins code commit `aec76c1684`. Test: after the pinned commit only `notebooks/` and `Docs/` may change. Result: **PASS**. The release manifest `Docs/release/vdm_v1_candidate_manifest.json` records the data checksums, versions and the commit at freeze time; rename it `vdm_v1` after H1 data arrive.
 
 ## Final Colab-readiness gate
 | gate | status |
@@ -100,4 +100,4 @@ HEAD `3586a3c3ff`; local commits ahead of `origin/mukul`: 9; working tree has un
 | paths work in a clean clone | yes (clean-clone check) |
 | no untracked local-only dependency silently required | the external stage needs Drive uploads (H4) and says so |
 | no restricted raw data in git | yes (`data/` ignored; DrugBank-derived blobs remain in history: H5) |
-| notebook pins a commit containing all code | NO: see section 3; it can only be cloned on Colab after the push (H3) |
+| notebook pins a commit containing all code | yes; it can only be cloned on Colab after the push (H3) |
