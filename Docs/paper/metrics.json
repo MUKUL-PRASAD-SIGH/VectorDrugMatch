@@ -1,0 +1,303 @@
+{
+  "split": {
+    "train": {
+      "drugs": 1260,
+      "positives": 6730,
+      "negatives": 33650,
+      "ntd_positives": 55
+    },
+    "val": {
+      "drugs": 270,
+      "positives": 1397,
+      "negatives": 6985,
+      "ntd_positives": 12
+    },
+    "test": {
+      "drugs": 271,
+      "positives": 1261,
+      "negatives": 6305,
+      "ntd_positives": 15
+    },
+    "strategy": {
+      "seed": 42,
+      "strategy": "hard",
+      "neg_ratio": 5.0,
+      "test_size": 0.15,
+      "val_size": 0.15,
+      "stratified_on_ntd": true
+    }
+  },
+  "disease_mapping_status": {
+    "unmapped_no_doid": 7788,
+    "mapped": 7407,
+    "unmapped_obsolete_unresolved": 905,
+    "partial": 490,
+    "unmapped": 360,
+    "ambiguous": 94,
+    "unmapped_related_only": 36
+  },
+  "indication_pairs_by_mapping": {
+    "total": 9388,
+    "on_fully_mapped_nodes": 6262,
+    "on_ambiguous_nodes": 95,
+    "on_partial_grouped_nodes": 1019,
+    "on_unmapped_nodes": 2012
+  },
+  "structure_coverage": {
+    "drugs_total": 7957,
+    "drugs_no_smiles": 996,
+    "drugs_zero_fingerprint": 997,
+    "indication_drugs": 1801,
+    "indication_drugs_with_smiles": 1615,
+    "pairs_without_structure_pct": {
+      "train": {
+        "positives": 5.85,
+        "negatives": 10.51,
+        "n_pos": 394,
+        "n_neg": 3536
+      },
+      "val": {
+        "positives": 3.22,
+        "negatives": 9.21,
+        "n_pos": 45,
+        "n_neg": 643
+      },
+      "test": {
+        "positives": 7.45,
+        "negatives": 11.82,
+        "n_pos": 94,
+        "n_neg": 745
+      }
+    }
+  },
+  "ntd": {
+    "groups": 22,
+    "groups_with_indication": 16,
+    "indication_pairs_sum_over_groups": 85,
+    "unique_indication_pairs": 82,
+    "per_group": {
+      "yaws": 19,
+      "trachoma": 11,
+      "scabies": 10,
+      "soil-transmitted helminthiases": 10,
+      "lymphatic filariasis": 6,
+      "leishmaniasis": 6,
+      "human African trypanosomiasis": 4,
+      "onchocerciasis": 3,
+      "schistosomiasis": 3,
+      "leprosy": 3,
+      "foodborne trematodiases": 2,
+      "Chagas disease": 2,
+      "chromoblastomycosis": 2,
+      "echinococcosis": 2,
+      "taeniasis/cysticercosis": 1,
+      "mycetoma": 1,
+      "Buruli ulcer": 0,
+      "dracunculiasis": 0,
+      "dengue": 0,
+      "noma": 0,
+      "rabies": 0,
+      "snakebite envenoming": 0
+    }
+  },
+  "graph": {
+    "nodes": {
+      "drug": 7957,
+      "disease": 17080,
+      "gene": 19051
+    },
+    "edges_by_relation": {
+      "GiG": 321075,
+      "DaG": 80411,
+      "PK_DisDis": 32194,
+      "PK_contra": 30675,
+      "CbG": 25468,
+      "CtD": 9388,
+      "PK_offlabel": 2568
+    },
+    "kg_sha256": "0a5a010fcd88dcec572a573d98c26c1c244a11567092b6161d3ded611cfb5c69",
+    "mondo_release": "releases/2026-11-03"
+  },
+  "open_targets": {
+    "rows": {
+      "clinical_reports": 86451,
+      "distinct_chembl_drugs": 11378,
+      "distinct_ot_diseases": 3631,
+      "duplicate_raw_pairs(drug,disease)": 0
+    },
+    "drugs": {
+      "by_status(drugs)": {
+        "no_drugbank_xref": 5878,
+        "mapped": 5494,
+        "ambiguous": 6
+      },
+      "rows_by_status": {
+        "mapped": 49841,
+        "no_drugbank_xref": 36494,
+        "ambiguous": 116
+      },
+      "not_in_molecule_table": 0,
+      "drugs_by_tier": {
+        "1_exact_xref": 5494,
+        "none": 4697,
+        "2_parent_fallback": 1187
+      },
+      "rows_by_tier": {
+        "1_exact_xref": 49841,
+        "none": 29302,
+        "2_parent_fallback": 7308
+      },
+      "no_xref_but_parent_has_drugbank(tier 2, separate file)": 1187
+    },
+    "diseases": {
+      "by_namespace(ids)": {
+        "MONDO": 2660,
+        "EFO": 468,
+        "HP": 439,
+        "GO": 27,
+        "Orphanet": 23,
+        "OBA": 10,
+        "MP": 2,
+        "NCIT": 1,
+        "OTAR": 1
+      },
+      "by_status(ids)": {
+        "native": 2656,
+        "non_disease_ontology": 479,
+        "unmapped_no_xref": 470,
+        "xref_related_only": 12,
+        "xref_exact": 10,
+        "native_replaced": 3,
+        "native_obsolete_no_replacement": 1
+      },
+      "rows_by_status": {
+        "native": 72128,
+        "unmapped_no_xref": 7099,
+        "non_disease_ontology": 7070,
+        "xref_related_only": 77,
+        "xref_exact": 48,
+        "native_replaced": 28,
+        "native_obsolete_no_replacement": 1
+      },
+      "rows_with_exact_doid": 61822
+    },
+    "pairs": {
+      "rows_usable(drug mapped & single MONDO)": 40944,
+      "rows_usable_frac": 0.4736,
+      "clean_pairs_after_dedup": 40937,
+      "duplicate_rows_collapsed": 7,
+      "pairs_by_max_stage": {
+        "PHASE_2": 14356,
+        "PHASE_3": 7459,
+        "APPROVAL": 4937,
+        "PHASE_1": 4656,
+        "UNKNOWN": 4160,
+        "PHASE_1_2": 3043,
+        "PHASE_2_3": 1559,
+        "EARLY_PHASE_1": 646,
+        "IND": 67,
+        "PRECLINICAL": 33,
+        "PREAPPROVAL": 21
+      },
+      "approved_pairs(any APPROVAL report)": 4937,
+      "tier2_parent_fallback_pairs": 5901,
+      "tier2_pairs_not_already_in_tier1": 3351,
+      "pairs_with_exact_doid": 34831,
+      "distinct_drugbank": 5104,
+      "distinct_mondo": 2336
+    },
+    "primekg_overlap": {
+      "primekg_indication_pairs": 9388,
+      "ot_clean_pairs": 40937,
+      "ot_clean_pairs_with_primekg_drug": 33209,
+      "primekg_pairs_found_in_ot": 2451,
+      "primekg_pairs_found_in_ot_frac": 0.1446,
+      "primekg_pairs_with_ot_mappable_drug": 14044,
+      "primekg_pairs_found_in_ot_frac_among_mappable_drugs": 0.1745
+    },
+    "inputs": {
+      "molecules": {
+        "file": "00000000 (1).parquet",
+        "sha1": "df76b1fbfc28d49115fa3c9585196dd952d54cc1"
+      },
+      "mechanisms": {
+        "file": "00000000 (2).parquet",
+        "sha1": "c58a63b1ff8b78938ed7f0557e0fd7c4d92cfdc6"
+      },
+      "indications": {
+        "file": "00000000.parquet",
+        "sha1": "6fefb231b6023ee688b8fade1ef1d954944cb602"
+      },
+      "mondo.obo": {
+        "sha1": "ae3c7dbeead30def22717c3a284759070c82bc46"
+      }
+    },
+    "mondo_release": "releases/2026-11-03",
+    "overlap_by_stage": [
+      {
+        "max_clinical_stage": "APPROVAL",
+        "ot_pairs": 4937,
+        "ot_pairs_primekg_drug": 4578,
+        "also_primekg_indication": 1400,
+        "frac_of_pairs_with_primekg_drug": 0.3058,
+        "ot_only_pairs_with_primekg_drug": 3178
+      },
+      {
+        "max_clinical_stage": "PHASE_3",
+        "ot_pairs": 7459,
+        "ot_pairs_primekg_drug": 6642,
+        "also_primekg_indication": 576,
+        "frac_of_pairs_with_primekg_drug": 0.0867,
+        "ot_only_pairs_with_primekg_drug": 6066
+      },
+      {
+        "max_clinical_stage": "PHASE_2_3",
+        "ot_pairs": 1559,
+        "ot_pairs_primekg_drug": 1380,
+        "also_primekg_indication": 61,
+        "frac_of_pairs_with_primekg_drug": 0.0442,
+        "ot_only_pairs_with_primekg_drug": 1319
+      },
+      {
+        "max_clinical_stage": "PHASE_2",
+        "ot_pairs": 14356,
+        "ot_pairs_primekg_drug": 11132,
+        "also_primekg_indication": 203,
+        "frac_of_pairs_with_primekg_drug": 0.0182,
+        "ot_only_pairs_with_primekg_drug": 10929
+      },
+      {
+        "max_clinical_stage": "PHASE_1_2",
+        "ot_pairs": 3043,
+        "ot_pairs_primekg_drug": 2152,
+        "also_primekg_indication": 25,
+        "frac_of_pairs_with_primekg_drug": 0.0116,
+        "ot_only_pairs_with_primekg_drug": 2127
+      },
+      {
+        "max_clinical_stage": "PHASE_1",
+        "ot_pairs": 4656,
+        "ot_pairs_primekg_drug": 3039,
+        "also_primekg_indication": 27,
+        "frac_of_pairs_with_primekg_drug": 0.0089,
+        "ot_only_pairs_with_primekg_drug": 3012
+      },
+      {
+        "max_clinical_stage": "EARLY_PHASE_1",
+        "ot_pairs": 646,
+        "ot_pairs_primekg_drug": 587,
+        "also_primekg_indication": 5,
+        "frac_of_pairs_with_primekg_drug": 0.0085,
+        "ot_only_pairs_with_primekg_drug": 582
+      },
+      {
+        "max_clinical_stage": "UNKNOWN",
+        "ot_pairs": 4160,
+        "ot_pairs_primekg_drug": 3636,
+        "also_primekg_indication": 152,
+        "frac_of_pairs_with_primekg_drug": 0.0418,
+        "ot_only_pairs_with_primekg_drug": 3484
+      }
+    ]
+  }
+}
