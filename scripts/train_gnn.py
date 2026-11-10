@@ -17,6 +17,7 @@ Pipeline:
 """
 
 import sys
+import time
 from pathlib import Path
 import json
 import yaml
@@ -26,6 +27,7 @@ import torch.nn.functional as F
 import pandas as pd
 import numpy as np
 import mlflow
+from sklearn.metrics import roc_curve, confusion_matrix
 
 try:
     import torch_geometric.transforms as T
@@ -39,6 +41,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(REPO_ROOT))
 
 from src.data.graph_builder import build_hetero_data
+from src.data.dataset import build_tabular_dataset, build_message_passing_graph, set_seeds
 from src.utils.metrics import compute_all_metrics, format_metrics_table, print_metrics
 from src.utils.experiment_logger import log_experiment
 
@@ -47,44 +50,7 @@ from src.models.gnn.graphsage import create_graphsage_model
 from src.models.gnn.gat import create_gat_model
 from src.models.gnn.rgcn import create_rgcn_model
 from src.models.gnn.hgt import create_hgt_model
-
-
-class LinkPredictor(torch.nn.Module):
-    """Simple MLP to predict edge probability from node embeddings."""
-    def __init__(self, in_channels, hidden_channels):
-        super().__init__()
-        # Concat approach: in_channels * 2 -> hidden_channels -> 1
-        self.lin1 = torch.nn.Linear(in_channels * 2, hidden_channels)
-        self.lin2 = torch.nn.Linear(hidden_channels, 1)
-
-    def forward(self, z_src, z_dst, edge_label_index):
-        # Gather embeddings for source and destination nodes of the edges
-        z_src_edges = z_src[edge_label_index[0]]
-        z_dst_edges = z_dst[edge_label_index[1]]
-        
-        # Concatenate and pass through MLP
-        z = torch.cat([z_src_edges, z_dst_edges], dim=-1)
-        z = F.relu(self.lin1(z))
-        z = self.lin2(z).squeeze(-1)
-        return torch.sigmoid(z)
-
-
-class GNNLinkPredictionModel(torch.nn.Module):
-    """Wrapper that combines a GNN and a LinkPredictor."""
-    def __init__(self, gnn, in_channels, hidden_channels):
-        super().__init__()
-        self.gnn = gnn
-        self.predictor = LinkPredictor(in_channels, hidden_channels)
-        
-    def forward(self, x_dict, edge_index_dict, edge_label_index):
-        # 1. Get node embeddings from GNN
-        z_dict = self.gnn(x_dict, edge_index_dict)
-        
-        # 2. Predict links for the specific relation (drug-treats-disease)
-        z_src = z_dict['drug']
-        z_dst = z_dict['disease']
-        
-        return self.predictor(z_src, z_dst, edge_label_index)
+from src.models.gnn.base import GNNLinkPredictionModel
 
 
 def train_epoch(model, optimizer, train_data, scaler):
@@ -125,7 +91,14 @@ def evaluate_model(model, data):
     return metrics
 
 
-def train_evaluate_gnns(config_path: str):
+@torch.no_grad()
+def predict_proba(model, data):
+    model.eval()
+    eli = data['drug', 'treats', 'disease'].edge_label_index
+    return model(data.x_dict, data.edge_index_dict, eli).cpu().numpy()
+
+
+def train_evaluate_gnns(config_path: str, epochs: int = 100, only=None):
     if not PYG_AVAILABLE:
         print("ERROR: PyTorch Geometric is required to train GNNs.")
         sys.exit(1)
@@ -177,21 +150,26 @@ def train_evaluate_gnns(config_path: str):
     neg_ratio = dataset_cfg.get("neg_ratio", 5.0)
     test_size = dataset_cfg.get("test_size", 0.15)
     val_size = dataset_cfg.get("val_size", 0.15)
+    random_seed = dataset_cfg.get("random_seed", 42)
     
-    # 2. Train/Val/Test Split using PyG's RandomLinkSplit
-    print(f"\nSplitting graph into Train/Val/Test (negative sampling ratio {neg_ratio})...")
-    transform = T.RandomLinkSplit(
-        num_val=val_size,
-        num_test=test_size,
-        disjoint_train_ratio=0.3,
-        neg_sampling_ratio=neg_ratio,
-        add_negative_train_samples=True,
-        edge_types=[target_edge],
-        rev_edge_types=None,
-    )
-    
-    train_data, val_data, test_data = transform(data)
-    
+    # 2. Train/Val/Test split: same drug-disjoint (cold-start) split and hard negatives as the baselines
+    print(f"\nSplitting (cold-start drug split, hard negatives, ratio {neg_ratio})...")
+    splits = build_tabular_dataset(data, target_edge=target_edge, neg_ratio=neg_ratio,
+                                   test_size=test_size, val_size=val_size, random_state=random_seed,
+                                   presplit=dataset_cfg.get("presplit"))
+
+    # Message-passing graph with every drug->disease "treats" edge (and its reverse) removed, so no
+    # label can reach a prediction through message passing. Supervision comes only from edge_label_index.
+    mp_data = build_message_passing_graph(data, dataset_cfg.get("presplit"), target_edge)
+
+    def make_split(name):
+        d = mp_data.clone()
+        d[target_edge].edge_label_index = torch.as_tensor(splits[f"edges_{name}"], dtype=torch.long)
+        d[target_edge].edge_label = torch.as_tensor(splits[f"y_{name}"], dtype=torch.long)
+        return d
+
+    train_data, val_data, test_data = make_split("train"), make_split("val"), make_split("test")
+
     train_edges = train_data[target_edge].edge_label.shape[0]
     test_edges = test_data[target_edge].edge_label.shape[0]
     print(f"  Train set: {train_edges:,} edges")
@@ -215,16 +193,23 @@ def train_evaluate_gnns(config_path: str):
         "HGT": lambda: create_hgt_model(data.metadata(), hidden_channels=EMB_DIM, out_channels=EMB_DIM, heads=4)
     }
     
+    if only:                                       # train a subset (used to resume an interrupted run); each model is seeded independently
+        unknown = sorted(set(only) - set(gnn_factories))
+        if unknown:
+            sys.exit(f"unknown GNN model(s): {unknown}; choose from {sorted(gnn_factories)}")
+        gnn_factories = {k: v for k, v in gnn_factories.items() if k in only}
+
     results = []
     
     # 4. Train & Evaluate
-    EPOCHS = 100
+    EPOCHS = epochs
     
     for name, factory in gnn_factories.items():
         print(f"\n" + "="*50)
         print(f"Training {name}...")
         print("="*50)
         
+        set_seeds(random_seed)   # reseed per model: a model's initialisation must not depend on which models ran before it
         # Build GNN + Predictor
         gnn = factory()
         model = GNNLinkPredictionModel(gnn, in_channels=EMB_DIM, hidden_channels=32).to(device)
@@ -235,7 +220,7 @@ def train_evaluate_gnns(config_path: str):
                      train_data[target_edge].edge_label_index)
             
         optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-4)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=10, verbose=True)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=10)
         scaler = torch.cuda.amp.GradScaler(enabled=device.type == 'cuda')
         
         best_val_auc = 0.0
@@ -244,6 +229,8 @@ def train_evaluate_gnns(config_path: str):
         best_epoch = 0
         patience = 20
         epochs_no_improve = 0
+        history = []
+        t_start = time.time()
         
         # Training loop
         for epoch in range(1, EPOCHS + 1):
@@ -251,6 +238,8 @@ def train_evaluate_gnns(config_path: str):
             val_metrics = evaluate_model(model, val_data)
             
             scheduler.step(val_metrics["roc_auc"])
+            history.append({"epoch": epoch, "train_loss": loss, "val_roc_auc": val_metrics["roc_auc"],
+                            "val_pr_auc": val_metrics["pr_auc"]})
             
             # Checkpointing based on Validation ROC-AUC
             if val_metrics["roc_auc"] > best_val_auc:
@@ -272,10 +261,23 @@ def train_evaluate_gnns(config_path: str):
         if best_model_state is not None:
             model.load_state_dict(best_model_state)
             
-        best_metrics = evaluate_model(model, test_data)
-            
+        train_seconds = time.time() - t_start
+
+        # Youden threshold from the validation split, applied to test (same protocol as the baseline cold-start)
+        y_val = val_data['drug', 'treats', 'disease'].edge_label.cpu().numpy()
+        v_fpr, v_tpr, v_thr = roc_curve(y_val, predict_proba(model, val_data))
+        threshold = float(v_thr[np.argmax(v_tpr - v_fpr)])
+        y_test = test_data['drug', 'treats', 'disease'].edge_label.cpu().numpy()
+        test_proba = predict_proba(model, test_data)
+        best_metrics = compute_all_metrics(y_test, test_proba, threshold=threshold)
+        tn, fp, fn, tp = confusion_matrix(y_test, test_proba >= threshold, labels=[0, 1]).ravel()
+
         best_metrics["name"] = name
         best_metrics["type"] = "gnn"
+        best_metrics.update({"threshold": threshold, "tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp),
+                             "best_epoch": best_epoch, "epochs_run": len(history),
+                             "train_seconds": round(train_seconds, 1), "seed": random_seed})
+        pd.DataFrame(history).to_csv(outputs_dir / f"gnn_{name}_history.csv", index=False)
         
         feature_dim = data['drug'].x.shape[1] if hasattr(data['drug'], 'x') else None
         
@@ -287,7 +289,7 @@ def train_evaluate_gnns(config_path: str):
         import json
         import shutil
         with open(models_dir / f"gnn_{name}_metrics.json", "w") as f:
-            json.dump(best_metrics, f, indent=4)
+            json.dump(best_metrics, f, indent=4, default=float)
         if config_path.exists():
             shutil.copy2(config_path, models_dir / f"gnn_{name}_config.yaml")
             
@@ -323,7 +325,7 @@ def train_evaluate_gnns(config_path: str):
                     "drug_id": edge_label_index[0].cpu().numpy(),
                     "disease_id": edge_label_index[1].cpu().numpy(),
                     "label": y_true,
-                    "prediction": (pred_proba >= 0.5).astype(int),
+                    "prediction": (pred_proba >= threshold).astype(int),
                     "probability": pred_proba,
                     "experiment": config.get("experiment", {}).get("name", "baseline"),
                     "model": name
@@ -353,7 +355,8 @@ def train_evaluate_gnns(config_path: str):
     
     results_df = pd.DataFrame(results)
     csv_path = outputs_dir / "gnn_comparison.csv"
-    results_df.to_csv(csv_path, index=False)
+    from src.utils.results_io import merge_rows
+    merge_rows(csv_path, results_df, key="name")      # keeps the rows of models trained in other calls
     print(f"\nResults saved to {csv_path}")
 
 
@@ -361,6 +364,8 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="VectorDrugMatch GNN Training")
     parser.add_argument("--config", type=str, default="config.yaml", help="Path to experiment config file")
+    parser.add_argument("--epochs", type=int, default=100, help="Max training epochs per model")
+    parser.add_argument("--models", nargs="+", default=None, help="subset of GCN GraphSAGE GAT RGCN HGT (default: all five)")
     args = parser.parse_args()
     
-    train_evaluate_gnns(args.config)
+    train_evaluate_gnns(args.config, epochs=args.epochs, only=args.models)

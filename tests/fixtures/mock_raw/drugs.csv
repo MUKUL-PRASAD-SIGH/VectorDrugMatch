@@ -1,0 +1,16 @@
+drug_id,drug_name,smiles,mw,who_eml,is_generic,price_usd
+DB00795,Sulfasalazine,Cc1ccc(cc1)N=Nc2ccc(cc2)S(=O)(=O)Nc3ncc(cs3),398.4,1,1,0.5
+DB00607,Nifurtimox,O=C1NC(=O)c2cc([N+](=O)[O-])ccc2N1Cc1ccco1,287.3,1,1,0.3
+DB01048,Abacavir,Nc1nc(=O)c2ncn(C3CC(CO)C(O)C3)c2n1,286.3,1,1,8.0
+DB00437,Allopurinol,Nc1ncnc2[nH]ncc12,136.1,1,1,0.1
+DB00759,Tetracycline,CN(C)c1ccc(cc1)C(=O)c1ccccc1,444.4,1,1,0.4
+DB01175,Escitalopram,CNCCC(Oc1ccc(F)cc1)c1ccccc1,324.4,0,0,120.0
+DB00694,Daunorubicin,COc1cccc2cc3c(=O)c4c(O)cccc4c(=O)c3cc12,457.5,0,1,450.0
+DB00224,Indinavir,CC(C)(C)NC(=O)c1cc2c(cc1C(F)(F)F)n1ccccc1c2=O,613.8,0,1,12.0
+DB00602,Ivermectin,C1CC2CC1CC(C2)Oc1ccc(cc1)Cl,875.1,1,1,0.8
+DB00878,Chlorpromazine,CN1CCCCC1=Nc1ccccc1Cl,318.9,0,1,0.3
+DB11693,Benznidazole,O=C(Cn1ccnc1[N+](=O)[O-])NCc1ccccc1,260.2,1,1,0.2
+DB00658,Meglumine antimoniate,OC(=O)C(N)Cc1cc(I)c(Oc2cc(I)c(O)c(I)c2)c(I)c1,466.8,1,1,25.0
+DB01229,Paclitaxel,CC(=O)OC1C(=O)c2ccccc2C(=O)C1OC(=O)c1ccccc1,853.9,0,0,3000.0
+DB01107,Miltefosine,CCCCCCCCCCCCCCCCOP(=O)(O)OCC(N)CO,407.6,1,1,15.0
+DB01060,Amphotericin B,OC(=O)C1CC(CC(C1)O)O,924.1,1,1,50.0

@@ -7,10 +7,115 @@ clean Train/Val/Test sets for Classical ML Baselines, fully preventing data leak
 
 import numpy as np
 import random
+from pathlib import Path
+import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from src.data.link_prediction_dataset import build_link_prediction_dataset
 from src.features.pair import build_pair_features
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_CURATED_NEG = REPO_ROOT / "data" / "external" / "labels_pharmacotherapydb.csv"
+# raw PharmacotherapyDB file (scripts/fetch_public_data.py) - used when the bundle's labels CSV is absent
+RAW_INDICATIONS = REPO_ROOT / "data" / "external" / "indications_pharmacotherapydb.tsv"
+
+
+def load_curated_negatives(hetero_data, path, src_type="drug", dst_type="disease"):
+    """PharmacotherapyDB 'NOT' rows (curated non-indications) as node-index arrays."""
+    path = Path(path)
+    if not path.exists() and path == DEFAULT_CURATED_NEG and RAW_INDICATIONS.exists():
+        path = RAW_INDICATIONS
+    if not path.exists() or not hasattr(hetero_data[src_type], "node_ids"):
+        return np.array([], dtype=np.int64), np.array([], dtype=np.int64)
+    if path.suffix == ".tsv":                      # raw dhimmel/indications format
+        df = pd.read_csv(path, sep="\t").rename(columns={"doid_id": "disease_id", "drugbank_id": "drug_id"})
+    else:
+        df = pd.read_csv(path)
+    df = df[df["category"] == "NOT"]
+    s_map = {n: i for i, n in enumerate(hetero_data[src_type].node_ids)}
+    d_map = {n: i for i, n in enumerate(hetero_data[dst_type].node_ids)}
+    pairs = [(s_map[a], d_map[b]) for a, b in zip(df["drug_id"].astype(str), df["disease_id"].astype(str))
+             if a in s_map and b in d_map]
+    if not pairs:
+        return np.array([], dtype=np.int64), np.array([], dtype=np.int64)
+    arr = np.array(sorted(set(pairs)), dtype=np.int64)
+    return arr[:, 0], arr[:, 1]
+
+
+def _resolve(path):
+    path = Path(path)
+    return path if path.is_absolute() else REPO_ROOT / path
+
+
+def build_tabular_dataset_from_presplit(hetero_data, presplit, target_edge=('drug', 'treats', 'disease'), disease_profile=False):
+    """Load a SAVED split (scripts/primekg_split.py) instead of splitting on the fly.
+
+    Every model that calls this gets byte-identical pairs, labels and negatives. Returns the same keys as
+    build_tabular_dataset plus curated_{split} (all False for PrimeKG) and diag_contra_/diag_offlabel_{split}
+    (evaluation-only pairs of that split's drugs; never used as labels).
+    """
+    z = np.load(_resolve(presplit))
+    src_type, _, dst_type = target_edge
+    src_feats = hetero_data[src_type].x.numpy()
+    dst_feats = hetero_data[dst_type].x.numpy()
+    out, cw = {}, {}
+    print(f"\nLoading saved split: {_resolve(presplit)}")
+    for sp in ("train", "val", "test"):
+        e, y = z[f"edges_{sp}"], z[f"y_{sp}"].astype(np.int8)
+        out[f"X_{sp}"] = build_pair_features(src_feats, dst_feats, e[0], e[1])
+        if disease_profile:                    # optional variant: + leak-free disease-profile block built from TRAIN edges/labels only
+            from src.features.disease_profile import build_disease_profile_block
+            out[f"X_{sp}"] = np.concatenate([out[f"X_{sp}"], build_disease_profile_block(src_feats, z["edges_train"], z["y_train"], e)], axis=1)
+        out[f"y_{sp}"], out[f"edges_{sp}"] = y, e
+        out[f"curated_{sp}"] = z[f"curated_{sp}"]
+        for k in ("diag_contra", "diag_offlabel"):
+            if f"{k}_{sp}" in z:
+                out[f"{k}_{sp}"] = z[f"{k}_{sp}"]
+        npos, nneg = int((y == 1).sum()), int((y == 0).sum())
+        cw[sp] = nneg / npos if npos else 1.0
+        print(f"  {sp}: {len(y):,} pairs ({npos:,} pos, {nneg:,} neg) | X {out[f'X_{sp}'].shape}")
+    d = {sp: set(z[f"edges_{sp}"][0].tolist()) for sp in ("train", "val", "test")}
+    assert not (d["train"] & d["val"]) and not (d["train"] & d["test"]) and not (d["val"] & d["test"]), \
+        "CRITICAL LEAKAGE: drug overlap between saved splits"
+    out["class_weights"] = cw
+    return out
+
+
+def _drop_pairs(edge_index, pairs, n_second):
+    """Remove columns of edge_index whose (row0, row1) is in `pairs` (2,K numpy array)."""
+    import torch
+    if edge_index.numel() == 0 or pairs.shape[1] == 0:
+        return edge_index
+    key = edge_index[0].numpy().astype(np.int64) * n_second + edge_index[1].numpy().astype(np.int64)
+    bad = np.isin(key, pairs[0].astype(np.int64) * n_second + pairs[1].astype(np.int64))
+    return edge_index[:, torch.as_tensor(~bad)]
+
+
+def build_message_passing_graph(data, presplit=None, target_edge=('drug', 'treats', 'disease')):
+    """Graph used for message passing: NO label can reach a prediction through it.
+
+    * every target (treats) edge and its reverse is removed (supervision comes only from edge_label_index);
+    * if a saved split is given, any other drug->disease relation (contraindicated_for, offlabel_for) is also
+      dropped on the HELD-OUT (val+test) indication pairs, in both directions, so a held-out positive cannot
+      leak through an alternative relation path.
+    """
+    import torch
+    mp = data.clone()
+    src_t, rel, dst_t = target_edge
+    for et in (target_edge, (dst_t, f"rev_{rel}", src_t)):
+        if et in mp.edge_types:
+            mp[et].edge_index = torch.empty((2, 0), dtype=torch.long)
+    if presplit is not None:
+        held = np.load(_resolve(presplit))["heldout_indication_pairs"]
+        n_dst, n_src = mp[dst_t].num_nodes, mp[src_t].num_nodes
+        for other in ("contraindicated_for", "offlabel_for"):
+            fwd, rev = (src_t, other, dst_t), (dst_t, f"rev_{other}", src_t)
+            if fwd in mp.edge_types:
+                mp[fwd].edge_index = _drop_pairs(mp[fwd].edge_index, held, n_dst)
+            if rev in mp.edge_types:
+                mp[rev].edge_index = _drop_pairs(mp[rev].edge_index, held[::-1], n_src)
+    return mp
+
 
 def set_seeds(seed=42):
     """Enforce strict reproducibility across all RNGs."""
@@ -23,7 +128,8 @@ def set_seeds(seed=42):
 
 def build_tabular_dataset(hetero_data, target_edge=('drug', 'treats', 'disease'), 
                           neg_ratio=5.0, test_size=0.15, val_size=0.15, random_state=42,
-                          split_mode="cold_start_drug", strategy="hard"):
+                          split_mode="cold_start_drug", strategy="hard",
+                          curated_neg_path="auto", presplit=None, disease_profile=False):
     """
     Builds X, y tabular datasets with strict data leakage prevention.
     
@@ -36,7 +142,16 @@ def build_tabular_dataset(hetero_data, target_edge=('drug', 'treats', 'disease')
     Args:
         split_mode: "random" (edges) or "cold_start_drug" (drugs).
         strategy: "random" or "hard" negative sampling.
+        presplit: path to a saved split (.npz from scripts/primekg_split.py); when set, nothing is re-split.
+        curated_neg_path: PharmacotherapyDB labels CSV whose 'NOT' rows are used as
+            real negatives (routed to the split that owns the drug); "auto" uses
+            data/external/labels_pharmacotherapydb.csv when present, None disables.
     """
+    if disease_profile and not presplit:
+        raise ValueError("disease_profile needs a saved split (presplit): it is built from the saved TRAIN edges only")
+    if presplit:                                   # Track B: a saved, shared split
+        set_seeds(random_state)
+        return build_tabular_dataset_from_presplit(hetero_data, presplit, target_edge, disease_profile=disease_profile)
     print(f"\nBuilding tabular dataset for target {target_edge}...")
     set_seeds(random_state)
     
@@ -89,6 +204,26 @@ def build_tabular_dataset(hetero_data, target_edge=('drug', 'treats', 'disease')
     # -------------------------------------------------------------------------
     # 2. NEGATIVE SAMPLING & FEATURE EXTRACTION PER SPLIT
     # -------------------------------------------------------------------------
+    # Curated true negatives, routed by the same rule as the positives (no leakage)
+    cn_src = cn_dst = np.array([], dtype=np.int64)
+    if curated_neg_path is not None and target_edge == ('drug', 'treats', 'disease'):
+        cpath = DEFAULT_CURATED_NEG if curated_neg_path == "auto" else curated_neg_path
+        cn_src, cn_dst = load_curated_negatives(hetero_data, cpath, src_type, dst_type)
+    curated = {}
+    if len(cn_src):
+        if split_mode == "cold_start_drug":
+            for name, drugs_in in (("train", train_drugs), ("val", val_drugs), ("test", test_drugs)):
+                m = np.isin(cn_src, drugs_in)
+                curated[name] = (cn_src[m], cn_dst[m])
+        else:
+            r = np.random.default_rng(random_state).random(len(cn_src))
+            tr_cut = 1 - test_size - val_size
+            for name, m in (("train", r < tr_cut), ("val", (r >= tr_cut) & (r < tr_cut + val_size)),
+                            ("test", r >= tr_cut + val_size)):
+                curated[name] = (cn_src[m], cn_dst[m])
+        print("  Curated negatives (PharmacotherapyDB NOT): "
+              + ", ".join(f"{k}={len(v[0])}" for k, v in curated.items()))
+
     src_feats = hetero_data[src_type].x.numpy()
     dst_feats = hetero_data[dst_type].x.numpy()
     
@@ -103,7 +238,8 @@ def build_tabular_dataset(hetero_data, target_edge=('drug', 'treats', 'disease')
         print(f"  Processing {split_name} split...")
         result = build_link_prediction_dataset(
             s_src, s_dst, num_src_nodes, num_dst_nodes,
-            neg_ratio=neg_ratio, seed=random_state, strategy=strategy
+            neg_ratio=neg_ratio, seed=random_state, strategy=strategy,
+            fixed_neg=curated.get(split_name)
         )
         
         X = build_pair_features(src_feats, dst_feats, result.edge_index[0], result.edge_index[1])
@@ -112,6 +248,7 @@ def build_tabular_dataset(hetero_data, target_edge=('drug', 'treats', 'disease')
         final_data[f"X_{split_name}"] = X
         final_data[f"y_{split_name}"] = y
         final_data[f"edges_{split_name}"] = result.edge_index
+        final_data[f"curated_{split_name}"] = result.is_curated   # report curated vs sampled negatives separately
         
         # Calculate class weights for imbalanced training (e.g., scale_pos_weight in XGBoost)
         num_pos = np.sum(y == 1)

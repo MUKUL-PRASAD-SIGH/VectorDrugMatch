@@ -15,6 +15,9 @@ class GAT(torch.nn.Module):
         super().__init__()
         self.convs = torch.nn.ModuleList()
         self.norms = torch.nn.ModuleList()
+        # nn.Dropout MODULE, not F.dropout(training=self.training): to_hetero's FX tracing bakes the functional flag in as a constant (training=True),
+        # which left dropout ACTIVE in eval mode (non-deterministic validation/test predictions). Modules follow model.train()/eval().
+        self.dropout = torch.nn.Dropout(p=0.2)
         
         # Output of first layer is hidden_channels * heads
         self.convs.append(GATConv((-1, -1), hidden_channels, heads=heads, add_self_loops=False))
@@ -29,19 +32,23 @@ class GAT(torch.nn.Module):
             self.convs.append(GATConv(hidden_channels * heads, out_channels, heads=1, concat=False, add_self_loops=False))
             self.norms.append(BatchNorm1d(out_channels))
 
+        # Decided statically so to_hetero's symbolic tracing never branches on tensor shapes
+        widths = [n.num_features for n in self.norms]
+        self.residual = [i > 0 and widths[i] == widths[i - 1] for i in range(len(widths))]
+
     def forward(self, x, edge_index):
         for i, (conv, norm) in enumerate(zip(self.convs, self.norms)):
             x_out = conv(x, edge_index)
             x_out = norm(x_out)
             
             # Residual connection
-            if i > 0 and x_out.size(-1) == x.size(-1):
+            if self.residual[i]:
                 x_out = x_out + x
                 
             x = x_out
             if i < len(self.convs) - 1:
                 x = F.elu(x)
-                x = F.dropout(x, p=0.2, training=self.training)
+                x = self.dropout(x)
         return x
 
 def create_gat_model(metadata, hidden_channels=32, out_channels=64, num_layers=2, heads=4):

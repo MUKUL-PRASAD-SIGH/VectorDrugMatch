@@ -48,7 +48,8 @@ def run_ablation_study(config_path):
         neg_ratio=dataset_cfg.get("neg_ratio", 5.0), 
         test_size=dataset_cfg.get("test_size", 0.15), 
         val_size=dataset_cfg.get("val_size", 0.15),
-        random_state=random_seed
+        random_state=random_seed,
+        presplit=dataset_cfg.get("presplit")
     )
     
     # We will use cross-validation over the entire dataset for ablation

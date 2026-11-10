@@ -25,8 +25,13 @@ class RGCN(torch.nn.Module):
         self.convs = torch.nn.ModuleList()
         self.norms = torch.nn.ModuleList()
         
+        # Node types have different raw feature sizes (drug 2048, disease 3, gene 1), so project each
+        # to hidden_channels before stacking them into one homogeneous feature matrix.
+        self.input_proj = torch.nn.ModuleDict(
+            {nt: torch.nn.LazyLinear(hidden_channels) for nt in self.node_types})
+
         for i in range(num_layers):
-            in_dim = -1 if i == 0 else hidden_channels
+            in_dim = hidden_channels
             out_dim = hidden_channels if i < num_layers - 1 else out_channels
             
             self.convs.append(RGCNConv(in_dim, out_dim, num_relations=self.num_relations))
@@ -38,7 +43,7 @@ class RGCN(torch.nn.Module):
         curr_offset = 0
         x_list = []
         for node_type in self.node_types:
-            x = x_dict[node_type]
+            x = F.relu(self.input_proj[node_type](x_dict[node_type]))
             node_offsets[node_type] = curr_offset
             curr_offset += x.size(0)
             x_list.append(x)
@@ -69,7 +74,7 @@ class RGCN(torch.nn.Module):
             x_out = conv(x_homo, edge_index_homo, edge_type_homo)
             x_out = norm(x_out)
             
-            # Residual Connection (skip on first layer because of dim mismatch)
+            # Residual connection (not on the first layer)
             if i > 0 and x_out.size(-1) == x_homo.size(-1):
                 x_out = x_out + x_homo
                 

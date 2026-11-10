@@ -1,88 +1,44 @@
 """
-src/scoring/equity.py - WHO Equity and Affordability Scoring
+src/scoring/equity.py - WHO Equity Scoring
 
-Evaluates the accessibility and public health impact of the drug for NTDs.
-Combines:
-  1. WHO Essential Medicines List (EML) presence
-  2. WHO GHO DALY (Disability-Adjusted Life Years) burden
-  3. Affordability proxy (molecular weight simplicity)
+    E = sum(w_k * c_k over KNOWN components) / sum(w_k over KNOWN components)
+
+Components
+  EML    1 if the drug is on the WHO Essential Medicines List, else 0.
+  DALY   min-max normalised disease burden in [0, 1] (one consistent definition; see
+         preprocess.load_daly_table).
+  Access real availability / affordability / unmet-need score in [0, 1] (e.g. from a price
+         guide or stockout data). No such data is wired in, so it is None by default.
+
+Missing components (None / NaN) are DROPPED and the remaining weights renormalised, so an
+unknown value neither raises nor lowers the score. If nothing is known the score is NaN.
+
+ATC class is deliberately NOT part of the equity score: it classifies a drug
+anatomically/therapeutically and says nothing about access. It stays available as a
+drug attribute (`atc_codes`) for stratification / filtering (e.g. anti-infectives).
 """
 
 import math
-import pandas as pd
+
+DEFAULT_WEIGHTS = {"eml": 0.45, "daly": 0.45, "access": 0.10}
 
 
-def get_affordability_score(molecular_weight: float) -> float:
-    """Proxy for manufacturing cost based on molecular complexity.
-    
-    Smaller molecules tend to be cheaper to synthesize at scale.
-    Formula: 1 / (1 + ln(1 + MW/200))
-    
-    Args:
-        molecular_weight: MW from RDKit descriptors.
-        
-    Returns:
-        Score [0.0, 1.0] where higher means more affordable.
-    """
-    if pd.isna(molecular_weight) or molecular_weight <= 0:
-        return 0.5  # Neutral default
-        
-    # Scale: MW 200 -> ~0.58, MW 500 -> ~0.44, MW 1000 -> ~0.35
-    return 1.0 / (1.0 + math.log1p(molecular_weight / 200.0))
+def _known(x) -> bool:
+    return x is not None and not (isinstance(x, float) and math.isnan(x))
 
 
-def get_atc_proxy_score(atc_code: str) -> float:
-    """Proxy for WHO/ATC category relevance to NTDs.
-    
-    J = Antiinfectives for systemic use
-    P = Antiparasitic products, insecticides and repellents
-    
-    Args:
-        atc_code: ATC code string (e.g., 'J01CA04').
-        
-    Returns:
-        Score [0.0, 1.0] based on NTD relevance.
-    """
-    if not atc_code or pd.isna(atc_code):
-        return 0.0
-    
-    atc_code = str(atc_code).upper().strip()
-    if atc_code.startswith('P') or atc_code.startswith('J'):
-        return 1.0
-    # Other classes receive a partial bump
-    return 0.5
-
-
-def compute_equity_score(is_on_eml: bool, daly_normalized: float, mw: float, atc_code: str = None) -> float:
-    """Compute the combined Equity Score [0, 1] for NDPI.
-    
-    Weights:
-      - 35% WHO EML status (is it an established, accessible medicine?)
-      - 35% DALY burden (does this disease desperately need attention?)
-      - 15% Affordability (can it be cheaply manufactured?)
-      - 15% ATC proxy (is it in a relevant therapeutic class?)
-      
-    Args:
-        is_on_eml: Boolean indicating presence on WHO EML.
-        daly_normalized: Normalised [0,1] DALY burden for the target disease.
-        mw: Molecular weight of the candidate drug.
-        atc_code: Anatomical Therapeutic Chemical code.
-        
-    Returns:
-        Combined equity score [0.0, 1.0].
-    """
-    eml_component = 1.0 if is_on_eml else 0.0
-    affordability_component = get_affordability_score(mw)
-    atc_component = get_atc_proxy_score(atc_code)
-    
-    # Ensure daly_normalized is bounded
-    daly_component = max(0.0, min(float(daly_normalized), 1.0))
-    
-    score = (
-        (0.35 * eml_component) +
-        (0.35 * daly_component) +
-        (0.15 * affordability_component) +
-        (0.15 * atc_component)
-    )
-    
-    return float(score)
+def compute_equity_score(is_on_eml=None, daly_normalized=None, access=None,
+                         weights: dict | None = None) -> float:
+    """Equity score in [0, 1], or NaN when no component is known. See module docstring."""
+    w = {**DEFAULT_WEIGHTS, **(weights or {})}
+    parts = []
+    if _known(is_on_eml):
+        parts.append((w["eml"], 1.0 if is_on_eml else 0.0))
+    if _known(daly_normalized):
+        parts.append((w["daly"], max(0.0, min(float(daly_normalized), 1.0))))
+    if _known(access):
+        parts.append((w["access"], max(0.0, min(float(access), 1.0))))
+    total = sum(wt for wt, _ in parts)
+    if total == 0:
+        return float("nan")
+    return float(sum(wt * v for wt, v in parts) / total)

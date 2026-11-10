@@ -7,6 +7,7 @@ MLflow tracking, Probability Calibration, and Threshold Optimization (Youden Ind
 """
 
 import sys
+import time
 import argparse
 from pathlib import Path
 import yaml
@@ -18,7 +19,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import roc_curve, precision_recall_curve
+from sklearn.metrics import roc_curve, precision_recall_curve, confusion_matrix
 import mlflow
 import mlflow.sklearn
 import shap
@@ -64,7 +65,9 @@ def train_evaluate_baselines(selected_models, config_path):
             config = yaml.safe_load(f)
             
     exp_name = config.get("experiment", {}).get("name", "baseline")
-    processed_dir = REPO_ROOT / "data" / "processed" / exp_name
+    # a feature variant writes to its own outputs folder but reads the SAME processed data and the SAME saved split as the original
+    processed_dir = REPO_ROOT / "data" / "processed" / config.get("experiment", {}).get("processed_name", exp_name)
+    use_dp = bool(config.get("features", {}).get("disease_profile", {}).get("enabled", False))
     
     outputs_dir = REPO_ROOT / "outputs" / exp_name
     models_dir = outputs_dir / "models"
@@ -94,7 +97,9 @@ def train_evaluate_baselines(selected_models, config_path):
         neg_ratio=neg_ratio, 
         test_size=test_size, 
         val_size=val_size,
-        random_state=random_seed
+        random_state=random_seed,
+        presplit=dataset_cfg.get("presplit"),
+        disease_profile=use_dp
     )
     
     X_all = np.vstack([splits.get("X_train", np.empty((0,0))), 
@@ -135,6 +140,7 @@ def train_evaluate_baselines(selected_models, config_path):
         
         model_kwargs = config.get("models", {}).get(key, {})
         
+        t_model = time.time()
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_seed)
         fold_metrics = []
         best_threshold = 0.5
@@ -180,9 +186,35 @@ def train_evaluate_baselines(selected_models, config_path):
             avg_metrics["name"] = name
             avg_metrics["type"] = "baseline"
             avg_metrics["best_threshold"] = float(best_threshold)
+            avg_metrics["seed"] = random_seed
+            avg_metrics["train_seconds"] = round(time.time() - t_model, 1)
             
             mlflow.log_metrics({f"avg_{k}": v for k,v in avg_metrics.items() if isinstance(v, (int, float))})
             
+            # Cold-start evaluation: fit on the drug-disjoint train split, score on the held-out test split.
+            # Threshold comes from the val split so the test split is never used for tuning.
+            if all(k in splits for k in ("X_train", "X_val", "X_test")):
+                cs_model = ModelClass(**model_kwargs)
+                if key in ["rf", "xgb", "logistic"] and hasattr(cs_model, "model"):
+                    cs_cal = CalibratedClassifierCV(estimator=cs_model.model, method="sigmoid", cv=3)
+                    cs_cal.fit(splits["X_train"], splits["y_train"])
+                    cs_model.model = cs_cal
+                else:
+                    cs_model.train(splits["X_train"], splits["y_train"])
+                val_fpr, val_tpr, val_thr = roc_curve(splits["y_val"], cs_model.predict_proba(splits["X_val"]))
+                cs_threshold = val_thr[np.argmax(val_tpr - val_fpr)]
+                cs_proba = cs_model.predict_proba(splits["X_test"])
+                cs_metrics = compute_all_metrics(splits["y_test"], cs_proba, threshold=cs_threshold)
+                tn, fp, fn, tp = confusion_matrix(splits["y_test"], cs_proba >= cs_threshold, labels=[0, 1]).ravel()
+                cs_metrics.update({"threshold": float(cs_threshold), "tn": int(tn), "fp": int(fp),
+                                   "fn": int(fn), "tp": int(tp)})
+                pd.DataFrame({"y_true": splits["y_test"], "probability": cs_proba}).to_csv(
+                    outputs_dir / f"baseline_{key}_coldstart_predictions.csv", index=False)
+                cs_model.save(models_dir / f"baseline_{key}_coldstart.pkl")   # the model that produced the reported cold-start test metrics
+                avg_metrics.update({f"coldstart_{k}": v for k, v in cs_metrics.items()})
+                mlflow.log_metrics({f"coldstart_{k}": v for k, v in cs_metrics.items()})
+                print(f"  Cold-start test ROC-AUC: {cs_metrics['roc_auc']:.4f}  PR-AUC: {cs_metrics['pr_auc']:.4f}")
+
             # Save final full model
             final_model = ModelClass(**model_kwargs)
             if key in ["rf", "xgb", "logistic"] and hasattr(final_model, "model"):
@@ -200,8 +232,10 @@ def train_evaluate_baselines(selected_models, config_path):
             if key in ["rf", "xgb"]:
                 if hasattr(final_model.model, "estimator"):
                     # Extract from calibrated classifier
-                    fi = final_model.model.estimator.feature_importances_
-                    base_estimator = final_model.model.estimator
+                    # CalibratedClassifierCV fits clones, so the wrapped estimator itself is unfitted
+                    fitted = [c.estimator for c in final_model.model.calibrated_classifiers_]
+                    fi = np.mean([e.feature_importances_ for e in fitted], axis=0)
+                    base_estimator = fitted[0]
                 else:
                     fi = final_model.model.feature_importances_
                     base_estimator = final_model.model
@@ -212,10 +246,11 @@ def train_evaluate_baselines(selected_models, config_path):
                 fi_df.to_csv(fi_path, index=False)
                 mlflow.log_artifact(str(fi_path))
                 
-                # SHAP Support
-                print(f"Computing SHAP values for {name}...")
+                # SHAP Support. NOTE: this model is fit on train+val+test POOLED (final_model above), so these SHAP values describe a model that has
+                # seen the test pairs: use them for global feature importance only, never as evidence of held-out behaviour. For held-out
+                # explanations of the cold-start model use scripts/explain_models.py (SHAP on test pairs of baseline_<key>_coldstart.pkl).
+                print(f"Computing SHAP values for {name} (pooled all-data model; see comment)...")
                 try:
-                    explainer = shap.TreeExplainer(base_estimator)
                     # Use a random subset of 5000 instances to save time
                     sample_size = min(5000, len(X_all))
                     np.random.seed(random_seed)
@@ -227,8 +262,18 @@ def train_evaluate_baselines(selected_models, config_path):
                     np.save(idx_path, idx)
                     mlflow.log_artifact(str(idx_path))
                     
-                    shap_values = explainer.shap_values(X_sample)
-                    
+                    if key == "xgb":
+                        # shap.TreeExplainer chokes on xgboost>=3 base_score strings; use native contributions
+                        import xgboost as xgb
+                        contribs = base_estimator.get_booster().predict(xgb.DMatrix(X_sample), pred_contribs=True)
+                        shap_values = contribs[:, :-1]  # last column is the bias term
+                    else:
+                        shap_values = shap.TreeExplainer(base_estimator).shap_values(X_sample)
+
+                    if isinstance(shap_values, list):               # old shap: [class0, class1]
+                        shap_values = shap_values[1]
+                    elif getattr(shap_values, "ndim", 2) == 3:        # new shap, sklearn RF: (n, features, 2) -> positive-class contributions
+                        shap_values = shap_values[:, :, 1]
                     shap_path = outputs_dir / f"{key}_shap_values.npy"
                     np.save(shap_path, shap_values)
                     mlflow.log_artifact(str(shap_path))
@@ -258,7 +303,8 @@ def train_evaluate_baselines(selected_models, config_path):
     
     results_df = pd.DataFrame(results)
     csv_path = outputs_dir / "baseline_comparison.csv"
-    results_df.to_csv(csv_path, index=False)
+    from src.utils.results_io import merge_rows
+    merge_rows(csv_path, results_df, key="name")      # one model per call: keep the rows written by the other calls
     print(f"\nResults saved to {csv_path}")
 
 

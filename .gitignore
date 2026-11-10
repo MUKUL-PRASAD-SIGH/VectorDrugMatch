@@ -2,8 +2,14 @@
 data/raw/
 data/processed/
 
-# Keep external metadata trackable
-!data/external/
+# Third-party / downloaded data under data/external is never committed (licences + size).
+# Everything there is re-creatable: python scripts/fetch_public_data.py --primekg
+data/external/*
+# raw manual downloads (Open Targets, HAI price surveys, IHME GBD) - never committed
+data/external/downloads/
+!data/external/.gitkeep
+!data/external/README.md
+
 
 # Python environment & cache
 __pycache__/
@@ -23,3 +29,26 @@ outputs/
 
 # Jupyter notebooks
 .ipynb_checkpoints/
+
+# MLflow tracking (local runs / sqlite stores)
+mlruns/
+mlflow.db
+*.db
+
+# Scratch folder and model weights
+ignore/
+*.pth
+*.zip
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Raw third-party data bundle (DrugBank/DisGeNET-derived)
+vdm_real_data/
+
+# Rendered review copies of the paper draft (regenerate with scripts/render_paper.py)
+Docs/paper/PAPER_DRAFT_IEEE.html
+Docs/paper/PAPER_DRAFT_IEEE.pdf

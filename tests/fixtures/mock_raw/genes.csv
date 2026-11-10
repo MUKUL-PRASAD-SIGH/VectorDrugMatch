@@ -1,0 +1,11 @@
+gene_id,gene_name,function
+NCBI:3579,IL6,cytokine
+NCBI:5743,PTGS2,prostaglandin synthesis
+NCBI:8900,ABCB1,drug transporter
+NCBI:4915,RHOB,small GTPase
+NCBI:4318,MKNK1,kinase
+NCBI:2099,ESR1,estrogen receptor
+NCBI:6714,SRC,tyrosine kinase
+NCBI:7157,TP53,tumor suppressor
+NCBI:207,AKT1,serine-threonine kinase
+NCBI:5290,PIK3CA,PI3-kinase

@@ -1,0 +1,45 @@
+data_source,licence_as_stated,feeds_clinical_reports
+AlphaMissense,CC-BY 4.0,no
+Cancer Gene Census,Commercial use for Open Targets,no
+Cancer Genome Interpreter,CC-BY 4.0,no
+Cell Ontology,CC BY 4.0,no
+ChEMBL,CC BY-SA 3.0,yes (ChEMBL curated indications + drug warnings)
+ClinGen,CC0 1.0,no
+ClinVar (via EVA),EMBL-EBI terms of use,no
+EFO,Apache 2.0,no
+Ensembl,CC-BY 4.0,no
+Europe PMC,"CC-BY, CC-BY-NC or CC0 license or open access (depending on publication licenses)",no
+eQTL Catalogue,CC-BY 4.0,no
+Expression Atlas,CC-BY 4.0,no
+FAERS,CC0 1.0,no
+FinnGen R12,Summary statistics can be requested here.,no
+Gene Ontology,CC-BY 4.0,no
+Gene Signature,Apache 2.0,no
+Gene2Phenotype,EMBL-EBI terms of use,no
+Genomics England PanelApp,Commercial use for Open Targets,no
+gnomAD,CC0 1.0,no
+GTEx,CC-BY 4.0,no
+GWAS Catalog,EMBL-EBI terms of use (Summary statistics are under CC0 1.0),no
+HeCaTos,CC-BY 4.0,no
+HPO,CC0 1.0,no
+Human Protein Atlas,CC BY-SA 3.0,no
+Intact,EMBL-EBI terms of use,no
+IntOGen,CC0 1.0,no
+MGI,CC-BY 4.0,no
+MONDO,CC-BY 4.0,no
+Orphanet,CC-BY 4.0,no
+panUKB,CC BY 4.0,no
+PhenoDigm,CC-BY 4.0,no
+Probes and Drugs,CC-BY 4.0,no
+PROGENy,Apache 2.0,no
+Project Score,Commercial use for Open Targets,no
+Reactome,CC-BY 4.0,no
+Sequence Ontology,CC-BY 4.0,no
+Signor (via Intact),EMBL-EBI terms of use,no
+SLAPenrich,MIT terms of use,no
+String DB,CC-BY 4.0,no
+TEP,CC-BY 4.0,no
+Tox21,CC0 1.0,no
+Uberon,CC BY 3.0,no
+UKB-PPP,Apache 2.0,no
+UniProt,CC-BY 4.0,no
