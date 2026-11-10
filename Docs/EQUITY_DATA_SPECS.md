@@ -1,6 +1,6 @@
 # Equity data: status, specifications and validation
 
-Generated 2026-11-10. All processors refuse bad input and never fill gaps with 0.
+Generated 2026-11-11. All processors refuse bad input and never fill gaps with 0.
 
 | component | status | where | validation |
 |---|---|---|---|
@@ -29,4 +29,4 @@ The IHME agreement forbids providing third parties the ability to download the d
 3. `python scripts/make_readiness_report.py`, `python scripts/make_final_docs.py`, `python scripts/freeze_release.py --tag vdm_v1`
 
 ## EML semantics
-`eml_status` = 1 listed as a single-ingredient entry; empty if the drug appears only inside fixed-dose combinations; 0 otherwise. A 0 can be a false 0 for any of the 106 single entries that could not be mapped (`data/processed/eml/eml_unmatched.csv`).
+`eml_status` = 1 confirmed positive (single-ingredient entry); empty if the drug appears only inside fixed-dose combinations, or is **unresolved** (its name shares a 5+ letter token with one of the 106 unmapped single entries in `data/processed/eml/eml_unmatched.csv`); 0 only where no candidate entry was found, which is not proof of absence. The 'EML coverage' percentage counts those zeros and is not evidence coverage: use `eml_confirmed_positive_pct` / `eml_evidence_counts_all_pairs` in `equity_report.json`.

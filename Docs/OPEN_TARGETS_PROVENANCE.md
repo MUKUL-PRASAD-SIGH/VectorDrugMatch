@@ -1,6 +1,6 @@
 # Open Targets indication data: provenance (resolved)
 
-Generated 2026-11-10 from `data/processed/open_targets/source_attribution_report.json`. Evidence: `Docs/source_evidence/fetch_log_2026-11-10.json`.
+Generated 2026-11-11 from `data/processed/open_targets/source_attribution_report.json`. Evidence: `Docs/source_evidence/fetch_log_2026-11-10.json`.
 
 ## 1. Release identification
 Our three local files are **byte-identical (SHA-256) to release 26.09**: `00000000.parquet` = `clinical_indication`, `00000000 (1).parquet` = `drug_molecule`, `00000000 (2).parquet` = `drug_mechanism_of_action`

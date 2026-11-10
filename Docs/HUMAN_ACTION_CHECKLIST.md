@@ -1,6 +1,6 @@
 # Human action checklist
 
-Generated 2026-11-10. Everything that needs you personally. **Not on this list because it already exists locally or was done for you:** the WHO EML PDF (processed), the Open Targets files (release identified, same-release `clinical_report` downloaded), the HAI surveys (parsed), the WHO NTD list (read and reconciled), the licence pages that could be read.
+Generated 2026-11-11. Everything that needs you personally. **Not on this list because it already exists locally or was done for you:** the WHO EML PDF (processed), the Open Targets files (release identified, same-release `clinical_report` downloaded), the HAI surveys (parsed), the WHO NTD list (read and reconciled), the licence pages that could be read.
 
 ## Mandatory
 | id | mandatory? | task | why | official source / URL | exact settings / decision | destination | required schema | blocks |

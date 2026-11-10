@@ -1,6 +1,6 @@
 # Data and pipeline readiness report
 
-Generated 2026-11-10 23:36 by `scripts/make_readiness_report.py` from the files on disk. Numbers are read from data/report files; validator lines are from running the validators during generation. Section 6 (unresolved issues) is curated text.
+Generated 2026-11-11 00:36 by `scripts/make_readiness_report.py` from the files on disk. Numbers are read from data/report files; validator lines are from running the validators during generation. Section 6 (unresolved issues) is curated text.
 
 ## 1. Datasets
 
@@ -20,7 +20,7 @@ Generated 2026-11-10 23:36 by `scripts/make_readiness_report.py` from the files 
 | HAI hai_affordability | WHO/HAI price surveys: Karnataka 2004-11, Maharashtra 2005-01, Delhi 2011-07 | check HAI terms | data/external/downloads/hai_price_surveys/ | data/processed/hai/hai_affordability.csv | 108 | 22 |  | numeric blanks = not reported/free (kept as status) | parsed; regional pilot |
 | HAI hai_medicines | WHO/HAI price surveys: Karnataka 2004-11, Maharashtra 2005-01, Delhi 2011-07 | check HAI terms | data/external/downloads/hai_price_surveys/ | data/processed/hai/hai_medicines.csv | 60 | 55 |  | numeric blanks = not reported/free (kept as status) | parsed; regional pilot |
 | NTD mapping table | WHO NTD list (read 2026-11-10) + MONDO + PrimeKG | n/a | - | data/processed/ntd/ntd_disease_mapping.csv | 26 |  |  | none | built from files (rows = WHO entry x group) |
-| Equity feature table | PrimeKG pairs + HAI (+ IHME, EML when supplied) | derived | - | data/processed/equity/equity_features.csv | 9388 | 1801 | 1363 | ndpi empty 113/9388 | built; access-only (EML, DALY absent) |
+| Equity feature table | PrimeKG pairs + HAI (+ IHME, EML when supplied) | derived | - | data/processed/equity/equity_features.csv | 9388 | 1801 | 1363 | ndpi empty 415/9388 | built; access-only (EML, DALY absent) |
 | IHME DALY by NTD group | IHME GBD 2023 export (must be re-exported) | IHME terms | data/external/downloads/ihme_gbd/ | data/processed/ihme/daly_by_ntd_group.csv (not created) | 0 |  |  | n/a | BLOCKED: export has only 'All causes' |
 | WHO EML flags | WHO Model List (file not supplied) | WHO terms | data/external/who_eml.csv (absent) | data/processed/eml/eml_drug_flags.csv (not created) | 0 |  |  | n/a | BLOCKED: file not supplied |
 
@@ -54,7 +54,7 @@ Generated 2026-11-10 23:36 by `scripts/make_readiness_report.py` from the files 
 
 **HAI medicines -> DrugBank:** {'mapped': 55, 'unmapped': 5} (tiers {'1_exact_name': 49, '3_curated_inn_synonym': 5, 'none': 5, '2_normalised_name': 1}); unmapped: Benzathine benzyl penicillin, Budesonide+Formeterol, Co-amoxiclav, Co-trimoxazole, Sulfadoxine+Pyrimethamine.
 
-**Equity component coverage (all pairs / NTD pairs):** {'eml': 98.6, 'daly': 0.0, 'access': 6.58} / {'eml': 100.0, 'daly': 0.0, 'access': 17.07} (%); NDPI available for 9275 pairs (82 NTD).
+**Equity component coverage (all pairs / NTD pairs):** {'eml': 95.39, 'daly': 0.0, 'access': 6.58} / {'eml': 100.0, 'daly': 0.0, 'access': 17.07} (%); NDPI available for 8973 pairs (82 NTD).
 
 
 ## 3. Models
@@ -96,8 +96,8 @@ Loader audit: {"primekg": {"X_train": [40380, 2051], "X_val": [8382, 2051], "X_t
 | # | Issue | Blocks | Needs |
 |---|---|---|---|
 | 1 | IHME export contains only 'All causes' (right dimensions, no NTD causes) | DALY component, NDPI | re-export with NTD causes (Docs/EQUITY_DATA_SPECS.md) |
-| 2 | WHO EML: extracted from the official 24th-list PDF (646 entries: 592 single, 54 combination; automated checks in tests/test_who_eml_extraction.py); 486 of 592 single entries map to 368 distinct PrimeKG drugs by exact/alias/salt/curated-INN tiers; 106 single entries unmapped (vaccines, biologics, blood products, drugs absent from PrimeKG). EML 0 can be a false 0 for those | EML component accuracy | none (limitation documented); WHO text is CC BY-NC-SA 3.0 IGO |
-| 3 | NDPI has EML (98.6% of pairs) + HAI pilot (6.6%) but NO burden component: it reduces to the EML flag and is NOT a burden-aware equity ranking; weights 0.45/0.45/0.10 unvalidated; sensitivity grid not meaningful until DALY exists | equity claims | IHME re-export |
+| 2 | WHO EML: extracted from the official 24th-list PDF (646 entries: 592 single, 54 combination; automated checks in tests/test_who_eml_extraction.py); 486 of 592 single entries map to 368 distinct PrimeKG drugs by exact/alias/salt/curated-INN tiers; 106 single entries unmapped (vaccines, biologics, blood products, drugs absent from PrimeKG). EML status separates confirmed positives, unresolved (name overlaps an unmapped entry) and no-candidate zeros | EML component accuracy | none (limitation documented); WHO text is CC BY-NC-SA 3.0 IGO |
+| 3 | NDPI has EML (31.2% confirmed positives, 3.2% unresolved; the rest are no-candidate zeros) + HAI pilot (6.6%) but NO burden component: it reduces to the EML flag and is NOT a burden-aware equity ranking; weights 0.45/0.45/0.10 unvalidated; sensitivity grid not meaningful until DALY exists | equity claims | IHME re-export |
 | 4 | HAI = three Indian surveys 2004-2011; 5 medicines unmapped (combinations, benzathine penicillin) | any global access claim | broader access evidence |
 | 5 | WHO NTD list verified directly (21 groupings; 25 fact sheets; `Docs/NTD_MAPPING.md`). The 22 frozen project groups reconcile to it with documented differences (chikungunya, other deep mycoses, other ectoparasitoses not in the flag; WHO does not enumerate members of two groupings). Page says 'NTDs include', gives no dates; headline: new-NTD requests on hold pending a criteria review (article not read). Candidate extensions are NOT in the frozen flag (changing it would change the NTD stratification) | NTD framing | decide whether to run a separate extended-NTD analysis |
 | 6 | NTD test set is tiny (15 positives, 13 groups with any test pair); MONDO has only a generic term for lymphatic filariasis; noma has none | NTD performance claims | report as exploratory |

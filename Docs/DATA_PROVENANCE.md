@@ -1,6 +1,6 @@
 # Data provenance
 
-Generated 2026-11-10. Every external source: where it came from, which version, how it was verified. Licences are in `Docs/LICENCE_AUDIT.md`; Open Targets detail in `Docs/OPEN_TARGETS_PROVENANCE.md`; WHO NTD detail in `Docs/NTD_MAPPING.md`; the machine-readable evidence log is `Docs/source_evidence/fetch_log_2026-11-10.json`; checksums of the processed release are in `Docs/release/`.
+Generated 2026-11-11. Every external source: where it came from, which version, how it was verified. Licences are in `Docs/LICENCE_AUDIT.md`; Open Targets detail in `Docs/OPEN_TARGETS_PROVENANCE.md`; WHO NTD detail in `Docs/NTD_MAPPING.md`; the machine-readable evidence log is `Docs/source_evidence/fetch_log_2026-11-10.json`; checksums of the processed release are in `Docs/release/`.
 
 | dataset | source / version | sha256 | raw path | processed | verified how |
 |---|---|---|---|---|---|
@@ -25,4 +25,4 @@ Structure-covered variant: keep pairs whose drug has SMILES and a non-zero finge
 646 entries (592 single, 54 combination); single status {'mapped': 486, 'unmapped': 106}; mapped by tier {'1_exact_name': 445, '2_primary_or_alias': 15, '4_curated_inn_synonym': 15, '3_salt_stripped': 11}; 368 distinct PrimeKG drugs flagged; combination components {'components': 127, 'status': {'mapped': 119, 'unmapped': 8}}.
 
 ## Equity table
-9,388 indication pairs; inputs present {'eml': True, 'daly': False, 'access': True}; component coverage (all pairs) {'eml': 98.6, 'daly': 0.0, 'access': 6.58}; NDPI available for 9,275 pairs. DALY is absent, so NDPI is not burden-aware.
+9,388 indication pairs; inputs present {'eml': True, 'daly': False, 'access': True}; component coverage (all pairs) {'eml': 95.39, 'daly': 0.0, 'access': 6.58}; NDPI available for 8,973 pairs. DALY is absent, so NDPI is not burden-aware.

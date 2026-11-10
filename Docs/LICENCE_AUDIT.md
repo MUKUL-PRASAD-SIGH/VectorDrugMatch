@@ -1,6 +1,6 @@
 # Licence and terms audit
 
-Generated 2026-11-10. A provenance record, **not legal advice**. Evidence: `Docs/source_evidence/fetch_log_2026-11-10.json` (URL, bytes, SHA-256 of every page read, 29 pages); raw pages are not stored in git.
+Generated 2026-11-11. A provenance record, **not legal advice**. Evidence: `Docs/source_evidence/fetch_log_2026-11-10.json` (URL, bytes, SHA-256 of every page read, 29 pages); raw pages are not stored in git.
 Statuses: VERIFIED = the stated terms were read from the source; PARTIAL = part read; NOT VERIFIED = could not be retrieved or read; LEGALLY UNRESOLVED = the terms were read but their effect on this project is a legal judgement not made here.
 
 ## 1. Platform-level versus upstream terms
