@@ -45,7 +45,7 @@ Colab downloads the code from GitHub, so the new files must be on GitHub first. 
 and run these lines one by one:
 
 ```powershell
-cd "C:\Users\Mukul Prasad\Desktop\PROJECTS\Vector Drug Match\VectorDrugMatch"
+cd <path-to-your-local-clone>/VectorDrugMatch
 git status
 ```
 
