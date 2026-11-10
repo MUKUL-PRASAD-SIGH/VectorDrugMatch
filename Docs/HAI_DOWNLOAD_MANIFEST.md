@@ -24,6 +24,6 @@ Moved from repo root on 2026-11-10; filenames unchanged; SHA-1 verified after mo
 | open_targets/00000000.parquet | Open Targets | clinical reports (drugId,diseaseId,maxClinicalStage) | 6fefb231 |
 | open_targets/00000000 (1).parquet | Open Targets | drug molecules | df76b1fb |
 | open_targets/00000000 (2).parquet | Open Targets | mechanisms of action | c58a63b1 |
-| ihme_gbd/IHME-GBD_2023_DATA-9feb184e-1.zip | IHME GBD 2023 | UNUSABLE stub: All-causes Deaths only; re-export DALYs | 70aea470 |
+| ihme_gbd/IHME-GBD_2023_DATA-9feb184e-1.zip | IHME GBD 2023 | UNUSABLE stub: 'All causes' only (Deaths and DALYs; Number/Percent/Rate; Global, Both, All ages, 2023) - no disease-specific causes; re-export selecting the NTD causes | 70aea470 |
 
 Notes: HAI surveys are regional, historical pilots (not a global Access score); Delhi uses MSH2010 reference prices, Karnataka/Maharashtra MSH2003, so MPRs are not directly comparable across surveys. Open Targets is not integrated into the benchmark yet.

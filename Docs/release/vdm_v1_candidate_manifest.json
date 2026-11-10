@@ -1,0 +1,316 @@
+{
+ "tag": "vdm_v1_candidate",
+ "created_utc": "2026-11-10T16:59:29+00:00",
+ "git_commit": "204f91bde2e5f51df85829fa412cad41fb61c935",
+ "git_tree_dirty_at_freeze": true,
+ "python": "3.10.11",
+ "platform": "Windows-10-10.0.26300-SP0",
+ "packages": {
+  "numpy": "2.2.6",
+  "pandas": "2.3.3",
+  "scikit-learn": "1.7.2",
+  "torch": "2.10.0+cpu",
+  "torch_geometric": "2.8.0",
+  "xgboost": "3.1.1",
+  "rdkit": "2026.03.4",
+  "matplotlib": "3.10.0",
+  "yaml": "6.0.3"
+ },
+ "split": {
+  "seed": 42,
+  "strategy": "hard negatives, drug-disjoint 70/15/15, neg_ratio 5.0",
+  "files": [
+   "data/processed/primekg/splits/seed42.npz",
+   "data/processed/primekg_structcov/splits/seed42.npz"
+  ]
+ },
+ "n_files": 47,
+ "files": [
+  {
+   "path": "data/processed/primekg/disease_features.npy",
+   "bytes": 205088,
+   "sha256": "c7a222863c6d833faded670de6718bd2b395768c29ac2eb3ec4fae0603f61032",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg/diseases.csv",
+   "bytes": 2072360,
+   "sha256": "4d29b7baa3ce238d1c7e384680e93dfcf12ebc9d4bf4faeef16cea65f1fdc464",
+   "rows": 17080
+  },
+  {
+   "path": "data/processed/primekg/drug_features.npy",
+   "bytes": 65183872,
+   "sha256": "b03ccc4eaf5a83458fb9e1165a79b24d093b719a6e1b6c237911063b322d69ca",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg/drugs.csv",
+   "bytes": 778957,
+   "sha256": "6fdd280a32eb3fc377907a316ae5fe325aa6c2cdb77e4e83ea4a4c0970d460ab",
+   "rows": 7957
+  },
+  {
+   "path": "data/processed/primekg/edges.csv",
+   "bytes": 29038960,
+   "sha256": "19cb372c2cab1bcf9e0ee472d32c613609476f6a69337096af0b72a405b53442",
+   "rows": 501779
+  },
+  {
+   "path": "data/processed/primekg/genes.csv",
+   "bytes": 350597,
+   "sha256": "ad20206067029a5b96046973defcdb38d91e1341eb2bc35550a0e138a8714ef0",
+   "rows": 19051
+  },
+  {
+   "path": "data/processed/primekg/graph_metadata.json",
+   "bytes": 258,
+   "sha256": "fbf323fa476555c21ee016b61f1ade1d4dc68260c42e1cf0c184dc9bcc2fc5c3",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg/primekg_provenance.json",
+   "bytes": 2745,
+   "sha256": "66d26e9e25fcb1a9ac670fe7c675ed2cf71dd2311864a12cfb29e425d26f8556",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg/splits/seed42.manifest.json",
+   "bytes": 3176,
+   "sha256": "9493dc5bdb515eea8f9e9ea6c6251e910eafd616433ef92d4fd84a6487eb72b2",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg/splits/seed42.npz",
+   "bytes": 313153,
+   "sha256": "1475cdf93b24a91ff67b7c822e821a2688bdb3605d334fe06977e19b9299934b",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg_structcov/disease_features.npy",
+   "bytes": 205088,
+   "sha256": "c7a222863c6d833faded670de6718bd2b395768c29ac2eb3ec4fae0603f61032",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg_structcov/diseases.csv",
+   "bytes": 2072360,
+   "sha256": "4d29b7baa3ce238d1c7e384680e93dfcf12ebc9d4bf4faeef16cea65f1fdc464",
+   "rows": 17080
+  },
+  {
+   "path": "data/processed/primekg_structcov/drug_features.npy",
+   "bytes": 65183872,
+   "sha256": "b03ccc4eaf5a83458fb9e1165a79b24d093b719a6e1b6c237911063b322d69ca",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg_structcov/drugs.csv",
+   "bytes": 778957,
+   "sha256": "6fdd280a32eb3fc377907a316ae5fe325aa6c2cdb77e4e83ea4a4c0970d460ab",
+   "rows": 7957
+  },
+  {
+   "path": "data/processed/primekg_structcov/edges.csv",
+   "bytes": 29038960,
+   "sha256": "19cb372c2cab1bcf9e0ee472d32c613609476f6a69337096af0b72a405b53442",
+   "rows": 501779
+  },
+  {
+   "path": "data/processed/primekg_structcov/genes.csv",
+   "bytes": 350597,
+   "sha256": "ad20206067029a5b96046973defcdb38d91e1341eb2bc35550a0e138a8714ef0",
+   "rows": 19051
+  },
+  {
+   "path": "data/processed/primekg_structcov/graph_metadata.json",
+   "bytes": 258,
+   "sha256": "fbf323fa476555c21ee016b61f1ade1d4dc68260c42e1cf0c184dc9bcc2fc5c3",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg_structcov/primekg_provenance.json",
+   "bytes": 2745,
+   "sha256": "66d26e9e25fcb1a9ac670fe7c675ed2cf71dd2311864a12cfb29e425d26f8556",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg_structcov/splits/seed42.manifest.json",
+   "bytes": 1078,
+   "sha256": "049792c4e0b0e5c3471ce18e4a330a5e69ee1666749424d72f38c52c474165de",
+   "rows": null
+  },
+  {
+   "path": "data/processed/primekg_structcov/splits/seed42.npz",
+   "bytes": 1417940,
+   "sha256": "1704266b94029fc085218b9733225f6507a887e6a46a8afafe5885de12451842",
+   "rows": null
+  },
+  {
+   "path": "data/processed/open_targets/indications_mapped.csv",
+   "bytes": 16021106,
+   "sha256": "a16eb87a80294212dfb375f8bd517042978212d7b272720c60eff7fb2e0c1301",
+   "rows": 86451
+  },
+  {
+   "path": "data/processed/open_targets/mapping_report.json",
+   "bytes": 3712,
+   "sha256": "198fae55a47995a2a8fe3799d338b21e2811a7c0bdcfe6883e72c68dddee4e41",
+   "rows": null
+  },
+  {
+   "path": "data/processed/open_targets/mapping_report.md",
+   "bytes": 4558,
+   "sha256": "9f510abe9883cfbca9f7b17b793143fcaa8fdb64f91edb307007d16eff7675a2",
+   "rows": null
+  },
+  {
+   "path": "data/processed/open_targets/pairs_drugbank_mondo.csv",
+   "bytes": 4375264,
+   "sha256": "e776c8298e29ab273fda3d241e7809262641edd37b9da6c82e85f68ce9859f39",
+   "rows": 40937
+  },
+  {
+   "path": "data/processed/open_targets/pairs_drugbank_mondo_parent_fallback.csv",
+   "bytes": 618934,
+   "sha256": "206260ef190dabb276fe21a542b08675261915371adc234cb6354758ea17f198",
+   "rows": 5901
+  },
+  {
+   "path": "data/processed/open_targets/primekg_overlap.csv",
+   "bytes": 506,
+   "sha256": "40c75027f58746e0656e183a95283e7a97ab5a4ed44f41c5afe1b7b4e086e77b",
+   "rows": 11
+  },
+  {
+   "path": "data/processed/open_targets/unmatched_diseases.csv",
+   "bytes": 40019,
+   "sha256": "e1e813d1dc1a9f2bce0a4876e52edf71f5838caf6071ba6410738f69725e612f",
+   "rows": 962
+  },
+  {
+   "path": "data/processed/open_targets/unmatched_drugs.csv",
+   "bytes": 325513,
+   "sha256": "4e7542bd6c87a019789b6cc470b075bf463510456e5a029d8991478d8281a53e",
+   "rows": 5884
+  },
+  {
+   "path": "data/processed/ntd/ntd_disease_mapping.csv",
+   "bytes": 6796,
+   "sha256": "e429d7661458a0bdc98856bd54d2b015015bc168820e30f5a14bc39cfc657886",
+   "rows": 26
+  },
+  {
+   "path": "data/processed/ntd/ntd_mapping_summary.json",
+   "bytes": 1682,
+   "sha256": "c49ed3958f9e62aff5f7773e315b249c5d679d80ea4516cde050134d319b445d",
+   "rows": null
+  },
+  {
+   "path": "data/processed/hai/hai_affordability.csv",
+   "bytes": 18450,
+   "sha256": "8c4b10627d4f61d4fcc66fda13df15d7caa539e744bfb3c6e3e500dede425f59",
+   "rows": 108
+  },
+  {
+   "path": "data/processed/hai/hai_median_price.csv",
+   "bytes": 66960,
+   "sha256": "e26ed95694ead3f657f8e3a321b5cf33f70336adf8b166e81662ae2f539dc44b",
+   "rows": 386
+  },
+  {
+   "path": "data/processed/hai/hai_medicines.csv",
+   "bytes": 6395,
+   "sha256": "a7b0367dfaa7e027eb02bf7f8dc5bcee4f2c6b8264e487dec347b382c1f4b8f4",
+   "rows": 60
+  },
+  {
+   "path": "data/processed/hai/hai_parse_report.json",
+   "bytes": 2708,
+   "sha256": "773cf9f87eba6f7ed941768d647f0b320425d87059091f92a8bf786fd449fd8d",
+   "rows": null
+  },
+  {
+   "path": "data/processed/hai/hai_price_availability.csv",
+   "bytes": 200872,
+   "sha256": "ea6977565264d5edaf7705cdc62a1f2fe2910209811da281f0386f7ca0cc857d",
+   "rows": 906
+  },
+  {
+   "path": "data/processed/hai/hai_surveys.csv",
+   "bytes": 1269,
+   "sha256": "41f6ad9edfa54125249ad8028b0e6928b90468f78487bd79a40cdcd9e1b2592c",
+   "rows": 3
+  },
+  {
+   "path": "data/processed/equity/equity_features.csv",
+   "bytes": 879301,
+   "sha256": "3d2c16f926d67173fd1acce65d76adb56d73e631c4680b6a7b7816e71bd18fb9",
+   "rows": 9388
+  },
+  {
+   "path": "data/processed/equity/equity_report.json",
+   "bytes": 933,
+   "sha256": "6fef559e98c18e2f5c798bdb260006fa44884b7950c2dc259cdf4367b0e61606",
+   "rows": null
+  },
+  {
+   "path": "data/processed/equity/ndpi_ntd_candidates.csv",
+   "bytes": 8061,
+   "sha256": "b07b1c29ef757d383b6a0530d838b4266f01c7153af3b44ad32723ed06d23f64",
+   "rows": 82
+  },
+  {
+   "path": "data/external/primekg_kg.csv",
+   "bytes": 981751236,
+   "sha256": "0a5a010fcd88dcec572a573d98c26c1c244a11567092b6161d3ded611cfb5c69",
+   "rows": null
+  },
+  {
+   "path": "data/external/mondo.obo",
+   "bytes": 53442278,
+   "sha256": "b5a3d848578694601dffb1c2866798d4f6f4b4a12c315030c4d4c62ffe4e7e22",
+   "rows": null
+  },
+  {
+   "path": "Docs/HAI_DOWNLOAD_MANIFEST.md",
+   "bytes": 3843,
+   "sha256": "aeae22e6dd9ce87c27464a01cd3676874b5f6091f4a1f31964d24b5df5fa0d50",
+   "rows": null
+  },
+  {
+   "path": "configs/baseline_avalon.yaml",
+   "bytes": 558,
+   "sha256": "27c5940c1143488f9b8b72a98464dea8776b09a6f3b0e4484efda19db9678662",
+   "rows": null
+  },
+  {
+   "path": "configs/baseline_morgan.yaml",
+   "bytes": 598,
+   "sha256": "c8d6bf5b2ed7ade28c8a91fcc28420d4d82bc85e4e49f16a4b11f8a4eb9172d1",
+   "rows": null
+  },
+  {
+   "path": "configs/baseline_morgan_maccs.yaml",
+   "bytes": 560,
+   "sha256": "df102b9c03c9d514f6f6f24453c60e58f1606ee1fdf89f75242137df3378f75d",
+   "rows": null
+  },
+  {
+   "path": "configs/primekg_morgan.yaml",
+   "bytes": 809,
+   "sha256": "11497148059b16e467c013f4cfa1b2f42d616f019fdd89ff2ec12d5103b90b58",
+   "rows": null
+  },
+  {
+   "path": "configs/primekg_morgan_structcov.yaml",
+   "bytes": 946,
+   "sha256": "0cb31c1e387df7cd088fc5d6bdfba9e1eecd0f7f2d16988f95b6d4372939899f",
+   "rows": null
+  }
+ ],
+ "notes": [
+  "data files are git-ignored; verify with --verify",
+  "models and outputs are NOT part of the data release"
+ ]
+}
