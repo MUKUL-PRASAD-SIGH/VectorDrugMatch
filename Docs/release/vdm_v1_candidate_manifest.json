@@ -1,8 +1,8 @@
 {
  "tag": "vdm_v1_candidate",
- "created_utc": "2026-11-10T18:06:31+00:00",
- "git_commit": "3586a3c3ff654cea15a798153dac8d3e5a0a8fc1",
- "git_tree_dirty_at_freeze": true,
+ "created_utc": "2026-11-10T19:20:48+00:00",
+ "git_commit": "94261bcf97d47cd25ebcc11c4c52642b9df9d8d7",
+ "git_tree_dirty_at_freeze": false,
  "python": "3.10.11",
  "platform": "Windows-10-10.0.26300-SP0",
  "packages": {
@@ -280,20 +280,20 @@
   },
   {
    "path": "data/processed/equity/equity_features.csv",
-   "bytes": 1229047,
-   "sha256": "3785a4b6a47b98946f24e39f2c5860f8c38216594074fa45ec6ed183650d51cc",
+   "bytes": 1247678,
+   "sha256": "95ed98dc83c7991bbc0102a240c8a59c56af178a471412fbc6784db68a1fd0bb",
    "rows": 9388
   },
   {
    "path": "data/processed/equity/equity_report.json",
-   "bytes": 1299,
-   "sha256": "d766053c580bd3bbe16a9b58af74bb034a7abea88d01ff1160eea83ad5862810",
+   "bytes": 2783,
+   "sha256": "8910ec771f944533aee2999ef4a1a0557e7e11ed35868923a6645ff34d02f805",
    "rows": null
   },
   {
    "path": "data/processed/equity/ndpi_ntd_candidates.csv",
-   "bytes": 10946,
-   "sha256": "99ce225d12dd8d6e5e691688b0be4463d1e38cda1e36626eb3137673e4808476",
+   "bytes": 11442,
+   "sha256": "17c8264258319ba022a284823c78f6892a9dc585421a6ecd03155de7b3c7dc72",
    "rows": 82
   },
   {
@@ -304,33 +304,33 @@
   },
   {
    "path": "data/processed/eml/eml_combination_components.csv",
-   "bytes": 10308,
-   "sha256": "72b5e85adea9136f8569e8be7dc1f0b0d8263cdaeeda5f01aad3d7bd53f47568",
+   "bytes": 10313,
+   "sha256": "693c5f6bb9b9ac338c532a002ecc3a265c8f1804d8e63d192cbd1ae7f716a1bc",
    "rows": 127
   },
   {
    "path": "data/processed/eml/eml_drug_flags.csv",
-   "bytes": 39786,
-   "sha256": "7df1e67e995b98c97f77bcd44c64e5dc9f17310eab376cbeab2afcc88841ccb9",
-   "rows": 368
+   "bytes": 41054,
+   "sha256": "8998d2e7ebb62f72c6f173e5d42935f8f2b7553919b8ff3283c95b498aa5e684",
+   "rows": 378
   },
   {
    "path": "data/processed/eml/eml_mapping_audit.csv",
-   "bytes": 96964,
-   "sha256": "ad95967eb539fbf79ae8b34118e3753513fcc17425701182a9417716184f72b3",
+   "bytes": 97191,
+   "sha256": "700b463b5eb3c24273b8edcb92244e4b16ff39bd408420d1dec5530398efeaf8",
    "rows": 646
   },
   {
    "path": "data/processed/eml/eml_report.json",
-   "bytes": 1082,
-   "sha256": "db50131699a82da3667f5899f3a445f59a5283de8e41c896e566d8f4f577622c",
+   "bytes": 1354,
+   "sha256": "83919e2b3e48009514c9d81727bbda72c923ded801968f1c722418a6994bc0f4",
    "rows": null
   },
   {
    "path": "data/processed/eml/eml_unmatched.csv",
-   "bytes": 16496,
-   "sha256": "584a89e2c16ecbb7395c6afdda8f491f39991d11e97026cdea876cea8edfdd1e",
-   "rows": 106
+   "bytes": 18632,
+   "sha256": "15ffd4bbe2800a5157fb7afe35f600429d29ae33f5250dd094f87abcd18389a4",
+   "rows": 95
   },
   {
    "path": "data/external/primekg_kg.csv",
@@ -352,8 +352,8 @@
   },
   {
    "path": "data/external/who_eml.csv",
-   "bytes": 181086,
-   "sha256": "957f90b6f6adf1102f6379fe933f5d0af2988035d62092655fdfca706019264f",
+   "bytes": 181080,
+   "sha256": "e538a89c2fcde0e7209740a57527838356e66f65eb74e592a9332b8013e3073e",
    "rows": 646
   },
   {
