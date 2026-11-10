@@ -86,7 +86,7 @@ Counts: {'DONE AND VALIDATED': 25, 'IMPLEMENTED BUT NOT VALIDATED': 7, 'BLOCKED 
 ```
 
 ## 3. Commit / pin / manifest reconciliation (state at generation)
-HEAD `632b5370d9`; local commits ahead of `origin/mukul`: 13; working tree has uncommitted changes. The notebook pins code commit `b4d6c39eb1`. Test: after the pinned commit only `notebooks/` and `Docs/` may change. Result: **FAIL: files changed after the pin: scripts/build_equity_features.py, scripts/make_readiness_report.py, scripts/process_who_eml.py, src/scoring/eml_status.py, tests/test_eml_status.py (commit them, then re-pin)**. The release manifest `Docs/release/vdm_v1_candidate_manifest.json` records the data checksums, versions and the commit at freeze time; rename it `vdm_v1` after H1 data arrive.
+HEAD `a745cd3dd8`; local commits ahead of `origin/mukul`: 14; working tree has uncommitted changes. The notebook pins code commit `a745cd3dd8`. Test: after the pinned commit only `notebooks/` and `Docs/` may change. Result: **PASS**. The release manifest `Docs/release/vdm_v1_candidate_manifest.json` records the data checksums, versions and the commit at freeze time; rename it `vdm_v1` after H1 data arrive.
 
 ## Final Colab-readiness gate
 | gate | status |
@@ -100,4 +100,4 @@ HEAD `632b5370d9`; local commits ahead of `origin/mukul`: 13; working tree has u
 | paths work in a clean clone | yes (clean-clone check) |
 | no untracked local-only dependency silently required | the external stage needs Drive uploads (H4) and says so |
 | no restricted raw data in git | yes (`data/` ignored; DrugBank-derived blobs remain in history: H5) |
-| notebook pins a commit containing all code | NO: see section 3; it can only be cloned on Colab after the push (H3) |
+| notebook pins a commit containing all code | yes; it can only be cloned on Colab after the push (H3) |
