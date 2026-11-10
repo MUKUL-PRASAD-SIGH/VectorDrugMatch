@@ -362,3 +362,14 @@ Present: data ingestion/provenance, preprocessing and validation, features, grap
 
 ## Open decisions (none blocks training)
 Code licence file; whether team names stay in `MASTER_PLAN.md`/`CONTRIBUTING.md`; DrugBank blobs in history; the legal questions in `Docs/LICENCE_AUDIT.md`.
+
+
+## Update after the repository restructure (all LOCAL ONLY, not pushed)
+Current notebook pin: the `refactor(repo)` commit below (the only code-tree change after commit 30 is moving unused files into `legacy/`; pipeline code, configs, data manifest and tests are unchanged).
+
+| commit | subject | changes |
+|---|---|---|
+| `6008aed` | feat(baselines): opt-in --coldstart-only (skip pooled CV and pooled all-data model); used by the final pipeline | 3 files changed, 35 insertions(+), 9 deletions(-) |
+| `c5d82b5` | docs(colab): re-pin notebook to the --coldstart-only commit; update handoff, handbook and publication plan | 4 files changed, 378 insertions(+), 72 deletions(-) |
+| `b86df0d` | refactor(repo): move unused earlier-phase scripts, notebooks and plans into legacy/ (git mv, history kept); README and docs index | 24 files changed, 35 insertions(+), 7 deletions(-) |
+| (this commit) | docs(colab): re-pin notebook to the legacy-restructure commit; update publication plan | notebook, handbook, handoff, plan |

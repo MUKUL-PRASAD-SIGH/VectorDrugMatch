@@ -2,7 +2,7 @@
 
 Written for someone who has never used Google Colab. Follow it in order. Nothing here needs programming: you click, wait, and check. Button names in Colab change slightly over time; if a label differs a little, look for the closest match.
 
-**The version to use:** the code commit **`6008aed`** (full value is in the notebook, in the line `PIN = '...'`). **Time needed:** the run is long and its length is **not known in advance**; Step 6 (smoke test) measures speed so you can judge. You can stop and resume.
+**The version to use:** the code commit **`b86df0d`** (full value is in the notebook, in the line `PIN = '...'`). **Time needed:** the run is long and its length is **not known in advance**; Step 6 (smoke test) measures speed so you can judge. You can stop and resume.
 
 **Words you will meet**
 * *Notebook*: a document made of **cells**. A *code cell* is a grey box with a small **play button (▶)** on its left; pressing it runs the cell. A *text cell* is just explanation.
@@ -67,7 +67,7 @@ Quick size check: right-click `VDM_Data` → **File information → Details** (o
 * Do not put passwords, keys or `.env` files anywhere.
 
 ### A6. Make sure the code is on GitHub
-Colab downloads the code from GitHub. The commit above must have been **pushed** (published on `mukul` and `main` on 2026-11-11, after your approval). To check: open https://github.com/MUKUL-PRASAD-SIGH/VectorDrugMatch/commits/mukul and look for a commit starting with `6008aed`. If it is not there, stop: the run cannot start yet.
+Colab downloads the code from GitHub. The commit above must have been **pushed** (published on `mukul` and `main` on 2026-11-11, after your approval). To check: open https://github.com/MUKUL-PRASAD-SIGH/VectorDrugMatch/commits/mukul and look for a commit starting with `b86df0d`. If it is not there, stop: the run cannot start yet.
 
 ---
 
@@ -82,11 +82,11 @@ Sign in with the same Google account as your Drive. (Alternative: go to https://
 
 ### B2. Save your own copy to Drive and name it
 1. **File → Save a copy in Drive**. A new tab opens with your copy.
-2. Click the notebook title at the top-left and rename it to: `VDM_final_run_6008aed`.
+2. Click the notebook title at the top-left and rename it to: `VDM_final_run_b86df0d`.
 3. Work **only in your copy** from now on, so your own settings and any outputs shown in it are saved in your Drive.
 
 ### B3. Check you have the correct version
-Scroll to the top: the first text cell says it is pinned to a commit and shows its first 10 characters (`6008aed...`). Later, Step 2 prints a line with that commit: it must start with `6008aed`. If it shows anything else, stop.
+Scroll to the top: the first text cell says it is pinned to a commit and shows its first 10 characters (`b86df0d...`). Later, Step 2 prints a line with that commit: it must start with `b86df0d`. If it shows anything else, stop.
 
 ### B4. Choose the GPU
 Menu **Runtime → Change runtime type**. Under *Hardware accelerator* choose **T4 GPU**, then **Save**. (A GPU is needed for the graph models.)
@@ -109,7 +109,7 @@ Only this notebook session gets access; you can revoke it later at https://myacc
 | Step | What it does | You must see | Wait (not timed on Colab) |
 |---|---|---|---|
 | 1 GPU | checks the graphics card | `GPU available: True` and a table naming a Tesla T4 | seconds |
-| 2 Drive, code, libraries (3 cells) | mounts Drive, downloads the code at the pinned commit, installs libraries | `Mounted at /content/drive`; a line starting `6008aed`; `ok: ... torch_cluster available` | a few minutes |
+| 2 Drive, code, libraries (3 cells) | mounts Drive, downloads the code at the pinned commit, installs libraries | `Mounted at /content/drive`; a line starting `b86df0d`; `ok: ... torch_cluster available` | a few minutes |
 | 3 Inputs | copies your Drive files into the session | `copied` lines for `mondo.obo`, `drugbank_*`, `B09474-eng.pdf`, `downloads/`; **no** error | short |
 | 4 Prepare | downloads PrimeKG (about 1 GB) and rebuilds the benchmark | no `[FAIL]` anywhere; ends with `pipeline stage complete` | includes a 1 GB download |
 | 4b Frozen-data check | proves the rebuilt data are identical to the frozen benchmark | `FROZEN BENCHMARK VERIFIED: 16 files match` (if it first says `MISMATCH` and then verifies after restoring the frozen copy, that is acceptable; an `AssertionError` is a **stop**) | short |
@@ -148,7 +148,7 @@ Step 6's printed times let you estimate Step 7 and 8 (the notebook does not gues
 
 ## F. Resuming after a disconnect (this is expected on long runs)
 Everything finished is already in `MyDrive/VDM_Outputs/outputs`, and `outputs/pipeline_log.jsonl` records which models finished. To continue:
-1. Reopen **your saved copy** (`VDM_final_run_6008aed`) from Drive.
+1. Reopen **your saved copy** (`VDM_final_run_b86df0d`) from Drive.
 2. Runtime → **Change runtime type** → T4 GPU (if needed) and run **Steps 1 to 6b again, in order**. (Step 6 repeats the smoke test; it can be skipped only if you are sure the session is healthy, but **do not skip 6b**.)
 3. Run the Step 7 cell again. Because it uses `--resume`, the models that already finished at this same commit print `[resume] already completed ... skipped`, and only the missing ones train. Do the same for Step 8.
 Never delete files in `VDM_Outputs`.
