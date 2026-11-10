@@ -27,6 +27,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 PY = sys.executable
 CFG = {"full": "configs/primekg_morgan.yaml", "structcov": "configs/primekg_morgan_structcov.yaml"}
+GNNS = ["GCN", "GraphSAGE", "GAT", "RGCN", "HGT"]
+TRAIN_SCRIPTS = {"train_baselines.py", "train_node2vec.py", "train_gnn.py", "run_ablations_coldstart.py"}   # the steps --resume may skip (cmd[1] is the script path)
 CFG_DP = {"full": "configs/primekg_morgan_dp.yaml", "structcov": "configs/primekg_morgan_structcov_dp.yaml"}   # baselines + train-side disease profile
 
 
@@ -57,8 +59,9 @@ def steps(stage, variant, epochs):
                 ([PY, "scripts/train_baselines.py", "--model", "logistic", "--config", c], R)]
     if stage == "train":
         s = [([PY, "scripts/train_baselines.py", "--model", m, "--config", c], R) for m in ("logistic", "nb", "xgb", "rf", "mlp")]
-        s += [([PY, "scripts/train_node2vec.py", "--config", c, "--epochs", "10"], R),
-              ([PY, "scripts/train_gnn.py", "--config", c, "--epochs", str(epochs)], R),
+        s += [([PY, "scripts/train_node2vec.py", "--config", c, "--epochs", "10"], R)]
+        s += [([PY, "scripts/train_gnn.py", "--config", c, "--epochs", str(epochs), "--models", m], R) for m in GNNS]     # one call per GNN: resumable
+        s += [
               ([PY, "scripts/run_ablations_coldstart.py", "--config", c], R)]
         d = CFG_DP[variant]                      # second baseline variant: drug + disease-profile features (same saved split and negatives)
         s += [([PY, "scripts/train_baselines.py", "--model", m, "--config", d], R) for m in ("logistic", "nb", "xgb", "rf", "mlp")]
@@ -79,6 +82,9 @@ def main():
     ap.add_argument("--variant", default="full", choices=list(CFG))
     ap.add_argument("--epochs", type=int, default=100)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--resume", action="store_true",
+                    help="skip training steps already completed (exit 0) at THIS commit according to outputs/pipeline_log.jsonl "
+                         "(point outputs/ at Drive so the log survives a disconnect); report/explain/prepare/external always re-run")
     a = ap.parse_args()
     if a.stage == "all":
         plan = (steps("prepare", "full", a.epochs) + steps("external", "full", a.epochs) + steps("train", "full", a.epochs)
@@ -88,22 +94,39 @@ def main():
     log = REPO / "outputs" / "pipeline_log.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
     skipped_optional = []
+    commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True, text=True).stdout.strip() or None
+    done = set()
+    if a.resume and log.exists():
+        for line in log.read_text(encoding="utf-8").splitlines():
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if r.get("returncode") == 0 and r.get("commit") == commit and r.get("training"):
+                done.add(r["cmd"])
+    n_skipped = 0
     for cmd, optional in plan:
         printable = " ".join(Path(x).name if x == PY else x for x in cmd)
+        training = any(Path(x).name in TRAIN_SCRIPTS for x in cmd[1:2])
         print(f"\n>>> {printable}" + ("   [optional]" if optional else ""))
         if a.dry_run:
+            continue
+        if a.resume and training and printable in done:
+            print("   [resume] already completed at this commit: skipped")
+            n_skipped += 1
             continue
         t0 = time.time()
         rc = subprocess.run(cmd, cwd=REPO).returncode
         with open(log, "a", encoding="utf-8") as f:
-            f.write(json.dumps({"cmd": printable, "returncode": rc, "optional": optional, "seconds": round(time.time() - t0, 1)}) + "\n")
+            f.write(json.dumps({"cmd": printable, "returncode": rc, "optional": optional, "seconds": round(time.time() - t0, 1), "commit": commit,
+                                "training": training, "resume_flag": a.resume, "finished_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}) + "\n")
         if rc != 0:
             if optional:
                 skipped_optional.append(printable)
                 print(f"   (optional step failed with exit {rc}; continuing: its outputs will be reported as missing)")
                 continue
             sys.exit(f"STOPPED: step failed (exit {rc}): {printable}")
-    print("\npipeline stage complete" + (" (dry run)" if a.dry_run else ""))
+    print("\npipeline stage complete" + (" (dry run)" if a.dry_run else "") + (f"; {n_skipped} completed training step(s) skipped by --resume" if n_skipped else ""))
     if skipped_optional:
         print("optional steps that failed (their data is MISSING downstream):\n  " + "\n  ".join(skipped_optional))
 

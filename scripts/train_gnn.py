@@ -98,7 +98,7 @@ def predict_proba(model, data):
     return model(data.x_dict, data.edge_index_dict, eli).cpu().numpy()
 
 
-def train_evaluate_gnns(config_path: str, epochs: int = 100):
+def train_evaluate_gnns(config_path: str, epochs: int = 100, only=None):
     if not PYG_AVAILABLE:
         print("ERROR: PyTorch Geometric is required to train GNNs.")
         sys.exit(1)
@@ -193,6 +193,12 @@ def train_evaluate_gnns(config_path: str, epochs: int = 100):
         "HGT": lambda: create_hgt_model(data.metadata(), hidden_channels=EMB_DIM, out_channels=EMB_DIM, heads=4)
     }
     
+    if only:                                       # train a subset (used to resume an interrupted run); each model is seeded independently
+        unknown = sorted(set(only) - set(gnn_factories))
+        if unknown:
+            sys.exit(f"unknown GNN model(s): {unknown}; choose from {sorted(gnn_factories)}")
+        gnn_factories = {k: v for k, v in gnn_factories.items() if k in only}
+
     results = []
     
     # 4. Train & Evaluate
@@ -349,7 +355,8 @@ def train_evaluate_gnns(config_path: str, epochs: int = 100):
     
     results_df = pd.DataFrame(results)
     csv_path = outputs_dir / "gnn_comparison.csv"
-    results_df.to_csv(csv_path, index=False)
+    from src.utils.results_io import merge_rows
+    merge_rows(csv_path, results_df, key="name")      # keeps the rows of models trained in other calls
     print(f"\nResults saved to {csv_path}")
 
 
@@ -358,6 +365,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="VectorDrugMatch GNN Training")
     parser.add_argument("--config", type=str, default="config.yaml", help="Path to experiment config file")
     parser.add_argument("--epochs", type=int, default=100, help="Max training epochs per model")
+    parser.add_argument("--models", nargs="+", default=None, help="subset of GCN GraphSAGE GAT RGCN HGT (default: all five)")
     args = parser.parse_args()
     
-    train_evaluate_gnns(args.config, epochs=args.epochs)
+    train_evaluate_gnns(args.config, epochs=args.epochs, only=args.models)

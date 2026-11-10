@@ -303,7 +303,8 @@ def train_evaluate_baselines(selected_models, config_path):
     
     results_df = pd.DataFrame(results)
     csv_path = outputs_dir / "baseline_comparison.csv"
-    results_df.to_csv(csv_path, index=False)
+    from src.utils.results_io import merge_rows
+    merge_rows(csv_path, results_df, key="name")      # one model per call: keep the rows written by the other calls
     print(f"\nResults saved to {csv_path}")
 
 
