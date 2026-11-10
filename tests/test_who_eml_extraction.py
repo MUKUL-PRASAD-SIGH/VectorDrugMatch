@@ -41,3 +41,17 @@ def test_combinations_are_split_correctly():
     d = _d()
     c = set(d[d.entry_type == "combination"].name)
     assert "ethambutol + isoniazid + pyrazinamide + rifampicin" in c and "artemether + lumefantrine" in c and "lopinavir + ritonavir" in c
+
+
+def test_superscript_footnote_marks_do_not_enter_names():
+    names = set(_d().name)
+    for bad in ("thoctreotide", "thlevonorgestrel-releasing intrauterine system", "thefavirenz + emtricitabine + tenofovir"):
+        assert bad not in names                      # 5.5pt superscript 'th' (PDF pp.55, 59) was glued to the next name
+    assert {"octreotide", "levonorgestrel-releasing intrauterine system", "efavirenz + emtricitabine + tenofovir"} <= names
+    assert "losartan" in names                       # genuine 9pt prefix fragments (lo + sartan) are still joined
+
+
+def test_copackaged_entries_are_combinations():
+    d = _d().set_index("name")
+    for n in ("mifepristone + misoprostol", "oral rehydration salts + zinc sulfate", "artesunate + sulfadoxine + pyrimethamine", "amodiaquine + sulfadoxine + pyrimethamine"):
+        assert d.loc[n, "entry_type"] == "combination" and "U+2013" in d.loc[n, "extraction_note"]

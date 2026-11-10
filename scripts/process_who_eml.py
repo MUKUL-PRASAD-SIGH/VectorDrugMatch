@@ -74,7 +74,6 @@ REASON_OVERRIDE = {
     "coal tar": "not in PrimeKG", "podophyllum resin": "not in PrimeKG", "meglumine iotroxate": "not in PrimeKG", "hypochlorous acid": "not in PrimeKG",
     "chlorine base compound": "not in PrimeKG", "alcohol based hand rub": "formulation, not a single substance",
     "realgar-indigo naturalis formulation": "herbal/mineral formulation",
-    "mifepristone misoprostol": "co-packaged combination extracted without '+' (both components exist in PrimeKG); deliberately NOT counted as a single entry",
     "erythropoiesis-stimulating agents": "drug class, not a substance", "sunscreen, broad-spectrum": "formulation, not a single substance",
     "glucose with sodium chloride": "mixture solution, not a single substance",
 }

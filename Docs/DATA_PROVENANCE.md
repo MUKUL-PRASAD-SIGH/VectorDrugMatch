@@ -22,7 +22,7 @@ Structure-covered variant: keep pairs whose drug has SMILES and a non-zero finge
 {'price_availability': 906, 'median_price': 386, 'affordability': 108, 'unique_medicines': 60} (price/availability, median price, affordability, unique medicines); DrugBank mapping {'mapped': 55, 'unmapped': 5} by tiers {'1_exact_name': 49, '3_curated_inn_synonym': 5, 'none': 5, '2_normalised_name': 1}; unmapped: Benzathine benzyl penicillin, Budesonide+Formeterol, Co-amoxiclav, Co-trimoxazole, Sulfadoxine+Pyrimethamine. Audit: `Docs/HAI_AUDIT.md`.
 
 ## WHO EML mapping
-646 entries (592 single, 54 combination); single status {'mapped': 497, 'unmapped': 95}; mapped by tier {'1_exact_name': 446, '4_curated_inn_synonym': 25, '2_primary_or_alias': 15, '3_salt_stripped': 11}; 378 distinct PrimeKG drugs flagged; combination components {'components': 127, 'status': {'mapped': 120, 'unmapped': 7}}.
+646 entries (590 single, 56 combination); single status {'mapped': 497, 'unmapped': 93}; mapped by tier {'1_exact_name': 446, '4_curated_inn_synonym': 25, '2_primary_or_alias': 15, '3_salt_stripped': 11}; 378 distinct PrimeKG drugs flagged; combination components {'components': 133, 'status': {'mapped': 127, 'unmapped': 6}}.
 
 ## Equity table
 9,388 indication pairs; inputs present {'eml': True, 'daly': False, 'access': True}; component coverage (all pairs) {'eml': 94.98, 'daly': 0.0, 'access': 6.58}; NDPI available for 8,935 pairs. DALY is absent, so NDPI is not burden-aware.

@@ -181,6 +181,8 @@ GBD Results tool (https://vizhub.healthdata.org/gbd-results/). The dimensions of
 | Sex | Both |
 | Age | All ages (or Age-standardized: then run `process_ihme_daly.py --age "Age-standardized"`) |
 | Year | 2023 (one year) |
+| Metric units | **Not verified from IHME documentation** (the Appendix 3 metric definitions could not be read). The usual GBD convention is DALY rate = per 100,000 population; the processor records the metric name and treats the values as relative burden only. |
+| Cause availability | **Not verified.** The IHME tool is interactive and the cause-list page could not be fetched. Secondary GBD 2021 papers (found by search, not read in full) name Chagas disease, cutaneous/mucocutaneous and visceral leishmaniasis, food-borne trematodiases, Guinea worm disease and an 'other NTDs' category as separate causes; the rest of the list below is expected, not confirmed. Check each name in the tool's cause picker; `process_ihme_daly.py` prints unmatched names. |
 | Cause | the NTD causes the tool offers, expected names: Visceral leishmaniasis; Cutaneous and mucocutaneous leishmaniasis; Chagas disease; African trypanosomiasis; Schistosomiasis; Cystic echinococcosis; Lymphatic filariasis; Onchocerciasis; Leprosy; Trachoma; Dengue; Rabies; Ascariasis; Trichuriasis; Hookworm disease; Food-borne trematodiases; Guinea worm disease; Scabies |
 Expected columns (as in the existing file): `measure_id, measure_name, location_id, location_name, sex_id, sex_name, age_id, age_name, cause_id, cause_name, metric_id, metric_name, year, val, upper, lower` (+ population-group columns). Destination: `data/external/downloads/ihme_gbd/` (keep the old zip; add the new one). The cause names above are our expectation and were **not** verified against the GBD tool; the processor prints any unmatched names. GBD may not offer causes for every WHO group (e.g. snakebite, noma, mycetoma, yaws); those groups will have no DALY value and are reported as missing.
 The IHME agreement forbids providing third parties the ability to download the data: keep the files out of git and out of any public hosting.
@@ -200,10 +202,10 @@ H = [
     ("H1", "MANDATORY (blocks NDPI burden component; does not block the prediction benchmark)", "Re-export IHME GBD with disease-specific DALYs",
      "The existing export has only the cause 'All causes' (verified: 6 rows), so no NTD burden can be computed.", "https://vizhub.healthdata.org/gbd-results/ (login)", "Settings table in `Docs/EQUITY_DATA_SPECS.md`", "`data/external/downloads/ihme_gbd/`",
      "columns as in the existing file; `cause_name` must include the NTD causes", "DALY component, NDPI, equity figures"),
-    ("H2", "MANDATORY DECISION (changes how baselines can be interpreted; recommended before the Colab run)", "Decide how classical baselines represent diseases",
+    ("H2", "DECIDED 2026-11-11: option B approved and implemented - nothing further needed from you", "Baselines get a second, drug + disease-profile variant",
      "PrimeKG disease features are `is_ntd` plus two constant columns (DALY absent): one informative feature. The baselines are effectively drug-only and cannot model drug-disease specificity; GNNs and Node2Vec see disease neighbourhoods. A like-for-like comparison would give baselines a disease representation.",
-     "n/a", "Reply A: keep as is and state the limitation in the paper (already written). Reply B: I add a separate optional config with a leak-free disease-profile feature block (e.g. SVD of the disease-gene matrix built only from non-label edges) and run both baseline variants; the frozen labels/splits are not touched.",
-     "configs/ (new optional config) if B", "a decision", "baseline-vs-GNN claims"),
+     "n/a", "Done: configs/primekg_morgan_dp.yaml and primekg_morgan_structcov_dp.yaml (block = src/features/disease_profile.py, built from TRAIN edges/labels only, leave-one-out); the drug-only configs are unchanged; both variants run in the Colab train stage. Tests: tests/test_disease_profile.py (8). Not run on any model.",
+     "configs/*_dp.yaml (done)", "nothing", "baseline-vs-GNN claims (now answerable with both variants)"),
     ("H3", "MANDATORY at Colab time", "Approve pushing the local commits to `origin/mukul`", "Colab clones from GitHub; the notebook is pinned to a commit that is not on the remote yet.", "n/a", "Reply 'push approved' after reviewing `git log origin/mukul..HEAD`", "GitHub", "n/a", "Colab clone"),
     ("H4", "MANDATORY for the Colab `external` stage (optional for the core benchmark)", "Put the private/manual inputs in Drive",
      "These files are git-ignored (licences/size) so a clean clone does not contain them. Without them the external stage skips Open Targets, HAI, IHME and EML and reports those components as missing.",
@@ -231,7 +233,7 @@ Generated {pd.Timestamp.now().strftime('%Y-%m-%d')}. Everything that needs you p
 {md(hc[hc['mandatory?'].str.startswith('OPTIONAL')])}
 
 ## Is anything still pending for the preparation phase?
-Yes: **H1** (IHME export) and **H2** (a scientific decision). Everything else mandatory is either needed only at Colab time (H3, H4), only before a public release (H5, H6) or only before submission (H7).
+Yes: **H1** (IHME export; H2 is decided). Everything else mandatory is either needed only at Colab time (H3, H4), only before a public release (H5, H6) or only before submission (H7).
 """
 (R / "Docs/HUMAN_ACTION_CHECKLIST.md").write_text(doc, encoding="utf-8")
 
@@ -243,7 +245,7 @@ T = [
     ("PrimeKG", "Negatives audited (sampled only; none curated; no negative is a known indication/contraindication/off-label pair)", D, "split manifest negatives_in_known_pairs = 0"),
     ("PrimeKG", "Structure-covered variant built with its own validation", D, "make_structure_covered_variant.py built-in checks; loaders audited"),
     ("PrimeKG", "SMILES / fingerprint coverage and zero-fingerprint handling documented", D, "996 no SMILES, 997 zero fingerprints; with/no_structure subsets"),
-    ("PrimeKG", "Disease representation for classical baselines", B, "decision H2 (only is_ntd is informative)"),
+    ("PrimeKG", "Disease representation for classical baselines: optional leak-free disease-profile variant (configs/*_dp.yaml)", I_, "tests/test_disease_profile.py (8 passed incl. real-split identity); no model trained; effect on results unknown until Colab"),
     ("NTD", "Official WHO list read directly (21 groupings, 25 fact sheets)", D, "evidence log; build_ntd_mapping.py asserts"),
     ("NTD", "Reconciliation with the 22 frozen groups; frozen labels unchanged", D, "ntd_group_reconciliation.csv; flag nodes 68 = union of groups"),
     ("NTD", "Nested-root / double-counting audit", D, "ntd_group_overlaps.csv: 2 overlaps; 85 vs 82 unique pairs"),
@@ -267,7 +269,7 @@ T = [
     ("Models", "Trained-model performance", N, "Colab by design"),
     ("Equity", "IHME file inspected", D, "finding: only 'All causes'; processor rejects it"),
     ("Equity", "IHME DALY processing", B, "H1"),
-    ("Equity", "WHO EML extracted from the official PDF and mapped", D, "tests/test_who_eml_extraction.py (4 passed); eml_mapping_audit.csv"),
+    ("Equity", "WHO EML extracted from the official PDF and mapped", I_, "automated structure checks + tests only; NOT manually validated entry by entry (spot checks on a few entries only); corrections in Docs/EML_EXTRACTION_CORRECTIONS.md"),
     ("Equity", "Equity table + NDPI code", I_, "EML + HAI only; no burden component"),
     ("Equity", "NDPI evaluation and sensitivity", B, "H1"),
     ("Paper", "Bibliography metadata verified (15 references)", D, "Crossref / arXiv / WHO page"),
@@ -315,15 +317,15 @@ Counts: {cnt}.
 
 **E. Paper tables and figures the final pipeline can generate** (from actual outputs): dataset statistics, split statistics, model comparison, cold-start metrics, ablation, structure sensitivity, NTD-specific performance, NDPI prioritisation and equity coverage (needs DALY for a meaningful NDPI), ROC/PR, confusion matrices, calibration, training curves, embedding PCA, SHAP and GNN-explanation tables. Figures 1-7 already exist from real data. **Not yet generated by any script:** a drug-disease candidate network figure, a molecular-feature analysis figure, an NDPI ranking figure and an equity-component contribution figure (they need DALY/EML-based NDPI and, for the network, final model outputs); no synthetic figure is presented as a result.
 
-**F. Unresolved issues.** `Docs/DATA_AND_PIPELINE_READINESS.md` section 6 lists 24; the main ones: IHME export; baseline disease representation (H2); legal questions (`Docs/LICENCE_AUDIT.md` section 4); Open Targets flag semantics; small NTD test set (15 positives); full-text reference checks; unvalidated trained behaviour.
+**F. Unresolved issues.** `Docs/DATA_AND_PIPELINE_READINESS.md` section 6 lists 24; the main ones: IHME export; the effect of the disease-profile baseline variant (known only after Colab); legal questions (`Docs/LICENCE_AUDIT.md` section 4); Open Targets flag semantics; small NTD test set (15 positives); full-text reference checks; unvalidated trained behaviour.
 
-**G. What you must provide or approve.** See `Docs/HUMAN_ACTION_CHECKLIST.md`: H1 (IHME re-export), H2 (decision), H3 (push approval), H4 (Drive upload), H5-H7 before release/submission.
+**G. What you must provide or approve.** See `Docs/HUMAN_ACTION_CHECKLIST.md`: H1 (IHME re-export), H3 (push approval), H4 (Drive upload), H5-H7 before release/submission.
 
-**H. Is human-dependent work still pending?** **Yes.** H1 and H2 for the preparation phase; H3-H4 at Colab time.
+**H. Is human-dependent work still pending?** **Yes.** H1 (IHME export) for the preparation phase; H3-H4 at Colab time. H2 is decided (B).
 
-**I. Can you freeze and move to Colab?** Not yet for the *complete* single-run goal: the equity/NDPI part cannot be completed without H1, and H2 changes how the baseline comparison reads (it should be decided before the run, because answering B means a new feature option and re-run of baselines). The core prediction benchmark itself (full + structure-covered, baselines, Node2Vec, five GNNs, ablation, explanations) is technically ready after H3 and H4. Running it now would be valid but would leave NDPI as a flag-only score and the baseline limitation unaddressed.
+**I. Can you freeze and move to Colab?** Not yet for the *complete* single-run goal: the equity/NDPI burden component cannot be completed without H1. The core prediction benchmark (full + structure-covered, both baseline variants, Node2Vec, five GNNs, ablation, explanations) is technically ready after H3 and H4; running it now would be valid but NDPI would stay an EML-flag score and not burden-aware.
 
-**J. Single next action.** Reply to **H2** (A or B), and export the IHME DALYs (**H1**) when convenient; H2 first because answer B requires code and a rebuild on my side.
+**J. Single next action.** Export the IHME disease-specific DALYs (**H1**) and place them in `data/external/downloads/ihme_gbd/`.
 
 ## Colab commands (do not run yet; the notebook `notebooks/colab_final_run.ipynb` contains them)
 ```

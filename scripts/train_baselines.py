@@ -65,7 +65,9 @@ def train_evaluate_baselines(selected_models, config_path):
             config = yaml.safe_load(f)
             
     exp_name = config.get("experiment", {}).get("name", "baseline")
-    processed_dir = REPO_ROOT / "data" / "processed" / exp_name
+    # a feature variant writes to its own outputs folder but reads the SAME processed data and the SAME saved split as the original
+    processed_dir = REPO_ROOT / "data" / "processed" / config.get("experiment", {}).get("processed_name", exp_name)
+    use_dp = bool(config.get("features", {}).get("disease_profile", {}).get("enabled", False))
     
     outputs_dir = REPO_ROOT / "outputs" / exp_name
     models_dir = outputs_dir / "models"
@@ -96,7 +98,8 @@ def train_evaluate_baselines(selected_models, config_path):
         test_size=test_size, 
         val_size=val_size,
         random_state=random_seed,
-        presplit=dataset_cfg.get("presplit")
+        presplit=dataset_cfg.get("presplit"),
+        disease_profile=use_dp
     )
     
     X_all = np.vstack([splits.get("X_train", np.empty((0,0))), 

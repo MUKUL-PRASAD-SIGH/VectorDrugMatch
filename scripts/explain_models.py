@@ -42,17 +42,19 @@ def main():
     cfg = yaml.safe_load(open(REPO / a.config))
     exp, ds = cfg["experiment"]["name"], cfg["dataset"]
     seed = ds.get("random_seed", 42)
-    proc, out = REPO / "data" / "processed" / exp, REPO / "outputs" / exp
+    proc, out = REPO / "data" / "processed" / cfg["experiment"].get("processed_name", exp), REPO / "outputs" / exp
     ex = out / "explain"
     ex.mkdir(parents=True, exist_ok=True)
     man = {"config": a.config, "split": ds["presplit"], "seed": seed, "test_only": True, "explained": {}}
     from src.data.dataset import build_message_passing_graph, build_tabular_dataset
     from src.data.graph_builder import build_hetero_data
     data = build_hetero_data(proc, include_features=True)
-    sp = build_tabular_dataset(data, presplit=ds["presplit"], random_state=seed)
+    use_dp = bool(cfg.get("features", {}).get("disease_profile", {}).get("enabled", False))
+    sp = build_tabular_dataset(data, presplit=ds["presplit"], random_state=seed, disease_profile=use_dp)
     drugs = pd.read_csv(proc / "drugs.csv", low_memory=False)
     dis = pd.read_csv(proc / "diseases.csv", low_memory=False)
-    names = feature_names(data["drug"].x.shape[1])
+    from src.features.disease_profile import NAMES as DP_NAMES
+    names = feature_names(data["drug"].x.shape[1]) + (list(DP_NAMES) if use_dp else [])
 
     for key in a.models:
         pkl = out / "models" / f"baseline_{key}_coldstart.pkl"

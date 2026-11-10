@@ -1,0 +1,33 @@
+# Track B - STRUCTURE-COVERED variant of the PrimeKG benchmark (drugs with a usable fingerprint only).
+# Built by scripts/make_structure_covered_variant.py from the frozen full benchmark (configs/primekg_morgan.yaml).
+experiment:
+  name: primekg_structcov_dp   # outputs/primekg_structcov_dp ; reads data/processed/primekg_structcov (processed_name)
+  processed_name: primekg_structcov
+  notes: "VARIANT drug + disease-profile features (train-side only; see src/features/disease_profile.py). Same data, split and negatives as primekg_structcov. Same drug partition and negatives as the full benchmark; pairs of drugs without SMILES / with zero fingerprint removed."
+  save_predictions: true
+
+dataset:
+  neg_ratio: 5.0
+  test_size: 0.15
+  val_size: 0.15
+  random_seed: 42
+  presplit: data/processed/primekg_structcov/splits/seed42.npz
+
+features:
+  disease_profile:
+    enabled: true          # the ONLY difference from the drug-only configuration
+  drug:
+    use_morgan: true
+    use_maccs: false
+    use_descriptors: false
+    use_scaffold: false
+    use_avalon: false
+    use_ecfp3: false
+    use_fcfp3: false
+  disease:
+    use_basic: true
+    use_sapbert: false
+
+models:
+  rf: {n_estimators: 100, max_depth: 10}
+  xgb: {n_estimators: 100, learning_rate: 0.1}

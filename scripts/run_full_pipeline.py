@@ -27,6 +27,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 PY = sys.executable
 CFG = {"full": "configs/primekg_morgan.yaml", "structcov": "configs/primekg_morgan_structcov.yaml"}
+CFG_DP = {"full": "configs/primekg_morgan_dp.yaml", "structcov": "configs/primekg_morgan_structcov_dp.yaml"}   # baselines + train-side disease profile
 
 
 def steps(stage, variant, epochs):
@@ -59,9 +60,13 @@ def steps(stage, variant, epochs):
         s += [([PY, "scripts/train_node2vec.py", "--config", c, "--epochs", "10"], R),
               ([PY, "scripts/train_gnn.py", "--config", c, "--epochs", str(epochs)], R),
               ([PY, "scripts/run_ablations_coldstart.py", "--config", c], R)]
+        d = CFG_DP[variant]                      # second baseline variant: drug + disease-profile features (same saved split and negatives)
+        s += [([PY, "scripts/train_baselines.py", "--model", m, "--config", d], R) for m in ("logistic", "nb", "xgb", "rf", "mlp")]
         return s
     if stage == "report":
-        return [([PY, "scripts/evaluate_primekg.py", "--config", c], R), ([PY, "scripts/make_results_package.py", "--config", c], R)]
+        d = CFG_DP[variant]
+        return [([PY, "scripts/evaluate_primekg.py", "--config", c], R), ([PY, "scripts/make_results_package.py", "--config", c], R),
+                ([PY, "scripts/evaluate_primekg.py", "--config", d], R)]
     if stage == "explain":
         return [([PY, "scripts/explain_models.py", "--config", c, "--models", "rf", "xgb", "--n-shap", "1000"], R),
                 ([PY, "scripts/explain_models.py", "--config", c, "--gnn", "HGT", "RGCN", "--n-links", "20"], O)]

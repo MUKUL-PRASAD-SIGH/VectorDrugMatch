@@ -30,7 +30,7 @@ def main():
     a = ap.parse_args()
     cfg = yaml.safe_load(open(REPO / a.config))
     exp, ds = cfg["experiment"]["name"], cfg.get("dataset", {})
-    proc, out = REPO / "data" / "processed" / exp, REPO / "outputs" / exp
+    proc, out = REPO / "data" / "processed" / cfg["experiment"].get("processed_name", exp), REPO / "outputs" / exp
     z = np.load(REPO / ds["presplit"])
     dis = pd.read_csv(proc / "diseases.csv", low_memory=False)
     e, y, cur = z["edges_test"], z["y_test"], z["curated_test"]

@@ -39,7 +39,7 @@ def main():
     cfg = yaml.safe_load(open(REPO / a.config))
     exp, ds = cfg["experiment"]["name"], cfg["dataset"]
     seed = ds.get("random_seed", 42)
-    proc, out = REPO / "data" / "processed" / exp, REPO / "outputs" / exp
+    proc, out = REPO / "data" / "processed" / cfg["experiment"].get("processed_name", exp), REPO / "outputs" / exp
     out.mkdir(parents=True, exist_ok=True)
     data = build_hetero_data(proc, include_features=True)
     sp = build_tabular_dataset(data, presplit=ds["presplit"], random_state=seed)

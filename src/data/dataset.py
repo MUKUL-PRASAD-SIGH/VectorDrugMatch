@@ -47,7 +47,7 @@ def _resolve(path):
     return path if path.is_absolute() else REPO_ROOT / path
 
 
-def build_tabular_dataset_from_presplit(hetero_data, presplit, target_edge=('drug', 'treats', 'disease')):
+def build_tabular_dataset_from_presplit(hetero_data, presplit, target_edge=('drug', 'treats', 'disease'), disease_profile=False):
     """Load a SAVED split (scripts/primekg_split.py) instead of splitting on the fly.
 
     Every model that calls this gets byte-identical pairs, labels and negatives. Returns the same keys as
@@ -63,6 +63,9 @@ def build_tabular_dataset_from_presplit(hetero_data, presplit, target_edge=('dru
     for sp in ("train", "val", "test"):
         e, y = z[f"edges_{sp}"], z[f"y_{sp}"].astype(np.int8)
         out[f"X_{sp}"] = build_pair_features(src_feats, dst_feats, e[0], e[1])
+        if disease_profile:                    # optional variant: + leak-free disease-profile block built from TRAIN edges/labels only
+            from src.features.disease_profile import build_disease_profile_block
+            out[f"X_{sp}"] = np.concatenate([out[f"X_{sp}"], build_disease_profile_block(src_feats, z["edges_train"], z["y_train"], e)], axis=1)
         out[f"y_{sp}"], out[f"edges_{sp}"] = y, e
         out[f"curated_{sp}"] = z[f"curated_{sp}"]
         for k in ("diag_contra", "diag_offlabel"):
@@ -126,7 +129,7 @@ def set_seeds(seed=42):
 def build_tabular_dataset(hetero_data, target_edge=('drug', 'treats', 'disease'), 
                           neg_ratio=5.0, test_size=0.15, val_size=0.15, random_state=42,
                           split_mode="cold_start_drug", strategy="hard",
-                          curated_neg_path="auto", presplit=None):
+                          curated_neg_path="auto", presplit=None, disease_profile=False):
     """
     Builds X, y tabular datasets with strict data leakage prevention.
     
@@ -144,9 +147,11 @@ def build_tabular_dataset(hetero_data, target_edge=('drug', 'treats', 'disease')
             real negatives (routed to the split that owns the drug); "auto" uses
             data/external/labels_pharmacotherapydb.csv when present, None disables.
     """
+    if disease_profile and not presplit:
+        raise ValueError("disease_profile needs a saved split (presplit): it is built from the saved TRAIN edges only")
     if presplit:                                   # Track B: a saved, shared split
         set_seeds(random_state)
-        return build_tabular_dataset_from_presplit(hetero_data, presplit, target_edge)
+        return build_tabular_dataset_from_presplit(hetero_data, presplit, target_edge, disease_profile=disease_profile)
     print(f"\nBuilding tabular dataset for target {target_edge}...")
     set_seeds(random_state)
     

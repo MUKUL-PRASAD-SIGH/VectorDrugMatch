@@ -97,7 +97,7 @@ def main():
     a = ap.parse_args()
     cfg = yaml.safe_load(open(REPO / a.config))
     exp, ds = cfg["experiment"]["name"], cfg["dataset"]
-    proc, out = REPO / "data" / "processed" / exp, REPO / "outputs" / exp
+    proc, out = REPO / "data" / "processed" / cfg["experiment"].get("processed_name", exp), REPO / "outputs" / exp
     pk = out / "paper_package"
     (pk / "tables").mkdir(parents=True, exist_ok=True)
     (pk / "figures").mkdir(parents=True, exist_ok=True)

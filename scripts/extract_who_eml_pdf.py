@@ -43,7 +43,13 @@ def spans_of(page):
     return sorted(out, key=lambda r: (round(r["y"] / 3), r["x"]))
 
 
+COPACK = re.compile(r"(?<=[A-Za-z)])\s+–\s+(?=[A-Za-z(])")
+
+
 def clean_name(raw):
+    # The WHO list joins CO-PACKAGED products with an en dash (U+2013), e.g. 'mifepristone – misoprostol' (p.60), 'oral rehydration salts –
+    # zinc sulfate' (p.53), 'artesunate – sulfadoxine + pyrimethamine' (p.29). Read it as '+' (a combination) BEFORE non-ASCII glyphs are stripped.
+    raw = COPACK.sub(" + ", raw)
     name = re.sub(r"\[c\]", "", raw)
     name = re.sub(r"[^\x20-\x7e]+", " ", name)            # dagger/glyph footnote marks
     name = name.replace("*", " ")
@@ -102,7 +108,9 @@ def main():
                 continue
             if 9.5 <= sz <= 10.5 and x < 100 and (len(t) > 70 or t.isupper() or (t[0].isupper() and len(t.split()) >= 4 and not t.startswith("("))):
                 continue                                                        # explanatory paragraph / all-caps heading, not a medicine
-            if sz < 9.5 and x < 70 and re.fullmatch(r"[a-z]{1,3}", t):
+            if 5.0 <= sz < 6.5 and x < 70 and re.fullmatch(r"[a-z]{1,3}", t):
+                continue                                                        # 5.5pt superscript footnote mark (e.g. "th"), never part of a name
+            if 8.0 <= sz < 9.5 and x < 70 and re.fullmatch(r"[a-z]{1,3}", t):
                 if cur is not None and abs(sp["y"] - cur["_y"]) < 3 and x < cur["_x"] - 2:
                     cur["_raw"] = t + cur["_raw"]                               # prefix printed (and sorted) after its name span
                 else:
@@ -143,6 +151,7 @@ def main():
         e.pop("_x")
         e["name"] = clean_name(raw)
         e["paediatric_marker_on_name"] = int("[c]" in raw)
+        e["extraction_note"] = "co-packaged products joined by U+2013 in the PDF; read as '+' (combination)" if COPACK.search(raw) else ""
         rows.append(e)
     df = pd.DataFrame(rows)
     df = df[df.name.str.len() > 1]

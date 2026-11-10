@@ -1,8 +1,8 @@
 {
  "tag": "vdm_v1_candidate",
- "created_utc": "2026-11-10T19:20:48+00:00",
- "git_commit": "94261bcf97d47cd25ebcc11c4c52642b9df9d8d7",
- "git_tree_dirty_at_freeze": false,
+ "created_utc": "2026-11-10T20:00:45+00:00",
+ "git_commit": "6550e6239469d62df5b461537a930ef897a001b6",
+ "git_tree_dirty_at_freeze": true,
  "python": "3.10.11",
  "platform": "Windows-10-10.0.26300-SP0",
  "packages": {
@@ -24,7 +24,7 @@
    "data/processed/primekg_structcov/splits/seed42.npz"
   ]
  },
- "n_files": 61,
+ "n_files": 63,
  "files": [
   {
    "path": "data/processed/primekg/disease_features.npy",
@@ -280,14 +280,14 @@
   },
   {
    "path": "data/processed/equity/equity_features.csv",
-   "bytes": 1247678,
-   "sha256": "95ed98dc83c7991bbc0102a240c8a59c56af178a471412fbc6784db68a1fd0bb",
+   "bytes": 1247670,
+   "sha256": "7cdac2d329635512e73eeca9a5e44f4426607fb71bded1832a30635dc7a6fb74",
    "rows": 9388
   },
   {
    "path": "data/processed/equity/equity_report.json",
    "bytes": 2783,
-   "sha256": "8910ec771f944533aee2999ef4a1a0557e7e11ed35868923a6645ff34d02f805",
+   "sha256": "462434ffebfce2c47fdbafb408df2aedddc5c94f790669715d055369982d7649",
    "rows": null
   },
   {
@@ -304,9 +304,9 @@
   },
   {
    "path": "data/processed/eml/eml_combination_components.csv",
-   "bytes": 10313,
-   "sha256": "693c5f6bb9b9ac338c532a002ecc3a265c8f1804d8e63d192cbd1ae7f716a1bc",
-   "rows": 127
+   "bytes": 10810,
+   "sha256": "f607ce7c6e03f76a9939a95b3b79d0337ab198ae0289e93328fd521f004c887b",
+   "rows": 133
   },
   {
    "path": "data/processed/eml/eml_drug_flags.csv",
@@ -316,21 +316,21 @@
   },
   {
    "path": "data/processed/eml/eml_mapping_audit.csv",
-   "bytes": 97191,
-   "sha256": "700b463b5eb3c24273b8edcb92244e4b16ff39bd408420d1dec5530398efeaf8",
+   "bytes": 97031,
+   "sha256": "6c7e7d6d9b20dea26ae9b2bd4e24df9388e10952f793a38f9abde2f9abd0cf02",
    "rows": 646
   },
   {
    "path": "data/processed/eml/eml_report.json",
    "bytes": 1354,
-   "sha256": "83919e2b3e48009514c9d81727bbda72c923ded801968f1c722418a6994bc0f4",
+   "sha256": "9bc37e6b1c7bec1f5f3925f7e9c4245038bc229e3c44af94c20fc58d1c73a2c8",
    "rows": null
   },
   {
    "path": "data/processed/eml/eml_unmatched.csv",
-   "bytes": 18632,
-   "sha256": "15ffd4bbe2800a5157fb7afe35f600429d29ae33f5250dd094f87abcd18389a4",
-   "rows": 95
+   "bytes": 18120,
+   "sha256": "6f66276f1dc79db22c9b7e429c6f6fd6012245e79983d6f99e03ae883614eb07",
+   "rows": 93
   },
   {
    "path": "data/external/primekg_kg.csv",
@@ -352,8 +352,8 @@
   },
   {
    "path": "data/external/who_eml.csv",
-   "bytes": 181080,
-   "sha256": "e538a89c2fcde0e7209740a57527838356e66f65eb74e592a9332b8013e3073e",
+   "bytes": 182060,
+   "sha256": "27a8dbd9e729c6be04fe8d72414364e69a720af894633ff231d06135f25eba49",
    "rows": 646
   },
   {
@@ -387,9 +387,21 @@
    "rows": null
   },
   {
+   "path": "configs/primekg_morgan_dp.yaml",
+   "bytes": 1128,
+   "sha256": "901abb03474193c99a825f5118a2ad051281d4aa41e0c3979d5fc78f07c6560e",
+   "rows": null
+  },
+  {
    "path": "configs/primekg_morgan_structcov.yaml",
    "bytes": 946,
    "sha256": "0cb31c1e387df7cd088fc5d6bdfba9e1eecd0f7f2d16988f95b6d4372939899f",
+   "rows": null
+  },
+  {
+   "path": "configs/primekg_morgan_structcov_dp.yaml",
+   "bytes": 1295,
+   "sha256": "59d09c43d327e5442a0b21f33f1e5cf65338662bafd09cc0595a4e469e67d921",
    "rows": null
   }
  ],
