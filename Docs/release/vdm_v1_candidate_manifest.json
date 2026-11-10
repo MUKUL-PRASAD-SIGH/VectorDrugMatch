@@ -1,7 +1,7 @@
 {
  "tag": "vdm_v1_candidate",
- "created_utc": "2026-11-10T20:35:17+00:00",
- "git_commit": "7e70d3cb05ebb59c20f4ab73202f487f85683827",
+ "created_utc": "2026-11-10T20:55:35+00:00",
+ "git_commit": "cb41c4406e0d8663f64bbea0af3d159ead20ca1e",
  "git_tree_dirty_at_freeze": true,
  "python": "3.10.11",
  "platform": "Windows-10-10.0.26300-SP0",
@@ -310,8 +310,8 @@
   },
   {
    "path": "data/processed/ihme/daly_by_ntd_group.csv",
-   "bytes": 4244,
-   "sha256": "791c2895c51d94285dec0e46455e100a0d8f60bfc3409fe18c56a0c10c2776db",
+   "bytes": 4208,
+   "sha256": "4a2691872b2900d02f3438840f25d62d3a564caaf91866b8dd75bb7ee9d804de",
    "rows": 22
   },
   {
