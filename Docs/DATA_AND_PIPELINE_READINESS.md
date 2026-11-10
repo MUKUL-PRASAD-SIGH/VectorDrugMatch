@@ -1,6 +1,6 @@
 # Data and pipeline readiness report
 
-Generated 2026-11-10 22:29 by `scripts/make_readiness_report.py` from the files on disk. Numbers are read from data/report files; validator lines are from running the validators during generation. Section 6 (unresolved issues) is curated text.
+Generated 2026-11-10 22:30 by `scripts/make_readiness_report.py` from the files on disk. Numbers are read from data/report files; validator lines are from running the validators during generation. Section 6 (unresolved issues) is curated text.
 
 ## 1. Datasets
 
@@ -89,7 +89,7 @@ Loader audit: {"primekg": {"X_train": [40380, 2051], "X_val": [8382, 2051], "X_t
 
 ## 5. Execution entry points (nothing below has been run for the final results)
 
-`python scripts/run_full_pipeline.py --stage prepare|smoke|train|report|all [--variant full|structcov] [--dry-run]` (31 steps for `all`; log in `outputs/pipeline_log.jsonl`). Release integrity: `python scripts/freeze_release.py --tag vdm_v1` then `--verify vdm_v1`.
+`python scripts/run_full_pipeline.py --stage prepare|external|smoke|train|report|all [--variant full|structcov] [--dry-run]` (`external` steps that need files only you can supply are optional: they log a failure and the equity table reports the component as missing; log in `outputs/pipeline_log.jsonl`). Release integrity: `python scripts/freeze_release.py --tag vdm_v1` then `--verify vdm_v1`.
 
 ## 6. Unresolved scientific / data issues (curated)
 

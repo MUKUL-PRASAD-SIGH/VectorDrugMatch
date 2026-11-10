@@ -177,7 +177,7 @@ def main():
 
     # ---------- 5. pipeline ----------
     L += ["## 5. Execution entry points (nothing below has been run for the final results)\n",
-          "`python scripts/run_full_pipeline.py --stage prepare|smoke|train|report|all [--variant full|structcov] [--dry-run]` (31 steps for `all`; log in `outputs/pipeline_log.jsonl`). Release integrity: `python scripts/freeze_release.py --tag vdm_v1` then `--verify vdm_v1`.\n"]
+          "`python scripts/run_full_pipeline.py --stage prepare|external|smoke|train|report|all [--variant full|structcov] [--dry-run]` (`external` steps that need files only you can supply are optional: they log a failure and the equity table reports the component as missing; log in `outputs/pipeline_log.jsonl`). Release integrity: `python scripts/freeze_release.py --tag vdm_v1` then `--verify vdm_v1`.\n"]
 
     # ---------- 6. unresolved ----------
     L += ["## 6. Unresolved scientific / data issues (curated)\n",
