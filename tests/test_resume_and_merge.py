@@ -54,3 +54,13 @@ def test_resume_skips_only_completed_training_steps(tmp_path, monkeypatch):
     rfp.main()
     ran = [c for c in calls if len(c) > 1 and c[1].startswith("scripts/")]
     assert len(ran) == 1 and "HGT" in ran[0]
+
+
+def test_baseline_steps_use_coldstart_only():
+    import importlib.util, pathlib
+    spec = importlib.util.spec_from_file_location("rfp", pathlib.Path(__file__).resolve().parents[1] / "scripts" / "run_full_pipeline.py")
+    m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+    for variant in ("full", "structcov"):
+        base = [c for c, _ in m.steps("train", variant, 100) if "train_baselines.py" in c[1]]
+        assert len(base) == 10 and all("--coldstart-only" in c for c in base)
+        assert not any("--coldstart-only" in c for c, _ in m.steps("train", variant, 100) if "train_gnn.py" in c[1])

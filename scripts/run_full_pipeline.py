@@ -56,15 +56,15 @@ def steps(stage, variant, epochs):
                 ([PY, "scripts/train_node2vec.py", "--config", c, "--dry-run"], R),
                 ([PY, "scripts/train_node2vec.py", "--config", c, "--epochs", "1"], R),
                 ([PY, "scripts/train_gnn.py", "--config", c, "--epochs", "5"], R),
-                ([PY, "scripts/train_baselines.py", "--model", "logistic", "--config", c], R)]
+                ([PY, "scripts/train_baselines.py", "--model", "logistic", "--config", c, "--coldstart-only"], R)]
     if stage == "train":
-        s = [([PY, "scripts/train_baselines.py", "--model", m, "--config", c], R) for m in ("logistic", "nb", "xgb", "rf", "mlp")]
+        s = [([PY, "scripts/train_baselines.py", "--model", m, "--config", c, "--coldstart-only"], R) for m in ("logistic", "nb", "xgb", "rf", "mlp")]
         s += [([PY, "scripts/train_node2vec.py", "--config", c, "--epochs", "10"], R)]
         s += [([PY, "scripts/train_gnn.py", "--config", c, "--epochs", str(epochs), "--models", m], R) for m in GNNS]     # one call per GNN: resumable
         s += [
               ([PY, "scripts/run_ablations_coldstart.py", "--config", c], R)]
         d = CFG_DP[variant]                      # second baseline variant: drug + disease-profile features (same saved split and negatives)
-        s += [([PY, "scripts/train_baselines.py", "--model", m, "--config", d], R) for m in ("logistic", "nb", "xgb", "rf", "mlp")]
+        s += [([PY, "scripts/train_baselines.py", "--model", m, "--config", d, "--coldstart-only"], R) for m in ("logistic", "nb", "xgb", "rf", "mlp")]
         return s
     if stage == "report":
         d = CFG_DP[variant]
