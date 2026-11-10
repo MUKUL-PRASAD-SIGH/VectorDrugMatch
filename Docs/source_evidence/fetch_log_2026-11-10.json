@@ -1,0 +1,140 @@
+{
+ "purpose": "Evidence log for the WHO NTD list and Open Targets licence/provenance audit. Raw pages are not stored in git; hashes let the fetch be re-verified.",
+ "fetched_with": "python urllib, direct HTTP GET, 2026-11-10",
+ "sources": {
+  "who_ntd_topic": {
+   "url": "https://www.who.int/health-topics/neglected-tropical-diseases",
+   "http": 200,
+   "bytes": 146039,
+   "content_type": "text/html; charset=utf-8",
+   "fetched_utc": "2026-11-10T17:15:44+00:00",
+   "sha256_full": "f5472b1665a5572392d14af5e9112320bd8f0b11d7f8c149f01604e6305742dc",
+   "what": "WHO NTD health-topic page: source of the 21 groupings (footnote 'NTDs include') and 25 fact-sheet links"
+  },
+  "ot_licence": {
+   "url": "https://platform-docs.opentargets.org/licence",
+   "http": 200,
+   "bytes": 579842,
+   "content_type": "text/html; charset=utf-8",
+   "fetched_utc": "2026-11-10T17:15:45+00:00",
+   "sha256_full": "8bc4371a99644f2e6cd493244f8404a4c04935257d31b718314882916cede718",
+   "what": "Open Targets licence page (HTML)"
+  },
+  "ot_licence_md": {
+   "url": "https://platform-docs.opentargets.org/licence.md",
+   "http": 200,
+   "bytes": 12081,
+   "content_type": "text/markdown; charset=utf-8",
+   "fetched_utc": "2026-11-10T17:15:45+00:00",
+   "sha256_full": "1dc64d95df328593c85feea5742945678349daaf60eff0666497fa4822ebb11e",
+   "what": "Open Targets licence page (Markdown): CC0 statement + 45-row source licence table"
+  },
+  "ot_clinical_report_md": {
+   "url": "https://platform-docs.opentargets.org/drug/clinical-report.md",
+   "http": 200,
+   "bytes": 11108,
+   "content_type": "text/markdown; charset=utf-8",
+   "fetched_utc": "2026-11-10T17:15:46+00:00",
+   "sha256_full": "8a39eaf338b4b3212be54d85b2c5f497e2d49c9dd000081fde716356407b9aee",
+   "what": "Open Targets clinical-report page: six source families, stage categories"
+  },
+  "ot_indications_md": {
+   "url": "https://platform-docs.opentargets.org/drug/indications.md",
+   "http": 200,
+   "bytes": 2388,
+   "content_type": "text/markdown; charset=utf-8",
+   "fetched_utc": "2026-11-10T17:15:46+00:00",
+   "sha256_full": "842e361d84aa9758da9c6084c1f524e4a26f7085acc2b6b91a0f204d7e4fe7bd",
+   "what": "Open Targets indications page"
+  },
+  "ot_terms_md": {
+   "url": "https://platform-docs.opentargets.org/licence/terms-of-use.md",
+   "http": 200,
+   "bytes": 4116,
+   "content_type": "text/markdown; charset=utf-8",
+   "fetched_utc": "2026-11-10T17:15:47+00:00",
+   "sha256_full": "9939d97e8e56746aacc8009c70f98118154a74f72449889cd148a0d00d6ed1a2",
+   "what": "Open Targets terms of use"
+  },
+  "ot_drugs_md": {
+   "url": "https://platform-docs.opentargets.org/disease-or-phenotype/drugs.md",
+   "http": 200,
+   "bytes": 2726,
+   "fetched_utc": "2026-11-10T17:16:39+00:00",
+   "sha256_full": "5545870d9d984ac79be2c5cfc1899e3fba61469f82bb6e096200fe02c616f4f0",
+   "what": "Open Targets drugs page: max-stage rule"
+  },
+  "ot_evidence_md": {
+   "url": "https://platform-docs.opentargets.org/evidence.md",
+   "http": 200,
+   "bytes": 37147,
+   "fetched_utc": "2026-11-10T17:16:40+00:00",
+   "sha256_full": "fd60489619c183ecc87587bbfc551da31f150e6c63c6546c3fcb3b5aa7fe3e57",
+   "what": "Open Targets evidence page"
+  },
+  "ctgov_terms": {
+   "url": "https://clinicaltrials.gov/about-site/terms-conditions",
+   "http": 200,
+   "bytes": 94251,
+   "fetched_utc": "2026-11-10T17:16:41+00:00",
+   "sha256_full": "66ba04e716eacfbd0601c980c442969da345a33403ec67c077e993a22710c74a",
+   "what": "ClinicalTrials.gov terms page: JS shell, NO terms text retrieved"
+  },
+  "aact": {
+   "url": "https://aact.ctti-clinicaltrials.org/",
+   "http": 200,
+   "bytes": 17686,
+   "fetched_utc": "2026-11-10T17:16:42+00:00",
+   "sha256_full": "043072ed7beb3a29c9fae45f2700642243ed13a9b80b184b1a651ece26ada4b0",
+   "what": "AACT landing page: no licence text found"
+  },
+  "ttd": {
+   "url": "https://db.idrblab.net/ttd/",
+   "http": 200,
+   "bytes": 461,
+   "fetched_utc": "2026-11-10T17:16:48+00:00",
+   "sha256_full": "4902fc7ad1c4f8a43566a070abb4bfb568effb34aa5a5fd7345bb42d9bb97dab",
+   "what": "TTD landing: 461-byte stub, NO terms retrieved"
+  },
+  "ema_legal": {
+   "url": "https://www.ema.europa.eu/en/about-us/legal-notice",
+   "http": 200,
+   "bytes": 67929,
+   "fetched_utc": "2026-11-10T17:16:49+00:00",
+   "sha256_full": "58f69c60d6ae941bcf808304f4908179a0fd1312fc8b967b6f57226c7f3883ff",
+   "what": "EMA legal notice: reproduction permitted (commercial and non-commercial) with EMA acknowledged; third-party content excluded"
+  },
+  "pmda_terms": {
+   "url": "https://www.pmda.go.jp/english/0010.html",
+   "http": 200,
+   "bytes": 46247,
+   "fetched_utc": "2026-11-10T17:16:50+00:00",
+   "sha256_full": "98dd6e8aa266e8c7a0d408a43d1759bc5f86300a148c4802d89796a1b8f136aa",
+   "what": "PMDA page: footer '(c) PMDA All Rights Reserved' and a Site Policy link; policy text NOT retrieved"
+  },
+  "chembl": {
+   "url": "https://www.ebi.ac.uk/chembl/",
+   "http": 200,
+   "bytes": 615472,
+   "fetched_utc": "2026-11-10T17:16:59+00:00",
+   "sha256_full": "c6e96e721c960024a9370c497312e087c8375eaefe2678f736fce342037e42d1",
+   "what": "ChEMBL home: 'Creative Commons Attribution-ShareAlike 3.0 Unported license'"
+  },
+  "ot_clinical_mining": {
+   "url": "https://raw.githubusercontent.com/opentargets/clinical_mining/main/README.md",
+   "http": 200,
+   "bytes": 1973,
+   "fetched_utc": "2026-11-10T17:17:00+00:00",
+   "sha256_full": "3fadbffb15861111583b253ebb3fddcd6b92b525df24bb23be8733a4d836b009",
+   "what": "Open Targets Mira (formerly clinical_mining) README"
+  },
+  "ot_downloads": {
+   "url": "https://platform-docs.opentargets.org/data-access/datasets.md",
+   "http": 200,
+   "bytes": 11302,
+   "fetched_utc": "2026-11-10T17:17:00+00:00",
+   "sha256_full": "96d0cd94074d95d035dbbb26f5cb5b21890b8a60139f4c2f54db2973bd3b286b",
+   "what": "Open Targets datasets download page (does not name the clinical datasets)"
+  }
+ }
+}

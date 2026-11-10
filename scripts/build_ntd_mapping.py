@@ -66,6 +66,54 @@ BROAD = {"lymphatic filariasis": "upper bound: MONDO has only the generic term '
          "noma": "no MONDO term found; cannot be evaluated from the ontology"}
 
 
+# ---- official WHO list, read directly from the page (evidence: Docs/source_evidence/fetch_log_2026-11-10.json) ----
+# source page bytes 146,039; sha256 f5472b1665a55723...; footnote 1: "NTDs include: ..." (21 groupings, listed verbatim below).
+# The page does not state inclusion dates or criteria; its 2026-10-15 headline says requests for new NTDs are on hold pending a criteria review.
+# "kind" is OUR classification (WHO does not label entries): single = one named disease; multi = the entry names several diseases or an open grouping.
+# Fact-sheet titles are the 25 distinct fact-sheet links on the same page (22 map to entries below; 3 are fact-sheet-only).
+WHO_OFFICIAL = [
+    (1, "Buruli ulcer", "single", "Buruli ulcer", ["Buruli ulcer (Mycobacterium ulcerans infection)"]),
+    (2, "Chagas disease", "single", "Chagas disease", ["Chagas disease (also known as American trypanosomiasis)"]),
+    (3, "dengue and chikungunya", "multi", "dengue; chikungunya", ["Dengue"]),
+    (4, "dracunculiasis", "single", "dracunculiasis", ["Dracunculiasis (Guinea-worm disease)"]),
+    (5, "echinococcosis", "single", "echinococcosis", ["Echinococcosis"]),
+    (6, "foodborne trematodiases", "multi", "(members not enumerated by WHO)", ["Foodborne trematode infections"]),
+    (7, "human African trypanosomiasis", "single", "human African trypanosomiasis", ["Trypanosomiasis, human African (sleeping sickness)"]),
+    (8, "leishmaniasis", "single", "leishmaniasis", ["Leishmaniasis"]),
+    (9, "leprosy", "single", "leprosy", ["Leprosy"]),
+    (10, "lymphatic filariasis", "single", "lymphatic filariasis", ["Lymphatic filariasis"]),
+    (11, "mycetoma, chromoblastomycosis and other deep mycoses", "multi", "mycetoma; chromoblastomycosis; other deep mycoses (not enumerated)", ["Mycetoma", "Chromoblastomycosis"]),
+    (12, "noma", "single", "noma", ["Noma"]),
+    (13, "onchocerciasis", "single", "onchocerciasis", ["Onchocerciasis"]),
+    (14, "rabies", "single", "rabies", ["Rabies"]),
+    (15, "scabies and other ectoparasitoses", "multi", "scabies; other ectoparasitoses (not enumerated)", ["Scabies"]),
+    (16, "schistosomiasis", "single", "schistosomiasis", ["Schistosomiasis"]),
+    (17, "soil-transmitted helminthiases", "multi", "(members not enumerated by WHO)", ["Soil-transmitted helminth infections"]),
+    (18, "snakebite envenoming", "single", "snakebite envenoming", ["Snakebite envenoming"]),
+    (19, "taeniasis/cysticercosis", "multi", "taeniasis; cysticercosis", ["Taeniasis/cysticercosis"]),
+    (20, "trachoma", "single", "trachoma", ["Trachoma"]),
+    (21, "yaws", "single", "yaws", ["Yaws"]),
+]
+FACTSHEET_ONLY = ["Podoconiosis (non-filarial lymphoedema)", "Sporotrichosis", "Tungiasis"]
+# how each of the 22 PROJECT groups relates to its WHO entry
+RECON = {
+    "Buruli ulcer": (1, "identical", ""), "Chagas disease": (2, "identical", ""),
+    "dengue": (3, "subset_of_entry", "chikungunya (the other named disease) is NOT in the frozen project flag; evaluated as candidate extension"),
+    "dracunculiasis": (4, "identical", ""), "echinococcosis": (5, "identical", ""),
+    "foodborne trematodiases": (6, "project_defined_members", "WHO does not enumerate members; project chose clonorchiasis, opisthorchiasis, fascioliasis, paragonimiasis"),
+    "human African trypanosomiasis": (7, "identical", ""), "leishmaniasis": (8, "identical", "project roots: leishmaniasis + visceral, cutaneous, mucocutaneous"),
+    "leprosy": (9, "identical", ""), "lymphatic filariasis": (10, "identical_but_broad", "MONDO has only generic 'filariasis' (also covers onchocerciasis etc.): upper bound"),
+    "mycetoma": (11, "split_component_of_entry", "WHO entry 11 is one grouping; project splits it into two groups"),
+    "chromoblastomycosis": (11, "split_component_of_entry", "'other deep mycoses' not enumerated by WHO and not in the project flag (sporotrichosis has its own WHO fact sheet; WHO does not say it is part of this entry)"),
+    "noma": (12, "identical_but_unmappable", "no MONDO term found"), "onchocerciasis": (13, "identical", ""), "rabies": (14, "identical", ""),
+    "scabies": (15, "subset_of_entry", "'other ectoparasitoses' not enumerated by WHO; tungiasis has its own fact sheet, WHO does not say it is part of this entry; candidate extension only"),
+    "schistosomiasis": (16, "identical", ""),
+    "soil-transmitted helminthiases": (17, "project_defined_members", "WHO does not enumerate members; project chose ascariasis, trichuriasis, hookworm infectious disease, ancylostomiasis, necatoriasis"),
+    "snakebite envenoming": (18, "identical", ""), "taeniasis/cysticercosis": (19, "identical", "taeniasis + cysticercosis"),
+    "trachoma": (20, "identical", ""), "yaws": (21, "identical", ""),
+}
+
+
 def descendants(children, ids):
     seen, q = set(ids), deque(ids)
     while q:
@@ -137,6 +185,25 @@ def main():
         add(f"(fact sheet only) {key}", key, "who_factsheet_only", [(mid, nm)], why)
     df = pd.DataFrame(rows)
     df.to_csv(out / "ntd_disease_mapping.csv", index=False)
+
+    # ---- official WHO list (groupings vs diseases vs fact sheets) and reconciliation with the 22 frozen project groups ----
+    assert [w[1] for w in WHO_OFFICIAL] == [w[0] for w in WHO], "WHO list differs between the two tables in this script"
+    assert set(RECON) == set(NTD_ROOTS), "reconciliation must cover exactly the 22 frozen project groups"
+    assert sum(len(w[4]) for w in WHO_OFFICIAL) + len(FACTSHEET_ONLY) == 25, "fact-sheet count (25 links on the page) does not add up"
+    src = {"source_url": WHO_URL, "accessed": WHO_ACCESSED, "page_sha256_prefix": "f5472b1665a55723", "page_bytes": 146039,
+           "evidence_log": "Docs/source_evidence/fetch_log_2026-11-10.json"}
+    pd.DataFrame([{"entry_no": n, "who_grouping_as_listed": t, "kind_project_classification": k, "named_diseases": nd,
+                   "fact_sheets_matching": " | ".join(fs), "n_fact_sheets": len(fs), "in_list_footnote": 1, **src} for n, t, k, nd, fs in WHO_OFFICIAL]
+                 + [{"entry_no": None, "who_grouping_as_listed": "(fact sheet only; not named in the list footnote)", "kind_project_classification": "fact_sheet_only",
+                     "named_diseases": f, "fact_sheets_matching": f, "n_fact_sheets": 1, "in_list_footnote": 0, **src} for f in FACTSHEET_ONLY]
+                 ).to_csv(out / "who_official_ntd_list.csv", index=False)
+    b = df[df.scope == "benchmark_group"].set_index("group_key")
+    rec = []
+    for g, (no, rel, note) in RECON.items():
+        rec.append({"project_group": g, "who_entry_no": no, "who_entry": WHO_OFFICIAL[no - 1][1], "relation": rel, "note": note,
+                    "has_mondo_term": int(b.loc[g, "mondo_roots"] != ""), "n_primekg_indication_pairs": int(b.loc[g, "n_primekg_indication_pairs"]),
+                    "in_frozen_benchmark_flag": 1})
+    pd.DataFrame(rec).to_csv(out / "ntd_group_reconciliation.csv", index=False)
 
     bench = df[df.scope == "benchmark_group"]
     summary = {

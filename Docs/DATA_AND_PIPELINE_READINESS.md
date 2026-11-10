@@ -1,6 +1,6 @@
 # Data and pipeline readiness report
 
-Generated 2026-11-10 22:30 by `scripts/make_readiness_report.py` from the files on disk. Numbers are read from data/report files; validator lines are from running the validators during generation. Section 6 (unresolved issues) is curated text.
+Generated 2026-11-10 22:52 by `scripts/make_readiness_report.py` from the files on disk. Numbers are read from data/report files; validator lines are from running the validators during generation. Section 6 (unresolved issues) is curated text.
 
 ## 1. Datasets
 
@@ -99,10 +99,10 @@ Loader audit: {"primekg": {"X_train": [40380, 2051], "X_val": [8382, 2051], "X_t
 | 2 | `data/external/who_eml.csv` not supplied | EML component, NDPI | WHO EML list in the documented CSV format |
 | 3 | NDPI currently rests on the HAI pilot only (6.6% of pairs); weights 0.45/0.45/0.10 unvalidated; sensitivity not computable until >= 2 components | equity claims | items 1-2 |
 | 4 | HAI = three Indian surveys 2004-2011; 5 medicines unmapped (combinations, benzathine penicillin) | any global access claim | broader access evidence |
-| 5 | WHO NTD list: page says 'NTDs include', no dates; headline says new-NTD requests on hold pending criteria review (article not read); fact sheets mention podoconiosis, sporotrichosis, tungiasis outside the list footnote | NTD framing in the paper | decide whether to extend the frozen flag (would change the NTD stratification) |
+| 5 | WHO NTD list verified directly (21 groupings; 25 fact sheets; `Docs/NTD_MAPPING.md`). The 22 frozen project groups reconcile to it with documented differences (chikungunya, other deep mycoses, other ectoparasitoses not in the flag; WHO does not enumerate members of two groupings). Page says 'NTDs include', gives no dates; headline: new-NTD requests on hold pending a criteria review (article not read). Candidate extensions are NOT in the frozen flag (changing it would change the NTD stratification) | NTD framing | decide whether to run a separate extended-NTD analysis |
 | 6 | NTD test set is tiny (15 positives, 13 groups with any test pair); MONDO has only a generic term for lymphatic filariasis; noma has none | NTD performance claims | report as exploratory |
 | 7 | 996 drugs have no SMILES (mostly biologics); with/no-structure subsets and the structure-covered variant address the shortcut risk but do not remove it | interpretation | run both variants on Colab |
-| 8 | Open Targets: upstream clinical-source licences unchecked (only ChEMBL CC BY-SA 3.0 is listed); stage ordering is a project convention; overlap with PrimeKG may reflect shared upstream sources | external corroboration claims | source-level licence review |
+| 8 | Open Targets licence/provenance (`Docs/LICENCE_AUDIT.md`, `Docs/OPEN_TARGETS_PROVENANCE.md`): CC0 is platform-level; six upstream source families feed clinical reports but only ChEMBL (CC BY-SA 3.0) is in the licence table; terms of AACT/ClinicalTrials.gov, TTD and PMDA unverified, EMA partial; which families feed OUR 86,451 records is unknown (needs the same-release clinical-report dataset; release number also unknown); stage order matches the documented list order but is our encoding; overlap with PrimeKG is not independent validation | external corroboration claims, any redistribution | per-source attribution + terms review |
 | 9 | PrimeKG upstream licence terms (DrugBank) unchecked; old DrugBank files remain in git history (commit 1829752 on origin/mukul) | public release | licence review; team decision on history cleanup |
 | 10 | `src/explainability` is empty: no SHAP / GNNExplainer code | explainability section | implementation |
 | 11 | Legacy `scripts/run_ablations.py` and `scripts/train_benchmark.py` are not drug-disjoint / leak-prone; use `run_ablations_coldstart.py` and `train_node2vec.py` | ablation validity | do not report the legacy outputs |

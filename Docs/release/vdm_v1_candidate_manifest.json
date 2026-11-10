@@ -1,7 +1,7 @@
 {
  "tag": "vdm_v1_candidate",
- "created_utc": "2026-11-10T16:59:29+00:00",
- "git_commit": "204f91bde2e5f51df85829fa412cad41fb61c935",
+ "created_utc": "2026-11-10T17:24:01+00:00",
+ "git_commit": "a95798d14866762a9c21acaa54ddb91d976890f5",
  "git_tree_dirty_at_freeze": true,
  "python": "3.10.11",
  "platform": "Windows-10-10.0.26300-SP0",
@@ -24,7 +24,7 @@
    "data/processed/primekg_structcov/splits/seed42.npz"
   ]
  },
- "n_files": 47,
+ "n_files": 49,
  "files": [
   {
    "path": "data/processed/primekg/disease_features.npy",
@@ -201,10 +201,22 @@
    "rows": 26
   },
   {
+   "path": "data/processed/ntd/ntd_group_reconciliation.csv",
+   "bytes": 2366,
+   "sha256": "8aca458ba8ca871a65e676c4f71fc62be6aeb36271fc62c0a3014935e2b70577",
+   "rows": 22
+  },
+  {
    "path": "data/processed/ntd/ntd_mapping_summary.json",
    "bytes": 1682,
    "sha256": "c49ed3958f9e62aff5f7773e315b249c5d679d80ea4516cde050134d319b445d",
    "rows": null
+  },
+  {
+   "path": "data/processed/ntd/who_official_ntd_list.csv",
+   "bytes": 5636,
+   "sha256": "a5977e132a61520c34a1bb930871584081a15e484e11a3018b8c4ab9006b45a8",
+   "rows": 24
   },
   {
    "path": "data/processed/hai/hai_affordability.csv",

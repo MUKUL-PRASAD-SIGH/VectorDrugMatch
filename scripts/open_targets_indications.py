@@ -48,13 +48,15 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 from src.data.mondo import mondo_version, parse_mondo, resolve_status  # noqa: E402
 
-# ORDINAL CONVENTION (ours, NOT published by Open Targets). The official clinical-report page
-# (platform-docs.opentargets.org/drug/clinical-report, read 2026-11-10) lists the harmonised categories and their
-# descriptions but states no ranking and no enum spellings; its list order (Withdrawal first) is not a progression.
-# We order by the *described* development progression: Unknown < Preclinical < IND (filing before first-in-human)
-# < Early Phase I < Phase I < I/II < II < II/III < III < Phase IV (post-marketing) < Preapproval < Approval.
-# Nothing downstream depends on it: the original stage is preserved on every row, every pair lists `stages_seen`,
-# and `approved` is a plain flag (any report with stage APPROVAL). Phase IV/WITHDRAWAL do not occur in this export.
+# STAGE ORDERING. Open Targets documents (platform-docs.opentargets.org/drug/clinical-report and /disease-or-phenotype/drugs,
+# read 2026-11-10) that max stage is "determined by ranking harmonised clinical stage values" with ONE explicit rule:
+# a Phase IV or Withdrawal report sets the maximum stage to Approval. It does not print a numeric ranking, but lists the
+# categories in this order: Withdrawal, Approval, Phase IV, Preapproval, Phase III, Phase II/III, Phase II, Phase I/II,
+# Phase I, Early Phase I, IND, Preclinical, Unknown. The ordering below (Unknown < Preclinical < IND < Early Phase I < Phase I
+# < I/II < II < II/III < III < Phase IV < Preapproval < Approval) agrees with that listed order for every stage present in
+# this export (Phase IV / Withdrawal are collapsed to Approval upstream and do not occur here). It is still OUR encoding of
+# a documented order, not a published ranking: the original stage is preserved on every row, every pair lists `stages_seen`,
+# and `approved` is a plain flag (any report with stage APPROVAL).
 STAGE_RANK = {"UNKNOWN": 0, "PRECLINICAL": 1, "IND": 2, "EARLY_PHASE_1": 3, "PHASE_1": 4, "PHASE_1_2": 5, "PHASE_2": 6,
               "PHASE_2_3": 7, "PHASE_3": 8, "PHASE_4": 9, "PREAPPROVAL": 10, "APPROVAL": 11}
 NON_DISEASE = {"HP", "MP", "GO", "OBA", "OTAR"}
