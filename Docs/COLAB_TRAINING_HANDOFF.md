@@ -5,10 +5,10 @@ Prepared 2026-11-11. No model was trained, no Colab run was made, nothing was pu
 ## 1. Exact commit to use
 | item | value |
 |---|---|
-| Code commit pinned in `notebooks/colab_final_run.ipynb` (`PIN`) | `b87801a4f5c27f5fbba1ab9434044613fdb1f132` |
-| HEAD | the commit that contains this file. It differs from the pin only in `notebooks/` and `Docs/` (`git diff --name-only b87801a HEAD`); all training/data code is identical |
+| Code commit pinned in `notebooks/colab_final_run.ipynb` (`PIN`) | `6008aed44bd29a32e622c094d6f036cb5b5e2506` |
+| HEAD | the commit that contains this file. It differs from the pin only in `notebooks/` and `Docs/` (`git diff --name-only 6008aed HEAD`); all training/data code is identical |
 | Branch | `mukul` on `https://github.com/MUKUL-PRASAD-SIGH/VectorDrugMatch` (**the repository is PUBLIC**) |
-| On GitHub? | **No.** All commits since `origin/mukul` are local (`git rev-list --count origin/mukul..HEAD`). `git checkout b87801a` in Colab fails until you approve the push |
+| On GitHub? | **Yes** for everything up to `59b05d5` (pushed to `origin/mukul` and merged into `main`, 2026-11-11). The pin commit and later commits are on GitHub only after the second push you approve separately; `git checkout <pin>` in Colab fails until then |
 | Which notebook to open | the one at HEAD (Step 4b frozen-data check, Step 6b Drive-persistent outputs). Step-by-step instructions for a beginner: `Docs/COLAB_BEGINNER_HANDBOOK.md` |
 
 ## 2. What was audited for this handoff (evidence)
@@ -64,7 +64,7 @@ Open the notebook at HEAD, runtime T4 GPU, run top to bottom. After each step, t
 | # | step (cell) | what it runs | must hold before continuing |
 |---|---|---|---|
 | 1 | GPU | torch version, `nvidia-smi` | `GPU available: True` |
-| 2 | Drive, code, libraries | mount, `git clone`, `git checkout b87801a...`, `git log -1`, pip installs, `pip freeze` | `git log -1` shows `b87801a`; `ok: ... torch_cluster available` |
+| 2 | Drive, code, libraries | mount, `git clone`, `git checkout 6008aed...`, `git log -1`, pip installs, `pip freeze` | `git log -1` shows `6008aed`; `ok: ... torch_cluster available` |
 | 3 | Inputs | copies `VDM_Data` files into `data/external/` | prints `copied` for `mondo.obo`, both caches, the PDF and `downloads/`; the assert for `mondo.obo` passes |
 | 4 | `--stage prepare` | downloads PrimeKG (1 GB), builds tables, saves split, runs the validator, builds the structure-covered variant, runs `audit_models.py` | no `[FAIL]`; the audit reports no failure |
 | 4b | frozen-data check | SHA-256 of tables, features, splits, `mondo.obo`, `primekg_kg.csv` vs the manifest | `FROZEN BENCHMARK VERIFIED: 16 files match` (a restore from `frozen_processed/` is acceptable; an assertion error is a stop) |
@@ -115,10 +115,10 @@ Per experiment folder `outputs/<exp>/` for `<exp>` in `primekg` and `primekg_str
 * The IHME rate unit is not verified against IHME documentation.
 * The disease-profile baseline variant has never been trained; its effect is unknown.
 
-## 10. Are the five-fold CV and the calibration needed? (analysis; no change made)
+## 10. Are the five-fold CV and the calibration needed? (analysis; `--coldstart-only` approved and implemented)
 Source: `scripts/train_baselines.py`, `scripts/make_results_package.py`, `scripts/evaluate_primekg.py`.
 * **What each baseline call does**: (1) a pooled 5-fold stratified CV on train+val+test pairs (`StratifiedKFold(5)`), each fold fitting a `CalibratedClassifierCV(cv=3, sigmoid)` for RF/XGBoost/Logistic (3 base fits per fold) or one plain fit for NB/MLP; (2) the **cold-start fit** on the train split only (calibrated for RF/XGBoost/Logistic = 3 fits), threshold from the validation split, test scored once, predictions and `baseline_<key>_coldstart.pkl` saved; (3) a **pooled final model** on all pairs (3 fits when calibrated) used only for feature importance and a pooled SHAP plot.
 * **Fit count**: RF/XGBoost/Logistic = 15 (CV) + 3 (cold-start) + 3 (pooled final) = 21 fits, 15 of them (71%) for the pooled CV; NB/MLP = 5 + 1 + 1 = 7, 5 of them (71%) for the pooled CV. Over the four baseline configurations by fit count this is the largest share of classical-baseline compute. **Run times were not measured**, so no hours are attributed here; the smoke stage times one baseline.
 * **What is reported**: every reported number comes from the cold-start prediction files (`baseline_*_coldstart_predictions.csv`) and `coldstart_*` thresholds; the evaluator and the results package read nothing from the CV. The CV columns (`roc_auc`, ...) in `baseline_<key>_metrics.json` are labelled pooled and our rules forbid presenting them as cold-start results. The pooled final model feeds only `<key>_feature_importance.csv` and `<key>_shap_*` (explicitly "not held-out evidence"); held-out SHAP comes from `explain_models.py` on the cold-start model.
 * **Calibration**: it is part of the reported estimator (the cold-start model is the calibrated one). Sigmoid calibration with an internal 3-fold split on the training pairs only affects the probability scale, the Brier score, calibration plots and the validation-chosen threshold; it uses no validation or test data. **Keep it.**
-* **Proposal (needs your approval; not implemented, because you asked for no change before this explanation)**: add an opt-in `--coldstart-only` flag to `train_baselines.py` that skips the pooled CV, the pooled final model and its pooled SHAP, leaving every reported number, file and threshold unchanged. Expected effect: about 71% fewer model fits per baseline (a count, not a time). Trade-off: no pooled-CV table and no pooled feature importance (both are not used in the paper). Alternative: keep everything and accept the longer run.
+* **Decision (approved by you; implemented in the pin commit)**: `train_baselines.py --coldstart-only` skips the pooled CV, the pooled final model, its pooled feature importance and pooled SHAP. The final pipeline passes it for all baseline steps (both configs, both variants) and the smoke baseline. Splits, negatives, features, models, calibration, thresholds, prediction files and `coldstart_*` metrics are unchanged. The pooled-CV columns and `<key>_feature_importance.csv` / `<key>_shap_*` files are therefore **not produced** in the final run (documented omission; they were never used for a reported number). Not run locally (no local training): the flag is covered by a step-list unit test and a syntax check only, so the Colab smoke test (Step 6) is its first real execution.
