@@ -1,7 +1,7 @@
 {
  "tag": "vdm_v1_candidate",
- "created_utc": "2026-11-10T20:55:35+00:00",
- "git_commit": "cb41c4406e0d8663f64bbea0af3d159ead20ca1e",
+ "created_utc": "2026-11-10T21:10:29+00:00",
+ "git_commit": "f4ecebe5d0c63a5dfc84c5d2ee4e86d2f6857e83",
  "git_tree_dirty_at_freeze": true,
  "python": "3.10.11",
  "platform": "Windows-10-10.0.26300-SP0",
