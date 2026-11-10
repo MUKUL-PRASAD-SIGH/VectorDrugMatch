@@ -5,8 +5,8 @@ Finalization pass of 2026-11-11. Scope is frozen: no new models, datasets, featu
 ## 0. Git commit and notebook pin
 | item | value |
 |---|---|
-| Code commit pinned by the notebook (`PIN` in `notebooks/colab_final_run.ipynb`) | `438495791883aae3a80c9d4709282f9869ce3d40` |
-| HEAD | the commit that contains this file (`git rev-parse HEAD`). Commits after the pin change only `notebooks/` and `Docs/`; check with `git diff --name-only 4384957 HEAD` |
+| Code commit pinned by the notebook (`PIN` in `notebooks/colab_final_run.ipynb`) | `7e70d3cb05ebb59c20f4ab73202f487f85683827` |
+| HEAD | the commit that contains this file (`git rev-parse HEAD`). Commits after the pin change only `notebooks/` and `Docs/`; check with `git diff --name-only 7e70d3c HEAD` |
 | Branch / remote state | local branch `mukul`; every commit since `origin/mukul` is **local only** (`git rev-list --count origin/mukul..HEAD`). Colab clones from GitHub, so **the pin does not exist for Colab until a push is approved** (section 3, A4). A clean external clone cannot reach it before then |
 | Release manifest | `Docs/release/vdm_v1_candidate_manifest.json` (63 files: SHA-256, sizes, rows, Python/package versions, split seeds). `python scripts/freeze_release.py --verify vdm_v1_candidate` -> `VERIFIED: all files match` (checked in this pass, also after re-running the deterministic builders) |
 | Final manifest tag | after the Colab run: `python scripts/freeze_release.py --tag vdm_v1` (notebook step 9) |
@@ -91,7 +91,7 @@ Prerequisites: A4 done (pushed; Drive populated). Open `notebooks/colab_final_ru
 | step | what it does |
 |---|---|
 | 1 | checks `torch`, `GPU available: True` |
-| 2 | mounts Drive, clones the repo, `git checkout 438495791883aae3a80c9d4709282f9869ce3d40`, installs libraries (PyG wheels matched to the torch/CUDA version), writes `outputs/pip_freeze_colab.txt` |
+| 2 | mounts Drive, clones the repo, `git checkout 7e70d3cb05ebb59c20f4ab73202f487f85683827`, installs libraries (PyG wheels matched to the torch/CUDA version), writes `outputs/pip_freeze_colab.txt` |
 | 3 | copies `downloads/`, `who_eml.csv`/`B09474-eng.pdf`, optional `drugbank_smiles_cache.json` from `MyDrive/VDM_Data/` (missing inputs are reported as missing, never as 0) |
 | 4 | `python scripts/run_full_pipeline.py --stage prepare` (download PrimeKG + MONDO, build tables, save split, safety check, structure-covered variant). A `[FAIL]` means: stop |
 | 5 | `... --stage external` (Open Targets, HAI, IHME, EML, equity table; optional steps log a failure and continue) |

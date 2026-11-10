@@ -1,7 +1,7 @@
 {
  "tag": "vdm_v1_candidate",
- "created_utc": "2026-11-10T20:13:25+00:00",
- "git_commit": "438495791883aae3a80c9d4709282f9869ce3d40",
+ "created_utc": "2026-11-10T20:35:17+00:00",
+ "git_commit": "7e70d3cb05ebb59c20f4ab73202f487f85683827",
  "git_tree_dirty_at_freeze": true,
  "python": "3.10.11",
  "platform": "Windows-10-10.0.26300-SP0",
@@ -24,7 +24,7 @@
    "data/processed/primekg_structcov/splits/seed42.npz"
   ]
  },
- "n_files": 63,
+ "n_files": 66,
  "files": [
   {
    "path": "data/processed/primekg/disease_features.npy",
@@ -280,27 +280,45 @@
   },
   {
    "path": "data/processed/equity/equity_features.csv",
-   "bytes": 1247670,
-   "sha256": "7cdac2d329635512e73eeca9a5e44f4426607fb71bded1832a30635dc7a6fb74",
+   "bytes": 1250593,
+   "sha256": "75fedebfbe647d3c2d1f0b0c917f6d89004c8411da94c1b9b6d3376d2a47d005",
    "rows": 9388
   },
   {
    "path": "data/processed/equity/equity_report.json",
-   "bytes": 2783,
-   "sha256": "462434ffebfce2c47fdbafb408df2aedddc5c94f790669715d055369982d7649",
+   "bytes": 3479,
+   "sha256": "f821cf3ea55d20dfc5c61f01959abfc07cec72658946d82d7e4c4dcf0412a3e0",
    "rows": null
   },
   {
    "path": "data/processed/equity/ndpi_ntd_candidates.csv",
-   "bytes": 11442,
-   "sha256": "17c8264258319ba022a284823c78f6892a9dc585421a6ecd03155de7b3c7dc72",
+   "bytes": 14365,
+   "sha256": "543b1211a1e0be12a207d1016c8aa7f7889df6ed1c661b4ba9cc976785e28156",
    "rows": 82
   },
   {
    "path": "data/processed/equity/ndpi_weight_sensitivity.csv",
-   "bytes": 1723,
-   "sha256": "e115c9d511064032c0c6b6eddaae9950770c9d88309cdef01f1921d016dd8e8e",
+   "bytes": 2147,
+   "sha256": "b6a377122f0230951837fbb3d1924f19723a4516261dd80d0ec68699c3bb76e0",
    "rows": 66
+  },
+  {
+   "path": "data/processed/equity/ndpi_weight_sensitivity_burden_pairs.csv",
+   "bytes": 2138,
+   "sha256": "8412efb53f14436dd4798c79560ecbe0f273c12f2953a74cf27df7f0c5d3bb8b",
+   "rows": 66
+  },
+  {
+   "path": "data/processed/ihme/daly_by_ntd_group.csv",
+   "bytes": 4244,
+   "sha256": "791c2895c51d94285dec0e46455e100a0d8f60bfc3409fe18c56a0c10c2776db",
+   "rows": 22
+  },
+  {
+   "path": "data/processed/ihme/daly_report.json",
+   "bytes": 588,
+   "sha256": "3507c53ff44af204562e5a8bc8ad898f509ee56edf47d5f473528cc1dbca9957",
+   "rows": null
   },
   {
    "path": "data/processed/eml/eml_combination_components.csv",
