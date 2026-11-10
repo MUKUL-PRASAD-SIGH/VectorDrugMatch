@@ -97,6 +97,8 @@ drive.mount('/content/drive')
 !git clone https://github.com/MUKUL-PRASAD-SIGH/VectorDrugMatch
 %cd VectorDrugMatch
 !git checkout mukul
+# pinned code version (reproducibility): do not change unless you re-audit
+!git checkout 522deb30dc87327d694b273c6ab5911ced24c53e
 !git log -1 --oneline
 !ls scripts/primekg_dataset.py scripts/primekg_split.py scripts/validate_primekg_dataset.py
 ```
@@ -236,6 +238,10 @@ Logistic Regression, Naive Bayes, Random Forest, XGBoost, MLP. They use the drug
 Learns an embedding of every node by random walks, then a small classifier on top. This version only lets the walks see the training answers - the old `train_benchmark.py` let it see the test answers, so do not use that one for PrimeKG.
 
 ```python
+import torch, torch_cluster
+print(torch.__version__, 'torch_cluster available')
+!python scripts/train_node2vec.py --config $CFG --dry-run
+!python scripts/train_node2vec.py --config $CFG --epochs 1   # one-epoch test; then run the full 10 epochs below
 !python scripts/train_node2vec.py --config $CFG --epochs 10
 ```
 
