@@ -53,7 +53,7 @@ MAPPING_NOTES = {
     "soil-transmitted helminthiases": "sum of Ascariasis + Trichuriasis + Hookworm disease (rates over one population add); other STH species are not in the export",
     "foodborne trematodiases": "GBD 'Food-borne trematodiases'; the project members are clonorchiasis, opisthorchiasis, fascioliasis, paragonimiasis",
     "scabies": "requested but absent from the export: stays missing (never 0)",
-    "dracunculiasis": "GBD 'Guinea worm disease' (id 936); the rate is essentially zero (3e-6 per 100,000 if the unit is per 100,000) so its percentile rank is the lowest, which is real, not missing",
+    "dracunculiasis": "GBD 'Guinea worm disease' (id 936); the exported rate is essentially zero, so its percentile rank is the lowest, which is real, not missing",
 }
 NO_GBD_CAUSE = ["Buruli ulcer", "mycetoma", "chromoblastomycosis", "noma", "snakebite envenoming", "yaws"]   # no requested cause; stay missing
 DALY_NAMES = ("DALYs (Disability-Adjusted Life Years)", "DALYs")

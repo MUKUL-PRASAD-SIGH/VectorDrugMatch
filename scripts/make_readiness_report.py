@@ -220,6 +220,8 @@ def main():
             D += [f"\n## `data/processed/{d_}/{f.name}`  ({len(pd.read_csv(f, usecols=[0], low_memory=False)):,} rows)\n", "| column | dtype | missing % | example | description |", "|---|---|---|---|---|"]
             for c in df.columns:
                 ex = df[c].dropna().astype(str).iloc[0][:40].replace("|", "/") if df[c].notna().any() else ""
+                if d_ == "ihme" or c in ("daly_rate", "daly_score", "lower", "upper") and "daly" in f.name or c in ("daly_rate", "daly_score"):
+                    ex = "(not shown: IHME terms)" if ex else ""      # the repository is public; IHME values are not republished
                 D.append(f"| {c} | {df[c].dtype} | {100 * df[c].isna().mean():.1f} | {ex} | {DESCR.get(c, '')} |")
     D += ["\n## Split files (`splits/seed42.npz`)\n", "Arrays: `edges_{train,val,test}` (2, N) drug/disease row indices into drugs.csv / diseases.csv; `y_*` labels (1 = indication, 0 = sampled negative); `curated_*` (all False for PrimeKG); `drugs_*` drug ids of the split; `diag_contra_*`, `diag_offlabel_*` evaluation-only pairs of that split's drugs (never labels); `heldout_indication_pairs` (2, K) val+test indications removed from message passing.\n"]
     (REPO / "Docs" / "DATA_DICTIONARY.md").write_text("\n".join(D), encoding="utf-8")
