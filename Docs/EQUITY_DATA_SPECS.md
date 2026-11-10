@@ -4,7 +4,7 @@ Generated 2026-11-11. All processors refuse bad input and never fill gaps with 0
 
 | component | status | where | validation |
 |---|---|---|---|
-| WHO EML (24th list, 2025) | **DONE**: extracted from `data/external/B09474-eng.pdf` (592 single + 54 combination entries); mapped to PrimeKG (486 single entries -> 368 drugs) | `data/external/who_eml.csv`, `data/processed/eml/` | `tests/test_who_eml_extraction.py`; `eml_mapping_audit.csv` |
+| WHO EML (24th list, 2025) | **DONE**: extracted from `data/external/B09474-eng.pdf` (592 single + 54 combination entries); mapped to PrimeKG (497 single entries -> 378 drugs) | `data/external/who_eml.csv`, `data/processed/eml/` | `tests/test_who_eml_extraction.py`; `eml_mapping_audit.csv` |
 | HAI price/availability (3 Indian surveys) | **DONE** (regional pilot) | `data/processed/hai/` | `scripts/audit_hai_parsing.py` |
 | IHME DALY | **BLOCKED**: the file in `data/external/downloads/ihme_gbd/` has only the cause 'All causes' (6 rows: Deaths and DALYs; Number/Percent/Rate; Global, Both, All ages, 2023) | `data/processed/ihme/` (not created) | `scripts/process_ihme_daly.py` rejects it |
 
@@ -29,4 +29,4 @@ The IHME agreement forbids providing third parties the ability to download the d
 3. `python scripts/make_readiness_report.py`, `python scripts/make_final_docs.py`, `python scripts/freeze_release.py --tag vdm_v1`
 
 ## EML semantics
-`eml_status` = 1 confirmed positive (single-ingredient entry); empty if the drug appears only inside fixed-dose combinations, or is **unresolved** (its name shares a 5+ letter token with one of the 106 unmapped single entries in `data/processed/eml/eml_unmatched.csv`); 0 only where no candidate entry was found, which is not proof of absence. The 'EML coverage' percentage counts those zeros and is not evidence coverage: use `eml_confirmed_positive_pct` / `eml_evidence_counts_all_pairs` in `equity_report.json`.
+`eml_status` = 1 confirmed positive (single-ingredient entry); empty if the drug appears only inside fixed-dose combinations, or is **unresolved** (its name shares a 5+ letter token with one of the 95 unmapped single entries in `data/processed/eml/eml_unmatched.csv`); 0 only where no candidate entry was found, which is not proof of absence. The 'EML coverage' percentage counts those zeros and is not evidence coverage: use `eml_confirmed_positive_pct` / `eml_evidence_counts_all_pairs` in `equity_report.json`.

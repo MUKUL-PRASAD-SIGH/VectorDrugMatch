@@ -1,6 +1,6 @@
 # Final release readiness
 
-Generated 2026-11-11 00:36 by `scripts/make_final_docs.py`. Statuses: DONE AND VALIDATED, IMPLEMENTED BUT NOT VALIDATED, BLOCKED ON MY INPUT, NOT STARTED, NOT APPLICABLE.
+Generated 2026-11-11 00:50 by `scripts/make_final_docs.py`. Statuses: DONE AND VALIDATED, IMPLEMENTED BUT NOT VALIDATED, BLOCKED ON MY INPUT, NOT STARTED, NOT APPLICABLE.
 
 ## Task registry
 | area | task | status | evidence / note |
@@ -53,7 +53,7 @@ Counts: {'DONE AND VALIDATED': 25, 'IMPLEMENTED BUT NOT VALIDATED': 7, 'BLOCKED 
 
 **B. Datasets.** Complete: PrimeKG full benchmark, structure-covered variant, NTD mapping tables, HAI tables (regional pilot), Open Targets tables (with provenance), WHO EML flags. Incomplete: equity feature table (no burden component). Unusable as it stands: the IHME export (only 'All causes').
 
-**C. Mappings.** Complete: WHO->MONDO->PrimeKG (with documented differences, nested roots and 6 WHO entries without indications); Open Targets drug (tier 1: 5,494 ChEMBL ids) and disease mapping; HAI medicines 55/60; EML 486/592 single entries. Ambiguous or missing: 106 EML single entries unmapped; 5 HAI medicines unmapped; ~470 Open Targets disease ids without a MONDO xref and 479 phenotype/GO ids; MONDO->DOID unmapped for 9,089 PrimeKG disease nodes.
+**C. Mappings.** Complete: WHO->MONDO->PrimeKG (with documented differences, nested roots and 6 WHO entries without indications); Open Targets drug (tier 1: 5,494 ChEMBL ids) and disease mapping; HAI medicines 55/60; EML 497/592 single entries. Ambiguous or missing: 95 EML single entries unmapped; 5 HAI medicines unmapped; ~470 Open Targets disease ids without a MONDO xref and 479 phenotype/GO ids; MONDO->DOID unmapped for 9,089 PrimeKG disease nodes.
 
 **D. Scripts implemented and validated.** Validated: dataset build/split/validation, structure variant, NTD mapping, HAI parser + audit, Open Targets loader/validator/attribution, EML extraction + tests, GNN determinism tests, explainability API tests (synthetic), paper checks, freeze/verify, clean-clone check. Implemented but not validated on real trained models: training scripts for Node2Vec and the five GNNs on GPU, cold-start ablation, results exporter beyond one baseline, explanation CLI.
 
@@ -86,7 +86,7 @@ Counts: {'DONE AND VALIDATED': 25, 'IMPLEMENTED BUT NOT VALIDATED': 7, 'BLOCKED 
 ```
 
 ## 3. Commit / pin / manifest reconciliation (state at generation)
-HEAD `b4d6c39eb1`; local commits ahead of `origin/mukul`: 12; working tree has uncommitted changes. The notebook pins code commit `b4d6c39eb1`. Test: after the pinned commit only `notebooks/` and `Docs/` may change. Result: **PASS**. The release manifest `Docs/release/vdm_v1_candidate_manifest.json` records the data checksums, versions and the commit at freeze time; rename it `vdm_v1` after H1 data arrive.
+HEAD `632b5370d9`; local commits ahead of `origin/mukul`: 13; working tree has uncommitted changes. The notebook pins code commit `b4d6c39eb1`. Test: after the pinned commit only `notebooks/` and `Docs/` may change. Result: **FAIL: files changed after the pin: scripts/build_equity_features.py, scripts/make_readiness_report.py, scripts/process_who_eml.py, src/scoring/eml_status.py, tests/test_eml_status.py (commit them, then re-pin)**. The release manifest `Docs/release/vdm_v1_candidate_manifest.json` records the data checksums, versions and the commit at freeze time; rename it `vdm_v1` after H1 data arrive.
 
 ## Final Colab-readiness gate
 | gate | status |
@@ -100,4 +100,4 @@ HEAD `b4d6c39eb1`; local commits ahead of `origin/mukul`: 12; working tree has u
 | paths work in a clean clone | yes (clean-clone check) |
 | no untracked local-only dependency silently required | the external stage needs Drive uploads (H4) and says so |
 | no restricted raw data in git | yes (`data/` ignored; DrugBank-derived blobs remain in history: H5) |
-| notebook pins a commit containing all code | yes; it can only be cloned on Colab after the push (H3) |
+| notebook pins a commit containing all code | NO: see section 3; it can only be cloned on Colab after the push (H3) |

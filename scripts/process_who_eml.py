@@ -50,11 +50,60 @@ CURATED_INN = {
     "all-trans retinoid acid": "Tretinoin",                # WHO spelling 'retinoid'; ATRA
     "amidotrizoate": "Diatrizoate",
     "diloxanide": "Diloxanide furoate",                    # formulation is the furoate
+    # added in the false-negative review (2026-11-11); each target is a single exact PrimeKG name
+    "pancreatic enzymes": "Pancrelipase",
+    "tuberculin, purified protein derivative": "Tuberculin purified protein derivative",
+    "suxamethonium": "Succinylcholine",
+    "norethisterone enantate": "Norethindrone enanthate",  # WHO spelling 'enantate'; salt form identical
+    "sodium calcium edetate": "Edetate calcium disodium anhydrous",   # same compound; anhydrous form chosen by PrimeKG
+    "dextran 70": "Dextran",                               # molecular-weight grade not represented in PrimeKG
+    "sodium hydrogen carbonate": "Sodium bicarbonate",
 }
+
+
+# Why an entry has no PrimeKG drug. Manual judgements are in REASON_OVERRIDE (checked against PrimeKG drug names on 2026-11-11);
+# the rest are categories from keywords/section. This is documentation of the decision, not a mapping.
+REASON_OVERRIDE = {
+    "senna": "not in PrimeKG (no senna/sennoside drug node)", "sodium nitrite": "not in PrimeKG (only amyl nitrite)", "sodium thiosulfate": "not in PrimeKG",
+    "benzathine benzylpenicillin": "not in PrimeKG (benzathine salt not a node)", "ravidasvir": "not in PrimeKG", "fexinidazole": "not in PrimeKG",
+    "ansuvimab": "biologic, not in PrimeKG", "asparaginase": "ambiguous: two PrimeKG asparaginase products; not merged",
+    "mesna": "not in PrimeKG", "phytomenadione": "not in PrimeKG under this INN (phytonadione absent)", "retinol": "ambiguous: only retinol derivatives in PrimeKG",
+    "ferrous salt": "ambiguous: eight PrimeKG ferrous salts; not merged", "glucose": "ambiguous: D-glucose vs dextrose forms; not merged",
+    "triamcinolone hexacetonide": "salt-specific; PrimeKG has only triamcinolone; not merged", "silver diamine fluoride": "not in PrimeKG",
+    "nicotine replacement therapy (nrt)": "therapy class; PrimeKG has nicotine; not merged", "barium sulfate": "not in PrimeKG", "calamine": "not in PrimeKG",
+    "coal tar": "not in PrimeKG", "podophyllum resin": "not in PrimeKG", "meglumine iotroxate": "not in PrimeKG", "hypochlorous acid": "not in PrimeKG",
+    "chlorine base compound": "not in PrimeKG", "alcohol based hand rub": "formulation, not a single substance",
+    "realgar-indigo naturalis formulation": "herbal/mineral formulation",
+    "mifepristone misoprostol": "co-packaged combination extracted without '+' (both components exist in PrimeKG); deliberately NOT counted as a single entry",
+    "erythropoiesis-stimulating agents": "drug class, not a substance", "sunscreen, broad-spectrum": "formulation, not a single substance",
+    "glucose with sodium chloride": "mixture solution, not a single substance",
+}
+
+
+def unmapped_reason(name, section):
+    n = str(name).lower().strip()
+    if n in REASON_OVERRIDE:
+        return REASON_OVERRIDE[n]
+    if "vaccine" in n:
+        return "vaccine (biologic), not in PrimeKG drug set"
+    if "immunoglobulin" in n or "antitoxin" in n or "antibod" in n or "antivenom" in n:
+        return "biologic, not in PrimeKG drug set"
+    if str(section).startswith("11."):
+        return "blood product, not a PrimeKG drug"
+    if "insulin" in n:
+        return "ambiguous: many PrimeKG insulin products; not merged"
+    if any(k in n for k in ("device", "implant", "intrauterine", "condom", "diaphragm", "vaginal ring", "cement", "composite")):
+        return "device / dental material, not a drug substance"
+    if "solution" in n or "salts" in n or "dialysis" in n or "water for" in n or "micronutrient" in n or "therapeutic food" in n:
+        return "solution / supplement mixture, not a single substance"
+    return "no match under any tier; not reviewed individually"
 
 
 def norm1(s):
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9+, ]", "", re.sub(r"[-/]", " ", str(s).lower()).replace("sulphate", "sulfate").replace("sulph", "sulf"))).strip()
+
+
+CURATED_NORM = {norm1(k): v for k, v in CURATED_INN.items()}      # keys normalised the same way as the lookup (hyphens, parentheses)
 
 
 def norm2(s):
@@ -92,7 +141,7 @@ class Mapper:
             return "mapped", "3_salt_stripped", sorted(h2)
         if len(h2) > 1:
             return "ambiguous", "3_salt_stripped", sorted(h2)
-        tgt = CURATED_INN.get(norm1(prim))
+        tgt = CURATED_NORM.get(norm1(prim))
         if tgt:
             ht = self.i1.get(norm1(tgt), set())
             if len(ht) == 1:
@@ -147,7 +196,9 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     au.to_csv(out / "eml_mapping_audit.csv", index=False)
     flags.to_csv(out / "eml_drug_flags.csv", index=False)
-    au[(au.entry_type == "single") & (au.status != "mapped")].to_csv(out / "eml_unmatched.csv", index=False)
+    un = au[(au.entry_type == "single") & (au.status != "mapped")].copy()
+    un["reason"] = [unmapped_reason(n, sec) for n, sec in zip(un.eml_name, un.section)]
+    un.to_csv(out / "eml_unmatched.csv", index=False)
     cp.to_csv(out / "eml_combination_components.csv", index=False)
     single = au[au.entry_type == "single"]
     rep = {"eml_entries": int(len(au)), "single_entries": int(len(single)), "combination_entries": int((au.entry_type == "combination").sum()),

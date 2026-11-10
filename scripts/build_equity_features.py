@@ -28,6 +28,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from src.scoring.eml_status import classify  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 PK, PR = REPO / "data" / "processed" / "primekg", REPO / "data" / "processed"
@@ -70,23 +74,13 @@ def main():
             combo_only = {i for ids in cc.drugbank_ids for i in str(ids).split("|") if i} - on
         # 1 = listed as a single-ingredient entry; EMPTY = appears only inside a fixed-dose combination (not counted, not called 0);
         # 0 = not on the list. A 0 can be wrong if the drug matches one of the EML single entries that could not be mapped (eml_unmatched.csv).
-        # Zeros are only assigned where they are defensible: a drug whose name shares a token (>=5 letters) with any of the
-        # unmapped EML single entries is UNRESOLVED (empty), not 0. Remaining zeros are "no candidate entry found": still bounded by
-        # the name-matching tiers (a differently named synonym could be missed), so they are reported as such, never as certain.
-        import re
+        # Zeros only where defensible (src/scoring/eml_status.py): a drug whose name shares a stem with an UNMAPPED WHO single entry is
+        # UNRESOLVED (empty), combination-only is empty; the remaining zeros mean "no candidate entry found", not a verified negative.
         um = PR / "eml" / "eml_unmatched.csv"
-        um_tokens = set()
-        if um.exists():
-            for nm in pd.read_csv(um, keep_default_na=False).eml_name:
-                um_tokens |= {t for t in re.findall(r"[a-z]{5,}", str(nm).lower())}
-        def _cand(name):
-            return bool(set(re.findall(r"[a-z]{5,}", str(name).lower())) & um_tokens)
-        unresolved = {d for d, n in zip(df.drug_id, df.drug_name) if d not in on and d not in combo_only and _cand(n)}
-        df["eml_status"] = np.where(df.drug_id.isin(on), 1.0,
-                                    np.where(df.drug_id.isin(combo_only) | df.drug_id.isin(unresolved), np.nan, 0.0))
-        df["eml_evidence"] = np.where(df.drug_id.isin(on), "confirmed_positive_single_entry",
-                             np.where(df.drug_id.isin(combo_only), "combination_component_only",
-                             np.where(df.drug_id.isin(unresolved), "unresolved_possible_unmapped_entry", "negative_no_candidate_entry")))
+        um_names = pd.read_csv(um, keep_default_na=False).eml_name.tolist() if um.exists() else []
+        res = [classify(d, n, on, combo_only, um_names) for d, n in zip(df.drug_id, df.drug_name)]
+        df["eml_evidence"] = [r[0] for r in res]
+        df["eml_status"] = [r[1] for r in res]
         avail["eml"] = True
     else:
         df["eml_status"] = np.nan
@@ -154,6 +148,12 @@ def main():
            "component_coverage_pct_all_pairs": {k: round(100 * df[f"{k}_score"].notna().mean(), 2) for k in W},
            "component_coverage_pct_ntd_pairs": {k: round(100 * df.loc[df.is_ntd == 1, f"{k}_score"].notna().mean(), 2) for k in W},
            "eml_evidence_counts_all_pairs": df.eml_evidence.value_counts().to_dict(),
+           "denominators": {"all_pairs": n, "all_drugs": int(df.drug_id.nunique()), "ntd_pairs": int((df.is_ntd == 1).sum()),
+                            "ntd_drugs": int(df.loc[df.is_ntd == 1, "drug_id"].nunique())},
+           "eml_evidence_pairs_all": df.eml_evidence.value_counts().to_dict(),
+           "eml_evidence_drugs_all": df.drop_duplicates("drug_id").eml_evidence.value_counts().to_dict(),
+           "eml_evidence_pairs_ntd": df[df.is_ntd == 1].eml_evidence.value_counts().to_dict(),
+           "eml_evidence_drugs_ntd": df[df.is_ntd == 1].drop_duplicates("drug_id").eml_evidence.value_counts().to_dict(),
            "eml_confirmed_positive_pct": round(100 * (df.eml_evidence == "confirmed_positive_single_entry").mean(), 2),
            "eml_unresolved_pct": round(100 * (df.eml_evidence == "unresolved_possible_unmapped_entry").mean(), 2),
            "eml_unmapped_single_entries_possible_false_zeros": int(len(pd.read_csv(PR / "eml" / "eml_unmatched.csv"))) if (PR / "eml" / "eml_unmatched.csv").exists() else None,
