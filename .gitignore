@@ -48,3 +48,7 @@ Thumbs.db
 
 # Raw third-party data bundle (DrugBank/DisGeNET-derived)
 vdm_real_data/
+
+# Rendered review copies of the paper draft (regenerate with scripts/render_paper.py)
+Docs/paper/PAPER_DRAFT_IEEE.html
+Docs/paper/PAPER_DRAFT_IEEE.pdf
