@@ -5,6 +5,8 @@ data/processed/
 # Third-party / downloaded data under data/external is never committed (licences + size).
 # Everything there is re-creatable: python scripts/fetch_public_data.py --primekg
 data/external/*
+# raw manual downloads (Open Targets, HAI price surveys, IHME GBD) - never committed
+data/external/downloads/
 !data/external/.gitkeep
 !data/external/README.md
 
