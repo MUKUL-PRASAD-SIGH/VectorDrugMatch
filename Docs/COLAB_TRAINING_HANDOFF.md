@@ -5,11 +5,11 @@ Prepared 2026-11-11. No model was trained, no Colab run was made, nothing was pu
 ## 1. Exact commit to use
 | item | value |
 |---|---|
-| Code commit pinned in `notebooks/colab_final_run.ipynb` (`PIN`) | `cb41c4406e0d8663f64bbea0af3d159ead20ca1e` |
-| HEAD | the commit that contains this file. It differs from the pin only in `notebooks/` and `Docs/` (`git diff --name-only cb41c44 HEAD`); all training/data code is identical |
+| Code commit pinned in `notebooks/colab_final_run.ipynb` (`PIN`) | `b87801a4f5c27f5fbba1ab9434044613fdb1f132` |
+| HEAD | the commit that contains this file. It differs from the pin only in `notebooks/` and `Docs/` (`git diff --name-only b87801a HEAD`); all training/data code is identical |
 | Branch | `mukul` on `https://github.com/MUKUL-PRASAD-SIGH/VectorDrugMatch` (**the repository is PUBLIC**) |
-| On GitHub? | **No.** All commits since `origin/mukul` are local (`git rev-list --count origin/mukul..HEAD`). `git checkout cb41c44` in Colab fails until you approve the push |
-| Which notebook to open | the one at HEAD (it contains Step 4b, the frozen-data check). Open it from GitHub after the push, or upload the local `notebooks/colab_final_run.ipynb` |
+| On GitHub? | **No.** All commits since `origin/mukul` are local (`git rev-list --count origin/mukul..HEAD`). `git checkout b87801a` in Colab fails until you approve the push |
+| Which notebook to open | the one at HEAD (Step 4b frozen-data check, Step 6b Drive-persistent outputs). Step-by-step instructions for a beginner: `Docs/COLAB_BEGINNER_HANDBOOK.md` |
 
 ## 2. What was audited for this handoff (evidence)
 | check | result |
@@ -55,7 +55,7 @@ Create `MyDrive/VDM_Outputs/` (empty; the notebook writes results there).
 ## 4. Approvals and actions needed from you (and nothing else)
 1. **Approve the push of all local commits to `origin/mukul`** (public repository). What becomes public: code, tests, configs, documentation, the paper draft, aggregate counts and figures, the notebook. What does not: any dataset, IHME values, EML list, DrugBank file. The three DrugBank-derived blobs already in remote history stay as they are (unchanged by this push). If you do not want a public push, say so: the alternative is a private repository, which needs a token inside Colab and a notebook edit.
 2. **Upload the Drive files in section 3** and keep the folder private.
-3. **Choose the Colab runtime**: T4 GPU is required (`torch_cluster` and GNN training); see section 6 for time and why a long-session plan (Colab Pro or a stable connection) is advisable.
+3. **Choose the Colab runtime**: T4 GPU is required (`torch_cluster` and GNN training). The duration is unknown until the smoke test; the run can be split over sessions.
 4. Before any public release or submission (not before training): DrugBank/IHME entitlements, ClinicalTrials.gov/AACT/TTD/PMDA terms, final claims (see `Docs/FINAL_PROJECT_HANDOFF.md` section 3).
 
 ## 5. Ordered Colab execution plan
@@ -64,42 +64,31 @@ Open the notebook at HEAD, runtime T4 GPU, run top to bottom. After each step, t
 | # | step (cell) | what it runs | must hold before continuing |
 |---|---|---|---|
 | 1 | GPU | torch version, `nvidia-smi` | `GPU available: True` |
-| 2 | Drive, code, libraries | mount, `git clone`, `git checkout cb41c44...`, `git log -1`, pip installs, `pip freeze` | `git log -1` shows `cb41c44`; `ok: ... torch_cluster available` |
+| 2 | Drive, code, libraries | mount, `git clone`, `git checkout b87801a...`, `git log -1`, pip installs, `pip freeze` | `git log -1` shows `b87801a`; `ok: ... torch_cluster available` |
 | 3 | Inputs | copies `VDM_Data` files into `data/external/` | prints `copied` for `mondo.obo`, both caches, the PDF and `downloads/`; the assert for `mondo.obo` passes |
 | 4 | `--stage prepare` | downloads PrimeKG (1 GB), builds tables, saves split, runs the validator, builds the structure-covered variant, runs `audit_models.py` | no `[FAIL]`; the audit reports no failure |
 | 4b | frozen-data check | SHA-256 of tables, features, splits, `mondo.obo`, `primekg_kg.csv` vs the manifest | `FROZEN BENCHMARK VERIFIED: 16 files match` (a restore from `frozen_processed/` is acceptable; an assertion error is a stop) |
 | 5 | `--stage external` | NTD mapping, Open Targets, HAI, IHME, EML, equity table | optional steps may log a failure only if you left the input out; `data/processed/ihme/daly_report.json` exists |
 | 6 | `--stage smoke` | `torch_cluster`, Node2Vec 1 epoch, 5 epochs per GNN, one baseline | read the printed runtimes and GPU memory; extrapolate (section 6) before step 7 |
+| 6b | outputs on Drive | moves the smoke/setup outputs to `VDM_Outputs/smoke_and_setup_logs/<time>/`, removes them from `outputs/`, links `outputs/` to `MyDrive/VDM_Outputs/outputs`, writes `run_environment_<time>.json` (commit, GPU, torch/CUDA, seeds, config hashes) and `pip_freeze_<time>.txt` | prints `outputs -> /content/drive/MyDrive/VDM_Outputs/outputs` |
 | 7 | `--stage train --variant full`, then `--stage report --variant full` | 5 baselines (drug-only), Node2Vec, 5 GNNs, cold-start ablation, 5 baselines (disease-profile), then evaluation + results package | `outputs/pipeline_log.jsonl`: no non-optional step with `returncode != 0` |
 | 7b | `--stage explain --variant full` | SHAP (RF, XGBoost) on test pairs; GNNExplainer (HGT, RGCN) is optional | `outputs/primekg/explain/explain_manifest.json` |
 | 8 | `--stage train --variant structcov`, then `report` | same as 7 on the structure-covered variant | as 7 |
 | 9 | freeze, package, download | `freeze_release.py --tag vdm_v1`, readiness report, `vdm_results.zip` to Drive + browser | the zip downloads |
 
-**If Colab disconnects mid-step 7/8:** the stage re-run repeats every model of that stage (it does not resume). To avoid redoing finished models, run the remaining commands individually (same scripts, all read the same saved split), e.g.:
-```
-python scripts/train_baselines.py --model rf   --config configs/primekg_morgan.yaml
-python scripts/train_baselines.py --model rf   --config configs/primekg_morgan_dp.yaml
-python scripts/train_node2vec.py --config configs/primekg_morgan.yaml --epochs 10
-python scripts/train_gnn.py --config configs/primekg_morgan.yaml --epochs 100
-python scripts/run_ablations_coldstart.py --config configs/primekg_morgan.yaml
-```
-and copy `outputs/` to `MyDrive/VDM_Outputs/` after every model.
+**If Colab disconnects mid-step 7/8:** `outputs/` already lives on Drive (step 6b), and every model is its own step (one `train_gnn.py --models <GNN>` call per GNN; baselines are one call per model). Re-run steps 1-6b, then the step 7/8 cell: `--resume` skips every training step that finished with exit 0 at this same commit (from `outputs/pipeline_log.jsonl`) and trains only the rest. `report`, `explain`, `prepare` and `external` always re-run (they are cheap or depend on all models). Comparison CSVs are merged per model, not overwritten.
 
 Models covered: Logistic Regression, Naive Bayes, Random Forest, XGBoost, MLP (both baseline variants, both benchmark variants); Node2Vec; GCN, GraphSAGE, GAT, RGCN, HGT; cold-start ablation (drug-only config, full benchmark); explanations (full benchmark, drug-only config).
 
-## 6. Runtime, GPU and storage (ESTIMATES, nothing was measured)
-| item | estimate / fact |
+## 6. Runtime, GPU and storage (facts and local measurements only; Colab times are NOT estimated)
+| item | fact |
 |---|---|
-| GPU | T4 (16 GB) is enough: the graph has 7,957 drugs, 17,080 diseases, 19,051 genes and about 0.8 M edges (about twice that with reverse edges); drug features are 2,048 bits (65 MB). GNNs train full-batch with 64-dimensional embeddings. Expect well under 8 GB |
-| Training size | 40,380 / 8,382 / 7,566 train/val/test pairs (6,730 / 1,397 / 1,261 positives); up to 100 epochs per GNN with early stopping (patience 20) |
-| `prepare` | about 5-15 min on Colab (1 GB download; the same steps took 1 min 12 s locally without download) |
-| `external` | about 2-5 min (1 min 38 s locally) |
-| Five GNNs, one benchmark variant | order of 0.5-3 h (HGT/GAT slowest); two variants double it |
-| Node2Vec | tens of minutes per variant |
-| Classical baselines | CPU-bound on Colab's 2 vCPUs: each baseline runs a 5-fold pooled CV with calibration plus the cold-start fit, so Random Forest and XGBoost dominate; order of 1-3 h per benchmark variant x baseline variant is plausible, so **the whole run may take roughly 6-15 h** |
-| What to do about it | read the smoke-stage times (step 6) first; the pooled 5-fold CV is not reported anywhere, so if time is short you may run the cold-start path only, but that needs a code change I have not made (scope frozen); alternatively split the run over several sessions using the per-model commands above and Drive copies |
-| Colab disk | about 1 GB download + about 3-4 GB processed data + outputs (a few GB at most), far below the 70+ GB available |
-| Drive | upload about 340 MB; results about 0.5-2 GB (models, predictions, figures) |
+| GPU | a T4 (16 GB) is the intended runtime. The graph has 7,957 drugs, 17,080 diseases, 19,051 genes and about 0.8 M edges (reverse relations are added); drug features are 2,048 bits (65 MB); GNNs train full-batch with 64-dimensional embeddings. No memory measurement exists yet: the smoke stage prints GPU memory |
+| Training size | 40,380 / 8,382 / 7,566 train/val/test pairs (6,730 / 1,397 / 1,261 positives); up to 100 epochs per GNN, early stopping patience 20 |
+| Measured locally (not on Colab) | `prepare` data-building steps 1 min 12 s (without the download); `external` stage 1 min 38 s |
+| Everything else | **unknown until measured.** Step 6 (smoke test) prints the wall time of Node2Vec (1 epoch), each GNN (5 epochs) and one baseline; extrapolate from those (a GNN's maximum is 20x its 5-epoch time; Random Forest/XGBoost cost is dominated by the number of model fits, section 10) before committing to Steps 7 and 8 |
+| Session limits | the run is built to be split across sessions (resume, section 5); no time limit assumption is made here |
+| Storage | upload about 340 MB to Drive; Colab disk holds a 1 GB download plus processed data; result size is unknown until produced |
 
 ## 7. Expected output files
 Per experiment folder `outputs/<exp>/` for `<exp>` in `primekg` and `primekg_structcov` (and `primekg_dp`, `primekg_structcov_dp` for the disease-profile baselines only):
@@ -121,7 +110,15 @@ Per experiment folder `outputs/<exp>/` for `<exp>` in `primekg` and `primekg_str
 7. NDPI: burden-aware only for the 50 pairs with a DALY value; always show its weight sensitivity (`Docs/FINAL_PROJECT_HANDOFF.md` section 5).
 
 ## 9. Unverified / accepted limitations at the start of training
-* Time estimates above are not measurements. Colab library versions are not pinned (recorded in `pip_freeze_colab.txt`).
+* No Colab run time has been measured. Colab library versions are not pinned (recorded in `pip_freeze_colab.txt`).
 * No trained-model behaviour has been observed; explanation code ran only on synthetic API tests.
 * The IHME rate unit is not verified against IHME documentation.
 * The disease-profile baseline variant has never been trained; its effect is unknown.
+
+## 10. Are the five-fold CV and the calibration needed? (analysis; no change made)
+Source: `scripts/train_baselines.py`, `scripts/make_results_package.py`, `scripts/evaluate_primekg.py`.
+* **What each baseline call does**: (1) a pooled 5-fold stratified CV on train+val+test pairs (`StratifiedKFold(5)`), each fold fitting a `CalibratedClassifierCV(cv=3, sigmoid)` for RF/XGBoost/Logistic (3 base fits per fold) or one plain fit for NB/MLP; (2) the **cold-start fit** on the train split only (calibrated for RF/XGBoost/Logistic = 3 fits), threshold from the validation split, test scored once, predictions and `baseline_<key>_coldstart.pkl` saved; (3) a **pooled final model** on all pairs (3 fits when calibrated) used only for feature importance and a pooled SHAP plot.
+* **Fit count**: RF/XGBoost/Logistic = 15 (CV) + 3 (cold-start) + 3 (pooled final) = 21 fits, 15 of them (71%) for the pooled CV; NB/MLP = 5 + 1 + 1 = 7, 5 of them (71%) for the pooled CV. Over the four baseline configurations by fit count this is the largest share of classical-baseline compute. **Run times were not measured**, so no hours are attributed here; the smoke stage times one baseline.
+* **What is reported**: every reported number comes from the cold-start prediction files (`baseline_*_coldstart_predictions.csv`) and `coldstart_*` thresholds; the evaluator and the results package read nothing from the CV. The CV columns (`roc_auc`, ...) in `baseline_<key>_metrics.json` are labelled pooled and our rules forbid presenting them as cold-start results. The pooled final model feeds only `<key>_feature_importance.csv` and `<key>_shap_*` (explicitly "not held-out evidence"); held-out SHAP comes from `explain_models.py` on the cold-start model.
+* **Calibration**: it is part of the reported estimator (the cold-start model is the calibrated one). Sigmoid calibration with an internal 3-fold split on the training pairs only affects the probability scale, the Brier score, calibration plots and the validation-chosen threshold; it uses no validation or test data. **Keep it.**
+* **Proposal (needs your approval; not implemented, because you asked for no change before this explanation)**: add an opt-in `--coldstart-only` flag to `train_baselines.py` that skips the pooled CV, the pooled final model and its pooled SHAP, leaving every reported number, file and threshold unchanged. Expected effect: about 71% fewer model fits per baseline (a count, not a time). Trade-off: no pooled-CV table and no pooled feature importance (both are not used in the paper). Alternative: keep everything and accept the longer run.
