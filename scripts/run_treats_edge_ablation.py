@@ -103,7 +103,8 @@ def run_one(name, seed, a, ctx, out_root, max_epochs, patience):
         if a.resume:
             print(f"[resume] {name} seed {seed} already done")
             return
-        sys.exit(f"{run_dir} already holds results: refusing to overwrite (use --resume to skip finished runs, or a different --out)")
+        if not a.smoke:
+            sys.exit(f"{run_dir} already holds results: refusing to overwrite (use --resume to skip finished runs, or a different --out)")
     run_dir.mkdir(parents=True, exist_ok=True)
     log = open(run_dir / "train.log", "w", encoding="utf-8")
 
