@@ -1,0 +1,141 @@
+{
+ "1_A_k4_vs_B_k4_identical_except_edges": {
+  "seed21": {
+   "fold_sequences_identical_A_k4_vs_B_k4": true,
+   "folds_partition_all_train_pairs_every_epoch": true,
+   "initial_weights_hash": {
+    "A_orig": "f3910afdb4f6a1c6",
+    "A_k4": "f3910afdb4f6a1c6",
+    "B_k4": "f3910afdb4f6a1c6"
+   },
+   "initial_weights_identical": true
+  },
+  "seed42": {
+   "fold_sequences_identical_A_k4_vs_B_k4": true,
+   "folds_partition_all_train_pairs_every_epoch": true,
+   "initial_weights_hash": {
+    "A_orig": "06a38d181f1da73f",
+    "A_k4": "06a38d181f1da73f",
+    "B_k4": "06a38d181f1da73f"
+   },
+   "initial_weights_identical": true
+  },
+  "negatives_and_pairs": {
+   "train_pairs_hash": "f78a0c671d7d5e8a",
+   "train_labels_hash": "9825a7eb21b28f3c",
+   "val_pairs_hash": "fbd54ab6bdd0489b",
+   "test_pairs_hash": "fe0508e4fabc1bf3",
+   "note": "all configurations read these arrays from the one saved split; no negative is resampled"
+  },
+  "pass": true
+ },
+ "2_supervised_edges_and_reverse_hidden": {
+  "pass": true,
+  "steps_checked": 84,
+  "violations": 0,
+  "visible_train_treats_edges_per_step_range": [
+   3365,
+   5889
+  ],
+  "train_positives_total": 6730
+ },
+ "3_heldout_absent_from_every_message_passing_graph": {
+  "pass": true,
+  "per_config": {
+   "A_orig": {
+    "graphs_checked": 1,
+    "heldout_pair_occurrences": 0
+   },
+   "A_k4": {
+    "graphs_checked": 1,
+    "heldout_pair_occurrences": 0
+   },
+   "B_k2": {
+    "graphs_checked": 3,
+    "heldout_pair_occurrences": 0
+   },
+   "B_k4": {
+    "graphs_checked": 5,
+    "heldout_pair_occurrences": 0
+   },
+   "B_k8": {
+    "graphs_checked": 9,
+    "heldout_pair_occurrences": 0
+   },
+   "B0_naive": {
+    "graphs_checked": 1,
+    "heldout_pair_occurrences": 0
+   },
+   "C_k4": {
+    "graphs_checked": 1,
+    "heldout_pair_occurrences": 0
+   },
+   "D_rgcn_B": {
+    "graphs_checked": 5,
+    "heldout_pair_occurrences": 0
+   },
+   "A_k4_L3": {
+    "graphs_checked": 1,
+    "heldout_pair_occurrences": 0
+   },
+   "B_k4_L3": {
+    "graphs_checked": 5,
+    "heldout_pair_occurrences": 0
+   }
+  },
+  "heldout_pairs": 2658
+ },
+ "4_alternate_representations": {
+  "edge_types_joining_drug_and_disease": [
+   [
+    "drug",
+    "treats",
+    "disease"
+   ],
+   [
+    "drug",
+    "contraindicated_for",
+    "disease"
+   ],
+   [
+    "drug",
+    "offlabel_for",
+    "disease"
+   ],
+   [
+    "disease",
+    "rev_treats",
+    "drug"
+   ],
+   [
+    "disease",
+    "rev_contraindicated_for",
+    "drug"
+   ],
+   [
+    "disease",
+    "rev_offlabel_for",
+    "drug"
+   ]
+  ],
+  "drug_drug_edge_types": [],
+  "heldout_drugs_with_a_train_treats_edge": 0,
+  "duplicate_node_ids_drug_disease": {
+   "drug": 0,
+   "disease": 0
+  },
+  "val_test_drug_label_bearing_edges_still_in_all_configs_except_C": {
+   "contraindicated_for": {
+    "edges_of_val_test_drugs_remaining_in_message_passing": 7730,
+    "edges_total": 30638
+   },
+   "offlabel_for": {
+    "edges_of_val_test_drugs_remaining_in_message_passing": 704,
+    "edges_total": 2537
+   }
+  },
+  "pass": true,
+  "note": "Only treats, contraindicated_for and offlabel_for join drugs to diseases. Contraindication/off-label edges of held-out drugs to OTHER diseases stay in the graph in A, B and the 3-layer pairs (existing design; identical across A and B, so it cannot explain a difference between them); they are removed only in C."
+ },
+ "all_pass": true
+}

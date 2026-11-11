@@ -72,6 +72,19 @@ def git_commit():
         return None
 
 
+def make_model(cfg, data, base, splits, x, e_tr, seed, dev):
+    """Seeded model whose initial weights depend ONLY on (architecture, layers, seed): the lazy layers are initialised with one canonical forward pass on the
+    'original' edge dict for every configuration. (Initialising on each configuration's own edge dict was found to give different initial weights for A and B,
+    which would have confounded the comparison; see Docs/TREATS_EDGE_ABLATION_PLAN.md.)"""
+    set_seeds(seed)
+    gnn = create_gcn_model(data.metadata(), EMB, EMB, num_layers=cfg.get("layers", 2)) if cfg["arch"] == "GCN" else create_rgcn_model(data.metadata(), EMB, EMB)
+    model = GNNLinkPredictionModel(gnn, in_channels=EMB, hidden_channels=HEAD).to(dev)
+    ed0 = {k: v.to(dev) for k, v in build_variant_edges(base, splits, "original").items()}
+    with torch.no_grad():
+        model.forward_logits(x, ed0, e_tr[:, :8])
+    return model
+
+
 def forward_logits(model, x, ed, idx):
     return model.forward_logits(x, ed, idx)
 
@@ -86,9 +99,11 @@ def evaluate(model, x, ed, idx, y):
 def run_one(name, seed, a, ctx, out_root, max_epochs, patience):
     cfg = CONFIGS[name]
     run_dir = out_root / name / f"seed{seed}"
-    if a.resume and (run_dir / "metrics.json").exists():
-        print(f"[resume] {name} seed {seed} already done")
-        return
+    if (run_dir / "metrics.json").exists():
+        if a.resume:
+            print(f"[resume] {name} seed {seed} already done")
+            return
+        sys.exit(f"{run_dir} already holds results: refusing to overwrite (use --resume to skip finished runs, or a different --out)")
     run_dir.mkdir(parents=True, exist_ok=True)
     log = open(run_dir / "train.log", "w", encoding="utf-8")
 
@@ -120,11 +135,7 @@ def run_one(name, seed, a, ctx, out_root, max_epochs, patience):
         P("LEAKAGE AUDIT FAILED - not training", json.dumps({k: v for k, v in audit.items() if isinstance(v, dict) and not v.get("pass", True)}, default=str)[:600])
         sys.exit(2)
 
-    set_seeds(seed)
-    gnn = create_gcn_model(data.metadata(), EMB, EMB, num_layers=cfg.get("layers", 2)) if cfg["arch"] == "GCN" else create_rgcn_model(data.metadata(), EMB, EMB)
-    model = GNNLinkPredictionModel(gnn, in_channels=EMB, hidden_channels=HEAD).to(dev)
-    with torch.no_grad():
-        model.forward_logits(x, ed_eval, e_tr[:, :8])             # initialise lazy layers
+    model = make_model(cfg, data, base, splits, x, e_tr, seed, dev)
     n_params = int(sum(p.numel() for p in model.parameters()))
     opt = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, mode="max", factor=0.5, patience=10)
@@ -215,6 +226,8 @@ def main():
     ap.add_argument("--bootstrap", type=int, default=3000)
     ap.add_argument("--config", default="configs/primekg_morgan.yaml")
     a = ap.parse_args()
+    if not Path(a.out).name.startswith("treats_edge_ablation_"):
+        sys.exit("--out must be a treats_edge_ablation_* folder: this script never writes into other result folders")
     if a.smoke:
         a.config_name, a.seeds, a.epochs, a.bootstrap = list(CONFIGS), [42], 3, 20
         out_root = REPO / a.out / "smoke"
