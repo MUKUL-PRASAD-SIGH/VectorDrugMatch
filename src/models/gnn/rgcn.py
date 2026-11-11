@@ -71,7 +71,19 @@ class RGCN(torch.nn.Module):
 
         # 2. Native RGCN Forward Pass
         for i, (conv, norm) in enumerate(zip(self.convs, self.norms)):
-            x_out = conv(x_homo, edge_index_homo, edge_type_homo)
+            # RGCN segment_matmul requires matching input and weight dtypes.
+            # Keep this convolution in FP32 even when the outer training
+            # loop uses CUDA automatic mixed precision.
+            with torch.autocast(
+                device_type=x_homo.device.type,
+                enabled=False,
+            ):
+                x_out = conv(
+                    x_homo.float(),
+                    edge_index_homo,
+                    edge_type_homo,
+                )
+
             x_out = norm(x_out)
             
             # Residual connection (not on the first layer)

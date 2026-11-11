@@ -118,29 +118,113 @@ def hetero_khop_subset(data, seeds, k=2, max_neighbors=50, rng=None):
     return {t: torch.as_tensor(sorted(v), dtype=torch.long) for t, v in nodes.items()}
 
 
-def explain_link_gnn(model, data, drug_idx, disease_idx, hops=2, epochs=100, max_neighbors=50, seed=0, device="cpu"):
-    """GNNExplainer for ONE drug->disease pair on the k-hop neighbourhood. `model` = GNNLinkPredictionModel (eval mode), `data` = the message-passing HeteroData
-    (treats edges already removed). Returns (prob, edges_df, relation_df)."""
+
+def explain_link_gnn(
+    model, data, drug_idx, disease_idx,
+    hops=2, epochs=100, max_neighbors=50,
+    seed=0, device="cpu"
+):
+    """Local relation-level perturbation attribution for one drug-disease pair.
+
+    Removes each relation family (including reverse edges) from the local
+    neighbourhood and measures the change in predicted probability.
+    No model weights are modified.
+    """
     import torch
-    from torch_geometric.explain import Explainer, GNNExplainer
+
     torch.manual_seed(seed)
-    subset = hetero_khop_subset(data, {"drug": [drug_idx], "disease": [disease_idx]}, k=hops, max_neighbors=max_neighbors, rng=np.random.default_rng(seed))
-    sub = data.subgraph(subset).to(device)
-    d_pos = int(torch.searchsorted(subset["drug"], torch.tensor(drug_idx)))
-    s_pos = int(torch.searchsorted(subset["disease"], torch.tensor(disease_idx)))
-    eli = torch.tensor([[d_pos], [s_pos]], dtype=torch.long, device=device)
+
+    subset = hetero_khop_subset(
+        data,
+        {"drug": [drug_idx], "disease": [disease_idx]},
+        k=hops,
+        max_neighbors=max_neighbors,
+        rng=np.random.default_rng(seed),
+    )
+
+    # Remove Python-list attributes that PyG cannot tensor-index.
+    clean_data = data.clone()
+    for node_type in clean_data.node_types:
+        if "node_ids" in clean_data[node_type]:
+            del clean_data[node_type]["node_ids"]
+
+    sub = clean_data.subgraph(subset).to(device)
+
+    d_pos = int(torch.searchsorted(
+        subset["drug"], torch.tensor(drug_idx)
+    ))
+    s_pos = int(torch.searchsorted(
+        subset["disease"], torch.tensor(disease_idx)
+    ))
+
+    edge_label_index = torch.tensor(
+        [[d_pos], [s_pos]], dtype=torch.long, device=device
+    )
+
     model = model.to(device).eval()
-    ex = Explainer(model, algorithm=GNNExplainer(epochs=epochs), explanation_type="model", node_mask_type="attributes", edge_mask_type="object",
-                   model_config=dict(mode="binary_classification", task_level="edge", return_type="probs"))
+    edge_dict = sub.edge_index_dict
+
     with torch.no_grad():
-        prob = float(model(sub.x_dict, sub.edge_index_dict, eli)[0])
-    e = ex(sub.x_dict, sub.edge_index_dict, index=0, edge_label_index=eli)
+        original_prob = float(
+            model(sub.x_dict, edge_dict, edge_label_index)[0].item()
+        )
+
+    # Group forward and reverse relations into the same biological family.
+    families = {}
+    for edge_type in sub.edge_types:
+        src, relation, dst = edge_type
+        family = relation[4:] if relation.startswith("rev_") else relation
+        families.setdefault(family, []).append(edge_type)
+
     rows = []
-    for (s, r, d), mask in e.edge_mask_dict.items():
-        ei = sub[(s, r, d)].edge_index.cpu()
-        for j in range(ei.shape[1]):
-            rows.append({"src_type": s, "relation": r, "dst_type": d, "src_node_id": int(subset[s][ei[0, j]]), "dst_node_id": int(subset[d][ei[1, j]]),
-                         "edge_mask": float(mask[j])})
-    edges = pd.DataFrame(rows).sort_values("edge_mask", ascending=False).reset_index(drop=True)
-    rel = edges.groupby("relation").edge_mask.agg(mean_edge_mask="mean", n_edges="size").reset_index().sort_values("mean_edge_mask", ascending=False)
-    return prob, edges, rel
+
+    for family, edge_types in sorted(families.items()):
+        removed_count = sum(
+            int(edge_dict[et].shape[1]) for et in edge_types
+        )
+
+        # Skip relations absent from this local neighbourhood.
+        if removed_count == 0:
+            continue
+
+        perturbed_edges = dict(edge_dict)
+
+        for edge_type in edge_types:
+            perturbed_edges[edge_type] = torch.empty(
+                (2, 0), dtype=torch.long, device=device
+            )
+
+        with torch.no_grad():
+            perturbed_prob = float(
+                model(
+                    sub.x_dict,
+                    perturbed_edges,
+                    edge_label_index
+                )[0].item()
+            )
+
+        rows.append({
+            "relation": family,
+            "edge_types_removed": ";".join(
+                "|".join(et) for et in edge_types
+            ),
+            "removed_edges": removed_count,
+            "original_probability": original_prob,
+            "perturbed_probability": perturbed_prob,
+            "probability_drop": original_prob - perturbed_prob,
+            "attribution_method": "local_relation_perturbation",
+        })
+
+    edges = pd.DataFrame(rows)
+
+    if edges.empty:
+        raise ValueError("No non-empty relation families to explain.")
+
+    edges = edges.sort_values(
+        "probability_drop", key=lambda x: x.abs(), ascending=False
+    ).reset_index(drop=True)
+
+    # Relation-level output; these are not individual edge explanations.
+    rel = edges.copy()
+
+    return original_prob, edges, rel

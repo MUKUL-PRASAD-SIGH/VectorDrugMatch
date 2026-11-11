@@ -118,9 +118,10 @@ def main():
                        capture_output=True, text=True, timeout=600)
     res["node2vec_dry_run"] = "ok" if (r.returncode == 0 and "held-out pairs absent: OK" in r.stdout) else f"FAIL: {r.stderr[-200:]}"
     try:
-        import torch_cluster  # noqa: F401
-    except Exception:
-        res["missing_modules"].append("torch_cluster (needed for real Node2Vec training; install path is in the Colab notebook Step 3)")
+        import pyg_lib  # noqa: F401
+        from torch_geometric.nn import Node2Vec  # noqa: F401
+    except Exception as e:
+        res["missing_modules"].append(f"PyG Node2Vec backend unavailable: {type(e).__name__}: {e}"[:200])
     try:
         import shap  # noqa: F401
     except Exception:

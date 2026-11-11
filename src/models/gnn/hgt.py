@@ -47,7 +47,18 @@ class HGT(torch.nn.Module):
         
         # HGT layers with Residual and LayerNorm
         for conv, norm_dict in zip(self.convs, self.norms):
-            x_out = conv(out_dict, edge_index_dict)
+            # HGTConv's optimized segment_matmul requires matching input
+            # and weight dtypes. Run this operation in FP32 under AMP.
+            fp32_dict = {
+                node_type: features.float()
+                for node_type, features in out_dict.items()
+            }
+
+            with torch.autocast(
+                device_type=next(iter(fp32_dict.values())).device.type,
+                enabled=False,
+            ):
+                x_out = conv(fp32_dict, edge_index_dict)
             
             # Apply LayerNorm and Residual per node type
             for node_type in self.node_types:
