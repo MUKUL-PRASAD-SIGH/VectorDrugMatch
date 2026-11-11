@@ -1,0 +1,90 @@
+{
+ "variant": "original",
+ "nodes": {
+  "drug": 7957,
+  "disease": 17080,
+  "gene": 19051
+ },
+ "n_edge_types": 12,
+ "edges_by_relation": {
+  "drug|treats|disease": 0,
+  "drug|binds|gene": 25468,
+  "disease|associates|gene": 80411,
+  "gene|interacts|gene": 642150,
+  "drug|contraindicated_for|disease": 30638,
+  "drug|offlabel_for|disease": 2537,
+  "disease|related_to|disease": 64388,
+  "disease|rev_treats|drug": 0,
+  "gene|rev_binds|drug": 25468,
+  "gene|rev_associates|disease": 80411,
+  "disease|rev_contraindicated_for|drug": 30638,
+  "disease|rev_offlabel_for|drug": 2537
+ },
+ "target_edges": {
+  "train_positive_in_mp": 0,
+  "heldout_val_positive": 1397,
+  "heldout_test_positive": 1261
+ },
+ "non_target_edges_undirected_simple": 492286,
+ "drug_degree": {
+  "min": 0.0,
+  "median": 1.0,
+  "mean": 7.36533869548825,
+  "p90": 21.0,
+  "max": 306.0,
+  "zero": 1529
+ },
+ "disease_degree": {
+  "min": 0.0,
+  "median": 3.0,
+  "mean": 10.417857142857143,
+  "p90": 16.0,
+  "max": 1524.0,
+  "zero": 29
+ },
+ "gene_degree": {
+  "min": 1.0,
+  "median": 20.0,
+  "mean": 39.26455304183507,
+  "p90": 89.0,
+  "max": 5198.0,
+  "zero": 0
+ },
+ "isolated_nodes": {
+  "drug": 1529,
+  "disease": 29,
+  "gene": 0
+ },
+ "connected_components": {
+  "n": 1567,
+  "largest": 42511,
+  "share_drugs_in_largest": 0.8070880985295966,
+  "share_diseases_in_largest": 0.9983021077283373
+ },
+ "walk_coverage_test_positive_pairs": {
+  "direct_edge": 0.0,
+  "walk_le2": 0.2831086439333862,
+  "walk_le3": 0.8112609040444092
+ },
+ "walk_coverage_test_negative_pairs": {
+  "direct_edge": 0.0,
+  "walk_le2": 0.07010309278350516,
+  "walk_le3": 0.6157018239492467
+ },
+ "walk_coverage_val_positive_pairs": {
+  "direct_edge": 0.0,
+  "walk_le2": 0.2376521116678597,
+  "walk_le3": 0.8396564065855404
+ },
+ "test_drugs_with_no_gene_edge": 44,
+ "test_positive_diseases_train_positive_degree": {
+  "min": 0.0,
+  "median": 11.0,
+  "mean": 15.022997620935765,
+  "p90": 38.0,
+  "max": 72.0,
+  "zero": 91
+ },
+ "seconds": 0.6,
+ "leakage_all_pass": true
+}

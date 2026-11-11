@@ -1,0 +1,65 @@
+{
+ "heldout_pairs_equal_val_plus_test_positives": {
+  "pass": true,
+  "n_heldout": 2658
+ },
+ "no_heldout_pair_in_any_drug_disease_edge_or_its_reverse": {
+  "pass": true,
+  "detail": {
+   "treats": {
+    "heldout_in_forward": 0,
+    "heldout_in_reverse": 0
+   },
+   "contraindicated_for": {
+    "heldout_in_forward": 0,
+    "heldout_in_reverse": 0
+   },
+   "offlabel_for": {
+    "heldout_in_forward": 0,
+    "heldout_in_reverse": 0
+   }
+  }
+ },
+ "val_test_positives_absent_from_treats": {
+  "pass": true
+ },
+ "mp_treats_subset_of_train_positives": {
+  "pass": true,
+  "n_mp_treats_edges": 0,
+  "n_train_positives": 6730,
+  "expected": 0
+ },
+ "mp_treats_edge_count_matches_variant": {
+  "pass": true
+ },
+ "mp_treats_drugs_are_train_drugs": {
+  "pass": true
+ },
+ "drug_sets_disjoint": {
+  "pass": true
+ },
+ "rev_treats_is_flip_of_treats": {
+  "pass": true
+ },
+ "negatives_are_not_graph_edges": {
+  "pass": true,
+  "detail": {
+   "train": {
+    "n_negatives": 33650,
+    "known_pairs_among_negatives": 0,
+    "in_mp_treats": 0
+   },
+   "val": {
+    "n_negatives": 6985,
+    "known_pairs_among_negatives": 0,
+    "in_mp_treats": 0
+   },
+   "test": {
+    "n_negatives": 6305,
+    "known_pairs_among_negatives": 0,
+    "in_mp_treats": 0
+   }
+  }
+ },
+ "all_pass": true
+}

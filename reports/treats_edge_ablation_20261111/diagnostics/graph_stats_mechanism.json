@@ -1,0 +1,90 @@
+{
+ "variant": "mechanism",
+ "nodes": {
+  "drug": 7957,
+  "disease": 17080,
+  "gene": 19051
+ },
+ "n_edge_types": 12,
+ "edges_by_relation": {
+  "drug|treats|disease": 0,
+  "drug|binds|gene": 25468,
+  "disease|associates|gene": 80411,
+  "gene|interacts|gene": 642150,
+  "drug|contraindicated_for|disease": 0,
+  "drug|offlabel_for|disease": 0,
+  "disease|related_to|disease": 64388,
+  "disease|rev_treats|drug": 0,
+  "gene|rev_binds|drug": 25468,
+  "gene|rev_associates|disease": 80411,
+  "disease|rev_contraindicated_for|drug": 0,
+  "disease|rev_offlabel_for|drug": 0
+ },
+ "target_edges": {
+  "train_positive_in_mp": 0,
+  "heldout_val_positive": 1397,
+  "heldout_test_positive": 1261
+ },
+ "non_target_edges_undirected_simple": 459148,
+ "drug_degree": {
+  "min": 0.0,
+  "median": 1.0,
+  "mean": 3.200703782832726,
+  "p90": 8.0,
+  "max": 306.0,
+  "zero": 1675
+ },
+ "disease_degree": {
+  "min": 0.0,
+  "median": 3.0,
+  "mean": 8.477693208430914,
+  "p90": 13.0,
+  "max": 1524.0,
+  "zero": 36
+ },
+ "gene_degree": {
+  "min": 1.0,
+  "median": 20.0,
+  "mean": 39.26455304183507,
+  "p90": 89.0,
+  "max": 5198.0,
+  "zero": 0
+ },
+ "isolated_nodes": {
+  "drug": 1675,
+  "disease": 36,
+  "gene": 0
+ },
+ "connected_components": {
+  "n": 1720,
+  "largest": 42358,
+  "share_drugs_in_largest": 0.7887394746763856,
+  "share_diseases_in_largest": 0.9978922716627635
+ },
+ "walk_coverage_test_positive_pairs": {
+  "direct_edge": 0.0,
+  "walk_le2": 0.23473433782712133,
+  "walk_le3": 0.4631245043616178
+ },
+ "walk_coverage_test_negative_pairs": {
+  "direct_edge": 0.0,
+  "walk_le2": 0.05582870737509913,
+  "walk_le3": 0.26217287866772404
+ },
+ "walk_coverage_val_positive_pairs": {
+  "direct_edge": 0.0,
+  "walk_le2": 0.19040801717967074,
+  "walk_le3": 0.4502505368647101
+ },
+ "test_drugs_with_no_gene_edge": 44,
+ "test_positive_diseases_train_positive_degree": {
+  "min": 0.0,
+  "median": 11.0,
+  "mean": 15.022997620935765,
+  "p90": 38.0,
+  "max": 72.0,
+  "zero": 91
+ },
+ "seconds": 0.4,
+ "leakage_all_pass": true
+}
