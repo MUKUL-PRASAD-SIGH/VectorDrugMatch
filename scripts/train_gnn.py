@@ -63,8 +63,14 @@ def train_epoch(model, optimizer, train_data, scaler):
     
     # Mixed Precision Autocast
     with torch.cuda.amp.autocast(enabled=scaler.is_enabled()):
-        pred = model(train_data.x_dict, train_data.edge_index_dict, edge_label_index)
-        loss = F.binary_cross_entropy(pred, edge_label.float())
+        logits = model.forward_logits(
+            train_data.x_dict, train_data.edge_index_dict, edge_label_index
+        )
+
+    # Compute numerically stable logits-space BCE in FP32.
+    loss = F.binary_cross_entropy_with_logits(
+        logits.float(), edge_label.float()
+    )
         
     scaler.scale(loss).backward()
     scaler.unscale_(optimizer)
@@ -336,8 +342,16 @@ def train_evaluate_gnns(config_path: str, epochs: int = 100, only=None):
         # Save Embeddings
         model.eval()
         with torch.no_grad():
-            # Run forward pass on the full graph to extract node embeddings
-            node_embeddings = model.gnn(data.x_dict, data.edge_index_dict)
+            # Move full-graph inputs to the model device for embedding extraction.
+            full_x_dict = {
+                node_type: features.to(device)
+                for node_type, features in data.x_dict.items()
+            }
+            full_edge_index_dict = {
+                edge_type: edge_index.to(device)
+                for edge_type, edge_index in data.edge_index_dict.items()
+            }
+            node_embeddings = model.gnn(full_x_dict, full_edge_index_dict)
             if 'drug' in node_embeddings and 'disease' in node_embeddings:
                 drug_emb = node_embeddings['drug'].cpu().numpy()
                 disease_emb = node_embeddings['disease'].cpu().numpy()

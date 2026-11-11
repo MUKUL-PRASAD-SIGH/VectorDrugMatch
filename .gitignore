@@ -52,3 +52,7 @@ vdm_real_data/
 # Rendered review copies of the paper draft (regenerate with scripts/render_paper.py)
 Docs/paper/PAPER_DRAFT_IEEE.html
 Docs/paper/PAPER_DRAFT_IEEE.pdf
+
+# Local Colab artifacts
+outputs_local_pre_drive/
+outputs

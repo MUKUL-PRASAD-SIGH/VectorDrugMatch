@@ -14,16 +14,18 @@ class LinkPredictor(torch.nn.Module):
         self.lin1 = torch.nn.Linear(in_channels * 2, hidden_channels)
         self.lin2 = torch.nn.Linear(hidden_channels, 1)
 
-    def forward(self, z_src, z_dst, edge_label_index):
-        # Gather embeddings for source and destination nodes of the edges
+    def forward_logits(self, z_src, z_dst, edge_label_index):
         z_src_edges = z_src[edge_label_index[0]]
         z_dst_edges = z_dst[edge_label_index[1]]
-        
-        # Concatenate and pass through MLP
+
         z = torch.cat([z_src_edges, z_dst_edges], dim=-1)
         z = F.relu(self.lin1(z))
-        z = self.lin2(z).squeeze(-1)
-        return torch.sigmoid(z)
+        return self.lin2(z).squeeze(-1)
+
+    def forward(self, z_src, z_dst, edge_label_index):
+        return torch.sigmoid(
+            self.forward_logits(z_src, z_dst, edge_label_index)
+        )
 
 
 class GNNLinkPredictionModel(torch.nn.Module):
@@ -33,12 +35,13 @@ class GNNLinkPredictionModel(torch.nn.Module):
         self.gnn = gnn
         self.predictor = LinkPredictor(in_channels, hidden_channels)
         
-    def forward(self, x_dict, edge_index_dict, edge_label_index):
-        # 1. Get node embeddings from GNN
+    def forward_logits(self, x_dict, edge_index_dict, edge_label_index):
         z_dict = self.gnn(x_dict, edge_index_dict)
-        
-        # 2. Predict links for the specific relation (drug-treats-disease)
         z_src = z_dict['drug']
         z_dst = z_dict['disease']
-        
-        return self.predictor(z_src, z_dst, edge_label_index)
+        return self.predictor.forward_logits(z_src, z_dst, edge_label_index)
+
+    def forward(self, x_dict, edge_index_dict, edge_label_index):
+        return torch.sigmoid(
+            self.forward_logits(x_dict, edge_index_dict, edge_label_index)
+        )

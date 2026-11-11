@@ -52,7 +52,7 @@ def steps(stage, variant, epochs):
                 ([PY, "scripts/extract_who_eml_pdf.py"], O), ([PY, "scripts/process_who_eml.py"], O),
                 ([PY, "scripts/build_equity_features.py"], R)]
     if stage == "smoke":
-        return [([PY, "-c", "import torch,torch_cluster;print('torch',torch.__version__,'cuda',torch.cuda.is_available(),'torch_cluster ok')"], R),
+        return [([PY, "-c", "import torch,torch_geometric,pyg_lib;from torch_geometric.nn import Node2Vec;print('torch',torch.__version__,'cuda',torch.cuda.is_available(),'pyg_lib',pyg_lib.__file__,'Node2Vec backend ok')"], R),
                 ([PY, "scripts/train_node2vec.py", "--config", c, "--dry-run"], R),
                 ([PY, "scripts/train_node2vec.py", "--config", c, "--epochs", "1"], R),
                 ([PY, "scripts/train_gnn.py", "--config", c, "--epochs", "5"], R),
