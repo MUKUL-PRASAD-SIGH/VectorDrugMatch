@@ -1,5 +1,8 @@
 # Release audit (publication to the public GitHub repository)
 
+> **Status update (2026-11-11):** the Colab run described here as pending has been completed. Current status, results, the code of record (`1c85d98`) and known caveats: [`Docs/PROJECT_STATUS.md`](PROJECT_STATUS.md). Where this document says "pending", "not yet run" or names an older pin, the status file wins.
+
+
 Audit of 2026-11-11. The repository `https://github.com/MUKUL-PRASAD-SIGH/VectorDrugMatch` is **public** (`gh repo view`: visibility PUBLIC). Nothing has been pushed by this audit; no history was rewritten.
 
 ## 1. Repository state and versions

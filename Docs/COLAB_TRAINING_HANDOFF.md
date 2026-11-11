@@ -1,12 +1,15 @@
 # Colab training handoff (final run)
 
+> **Status update (2026-11-11):** the Colab run described here as pending has been completed. Current status, results, the code of record (`1c85d98`) and known caveats: [`Docs/PROJECT_STATUS.md`](PROJECT_STATUS.md). Where this document says "pending", "not yet run" or names an older pin, the status file wins.
+
+
 Prepared 2026-11-11. No model was trained, no Colab run was made, nothing was pushed. This document **supersedes sections 3 and 6 of `Docs/FINAL_PROJECT_HANDOFF.md`** for the Drive layout and the execution steps (the rest of that file still applies).
 
 ## 1. Exact commit to use
 | item | value |
 |---|---|
-| Code commit pinned in `notebooks/colab_final_run.ipynb` (`PIN`) | `b86df0db7ce0985f798f417b71e6c48c03773046` |
-| HEAD | the commit that contains this file. It differs from the pin only in `notebooks/` and `Docs/` (`git diff --name-only b86df0d HEAD`); all training/data code is identical |
+| Code commit pinned in `notebooks/colab_final_run.ipynb` (`PIN`) | `1c85d98a356d62d232aa8f8e3acf5ac497c2532a` |
+| HEAD | the commit that contains this file. It differs from the pin only in `notebooks/` and `Docs/` (`git diff --name-only 1c85d98 HEAD`); all training/data code is identical |
 | Branch | `mukul` on `https://github.com/MUKUL-PRASAD-SIGH/VectorDrugMatch` (**the repository is PUBLIC**) |
 | On GitHub? | **Yes** for everything up to `59b05d5` (pushed to `origin/mukul` and merged into `main`, 2026-11-11). The pin commit and later commits are on GitHub only after the second push you approve separately; `git checkout <pin>` in Colab fails until then |
 | Which notebook to open | the one at HEAD (Step 4b frozen-data check, Step 6b Drive-persistent outputs). Step-by-step instructions for a beginner: `Docs/COLAB_BEGINNER_HANDBOOK.md` |
@@ -46,7 +49,7 @@ Open the notebook at HEAD, runtime T4 GPU, run top to bottom. After each step, t
 | # | step (cell) | what it runs | must hold before continuing |
 |---|---|---|---|
 | 1 | GPU | torch version, `nvidia-smi` | `GPU available: True` |
-| 2 | Drive, code, libraries | mount, `git clone`, `git checkout b86df0d...`, `git log -1`, pip installs, `pip freeze` | `git log -1` shows `b86df0d`; `ok: ... torch_cluster available` |
+| 2 | Drive, code, libraries | mount, `git clone`, `git checkout 1c85d98...`, `git log -1`, pip installs, `pip freeze` | `git log -1` shows `1c85d98`; `ok: ... torch_cluster available` |
 | 3 | Inputs | copies `VDM_Data` files into `data/external/` | prints `copied` for `mondo.obo`, both caches, the PDF and `downloads/`; the assert for `mondo.obo` passes |
 | 4 | `--stage prepare` | downloads PrimeKG (1 GB), builds tables, saves split, runs the validator, builds the structure-covered variant, runs `audit_models.py` | no `[FAIL]`; the audit reports no failure |
 | 4b | frozen-data check | SHA-256 of tables, features, splits, `mondo.obo`, `primekg_kg.csv` vs the manifest | `FROZEN BENCHMARK VERIFIED: 16 files match` (a restore from `frozen_processed/` is acceptable; an assertion error is a stop) |

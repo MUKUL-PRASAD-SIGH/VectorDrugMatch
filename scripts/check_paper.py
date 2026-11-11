@@ -30,14 +30,14 @@ chk(set(entries) <= set(cited), f"every entry is cited (uncited: {sorted(set(ent
 chk(entries == list(range(1, len(entries) + 1)), "entries numbered 1..N without gaps")
 chk(first == sorted(first), f"numbered by first citation (first-appearance order: {first})")
 figs = {int(x) for x in re.findall(r"!\[Fig\. (\d+)\.", body)}
-chk(figs == set(range(1, 8)), f"7 figures embedded, numbered 1..7 ({sorted(figs)})")
+chk(figs == set(range(1, 12)), f"11 figures embedded, numbered 1..11 ({sorted(figs)})")
 for f in re.findall(r"\(figures/([^)]+\.png)\)", body):
     ok = (D / "figures" / f).exists() and (D / "figures" / f.replace(".png", ".pdf")).exists()
     chk(ok, f"figure files exist (png+pdf): {f}")
 text_only = re.sub(r"!\[Fig[^\n]*\n|\*\*Fig\. \d+\.\*\*[^\n]*\n", "", body)
 for n in sorted(figs):
     chk(re.search(rf"Fig\. {n}\b", text_only) is not None, f"Fig. {n} is cited in running text")
-for tn in ("I", "II", "III"):
+for tn in ("I", "II", "III", "IV", "V", "VI", "VII"):
     chk(re.search(rf"Table {tn}\b|TABLE {tn}\b", body) is not None, f"Table {tn} present/cited")
 M = json.loads((D / "metrics.json").read_text())
 s = M["split"]

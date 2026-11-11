@@ -1,5 +1,8 @@
 # Human action checklist
 
+> **Status update (2026-11-11):** the Colab run described here as pending has been completed. Current status, results, the code of record (`1c85d98`) and known caveats: [`Docs/PROJECT_STATUS.md`](PROJECT_STATUS.md). Where this document says "pending", "not yet run" or names an older pin, the status file wins.
+
+
 Generated 2026-11-11. Everything that needs you personally. **Not on this list because it already exists locally or was done for you:** the WHO EML PDF (processed), the Open Targets files (release identified, same-release `clinical_report` downloaded), the HAI surveys (parsed), the WHO NTD list (read and reconciled), the licence pages that could be read.
 
 ## Mandatory

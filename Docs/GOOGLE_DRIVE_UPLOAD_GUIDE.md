@@ -1,5 +1,8 @@
 # Google Drive upload guide (one upload, then Colab)
 
+> **Status update (2026-11-11):** the Colab run described here as pending has been completed. Current status, results, the code of record (`1c85d98`) and known caveats: [`Docs/PROJECT_STATUS.md`](PROJECT_STATUS.md). Where this document says "pending", "not yet run" or names an older pin, the status file wins.
+
+
 This is the single reference for **what goes into Google Drive**. The file list is machine-checked: `Docs/drive_upload_expected.json` (path, size and SHA-256 of every file; hashes only, no data).
 `<REPO>` below means the folder on your computer that contains `README.md`. No script uploads anything: **you** upload, and you keep both Drive folders private.
 

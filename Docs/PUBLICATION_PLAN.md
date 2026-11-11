@@ -1,5 +1,8 @@
 # Publication plan and status
 
+> **Status update (2026-11-11):** the Colab run described here as pending has been completed. Current status, results, the code of record (`1c85d98`) and known caveats: [`Docs/PROJECT_STATUS.md`](PROJECT_STATUS.md). Where this document says "pending", "not yet run" or names an older pin, the status file wins.
+
+
 ## Status (read first)
 * Commits 1-29 below were **pushed on 2026-11-11** to `origin/mukul` (fast-forward `b05a6ff..59b05d5`) and merged into `origin/main` (merge commit `308d009`, clean, no force, no rebase) after your message "approve push to origin/mukul THEN MERGE TO MAIN". The repository is **public**.
 * Commit 30 (`--coldstart-only`) and the commit that re-pins the notebook and updates the docs are **local only**. **Nothing further has been pushed. A second push needs your separate approval.** It would be `git push origin mukul` (fast-forward) and, if you want it, `git push origin main` after a merge.
@@ -371,5 +374,5 @@ Current notebook pin: the `refactor(repo)` commit below (the only code-tree chan
 |---|---|---|
 | `6008aed` | feat(baselines): opt-in --coldstart-only (skip pooled CV and pooled all-data model); used by the final pipeline | 3 files changed, 35 insertions(+), 9 deletions(-) |
 | `c5d82b5` | docs(colab): re-pin notebook to the --coldstart-only commit; update handoff, handbook and publication plan | 4 files changed, 378 insertions(+), 72 deletions(-) |
-| `b86df0d` | refactor(repo): move unused earlier-phase scripts, notebooks and plans into legacy/ (git mv, history kept); README and docs index | 24 files changed, 35 insertions(+), 7 deletions(-) |
+| `1c85d98` | refactor(repo): move unused earlier-phase scripts, notebooks and plans into legacy/ (git mv, history kept); README and docs index | 24 files changed, 35 insertions(+), 7 deletions(-) |
 | (this commit) | docs(colab): re-pin notebook to the legacy-restructure commit; update publication plan | notebook, handbook, handoff, plan |

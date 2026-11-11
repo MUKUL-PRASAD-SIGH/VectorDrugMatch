@@ -1,5 +1,8 @@
 # VectorDrugMatch - final project handoff
 
+> **Status update (2026-11-11):** the Colab run described here as pending has been completed. Current status, results, the code of record (`1c85d98`) and known caveats: [`Docs/PROJECT_STATUS.md`](PROJECT_STATUS.md). Where this document says "pending", "not yet run" or names an older pin, the status file wins.
+
+
 Finalization pass of 2026-11-11. Scope is frozen: no new models, datasets, features, labels or splits. Nothing was trained locally, nothing was pushed, no history was rewritten, nothing was deleted.
 
 ## 0. Git commit and notebook pin
