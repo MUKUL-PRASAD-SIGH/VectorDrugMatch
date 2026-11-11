@@ -40,7 +40,7 @@ No clinical validation or efficacy claim; no deployed API, `/predict` endpoint, 
 Parameter counts reported in the owner's Colab session *(owner-reported; counted from initialised models before the GCN fix, on the configuration of that session)*: GCN 1,155,649; GraphSAGE 1,155,649; GAT 1,109,569; RGCN 242,561; HGT 298,023. All five are graph neural networks, about 0.2 to 1.2 million parameters each; they are not language models. The count is not a statement about accuracy.
 
 ## 6. Known defects found while aligning the repository (2026-11-11)
-1. `reports/research_validation_20261111/figures/01_model_performance.png` and `05_seed_stability.png` show **only the PrimeKG GCN**: the performance table they were drawn from had empty rows for the other three models. `research_report.md` showed `nan` for them and literal `\n` characters in its tables. **Fixed here:** the report text and `five_seed_performance.csv` now carry the values from log section 3. **Not fixed:** the two figures need regenerating from `seed_wise_metrics.csv` in Drive (`MyDrive/VDM_Outputs/external_validation/multiseed_results_20261111/`), which is not in this repository. Do not use them in the paper until regenerated.
+1. `reports/research_validation_20261111/figures/01_model_performance.png` and `05_seed_stability.png` show **only the PrimeKG GCN**: the performance table they were drawn from had empty rows for the other three models. `research_report.md` showed `nan` for them and literal `\n` characters in its tables. **Fixed here:** the report text and `five_seed_performance.csv` now carry the values from log section 3. **Paper figures 8-11** (performance, ranking, calibration, errors) were regenerated from the corrected committed CSVs by `scripts/make_results_figures.py` and are what the paper uses. **Not fixed:** report figures 01 and 05 (05 is a per-seed plot) need regenerating from `seed_wise_metrics.csv` in Drive (`MyDrive/VDM_Outputs/external_validation/multiseed_results_20261111/`), which is not in this repository. Do not use them in the paper until regenerated.
 2. The log's ranking table (section 7) labels the columns in the wrong order; the committed CSV and report are consistent with each other and with the arithmetic (PrimeKG GCN: Precision@500 0.7236 and Recall@500 0.2869 follow from 1,261 positives). Use the CSV.
 3. `tests/test_explainability.py` was failing after the explanation method changed; updated (37 tests pass).
 4. Source docstrings in `src/explainability/` and `scripts/explain_models.py` still say GNNExplainer; behaviour is as in section 3.
@@ -49,7 +49,8 @@ Parameter counts reported in the owner's Colab session *(owner-reported; counted
 ## 7. Where things are
 | what | where |
 |---|---|
-| Results report, tables, six figures | `reports/research_validation_20261111/` |
+| Results report, tables, six figures | `reports/research_validation_20261111/` (figures 01 and 05 defective, see section 6) |
+| Paper draft with results, figures 1-11, references [1]-[20] | `Docs/paper/PAPER_DRAFT_IEEE.md` (review PDF: `python scripts/render_paper.py`; checks: `python scripts/check_paper.py`) |
 | Dated results addendum, handoff | `Docs/paper/RESULTS_AND_VALIDATION_ADDENDUM_20261111.md`, `Docs/FINAL_PROJECT_HANDOFF_20261111.md` |
 | Owner's Colab log (redacted copy) | `Docs/COLAB_RESEARCH_VALIDATION_LOG.md` |
 | Private bundles (not in GitHub) | Drive: `VDM_Outputs/releases/` (computational snapshot, GCN inference release, full model release and ZIP), `VDM_Outputs/external_validation/` |

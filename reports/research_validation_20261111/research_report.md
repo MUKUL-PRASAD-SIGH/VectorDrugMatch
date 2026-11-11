@@ -101,7 +101,7 @@ They do not establish clinical validity or readiness for deployment.
 
 ## Figures
 
-> **Known defect (found during the repository alignment, 2026-11-11):** figures 01 and 05 were generated from an incomplete performance table and show only the PrimeKG GCN; the other three models are missing. They must be regenerated from `seed_wise_metrics.csv` in Google Drive (see `Docs/PROJECT_STATUS.md`, section 6). The tables above and `five_seed_performance.csv` were corrected from the verified values recorded in `Docs/COLAB_RESEARCH_VALIDATION_LOG.md`. Figures 02, 03, 04 and 06 were not found to have this problem in the checks made.
+> **Known defect (found during the repository alignment, 2026-11-11):** figures 01 and 05 were generated from an incomplete performance table and show only the PrimeKG GCN; the other three models are missing. They must be regenerated from `seed_wise_metrics.csv` in Google Drive (see `Docs/PROJECT_STATUS.md`, section 6). The tables above and `five_seed_performance.csv` were corrected from the verified values recorded in `Docs/COLAB_RESEARCH_VALIDATION_LOG.md`. Corrected versions of the performance, ranking, calibration and error figures (paper figures 8-11, `scripts/make_results_figures.py`) are in `Docs/paper/figures/`. Figures 02, 03, 04 and 06 were not found to have this problem in the checks made.
 
 
 - 01_model_performance.png
