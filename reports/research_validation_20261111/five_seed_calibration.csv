@@ -1,0 +1,5 @@
+model,brier_mean,brier_sd,log_loss_mean,log_loss_sd,ece_mean,ece_sd
+PrimeKG GCN,0.1132,0.00574,0.47067,0.02674,0.07255,0.00801
+PrimeKG RF,0.09658,0.00078,0.33695,0.00209,0.02705,0.00347
+Structure GCN,0.11727,0.00349,0.50864,0.03458,0.07944,0.00469
+Structure XGBoost,0.09155,0.0,0.32414,0.0,0.05056,0.0
