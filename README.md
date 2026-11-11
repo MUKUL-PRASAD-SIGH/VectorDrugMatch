@@ -4,7 +4,16 @@
 
 IEEE Computer Society Student Chapter, IAM Pro CS Internship 2026, Ramaiah Institute of Technology, Bangalore.
 
-> **Status (read this first).** The data layer, the benchmark, all models, the evaluation and the explanation code are implemented and tested. **The final model training has not been run yet, so this repository reports no model performance and makes no claim that any model is better than another.** Nothing here is clinically validated; predictions are research hypotheses, not treatment advice. The equity score (NDPI) is an exploratory prioritisation aid with documented limits (section 9).
+> **Status (read this first).** The data layer, benchmark, models, evaluation and explanations are implemented and the final Colab run has been completed (2026-11-11). Reported results, the code of record and known caveats are in **`Docs/PROJECT_STATUS.md`** and `reports/research_validation_20261111/`. These are computational benchmark results on sampled negatives and one fixed drug-disjoint split; **no model is claimed to be superior, nothing is clinically validated, and no inference API or web application is deployed.** Predictions are research hypotheses, not treatment advice. The equity score (NDPI) is an exploratory prioritisation aid with documented limits (section 9).
+
+| Variant (selected model) | ROC-AUC / PR-AUC, seed 42 | five seeds, mean ± SD |
+|---|---|---|
+| PrimeKG (GCN) | 0.7787 / 0.4919 | 0.7880 ± 0.0118 / 0.5285 ± 0.0334 |
+| PrimeKG + disease profile (Random Forest) | 0.8043 / 0.6041 | 0.8049 ± 0.0020 / 0.6113 ± 0.0078 |
+| Structure-covered (GCN) | 0.7838 / 0.5183 | 0.7847 ± 0.0089 / 0.5390 ± 0.0182 |
+| Structure-covered + disease profile (XGBoost) | 0.8433 / 0.6979 | 0.8433 ± 0.0000 / 0.6979 ± 0.0000 |
+
+The disease-profile variants add a training-side feature that can act as a popularity signal; the structure-covered set is a test subset; the five seeds share one split; the basis for choosing the "selected model" is not documented here. Compare rows with care.
 
 ## 1. Research problem and motivation
 Drug repurposing proposes new indications for existing drugs. Published link-prediction results on knowledge graphs are often optimistic because the same drugs (and their known indications) appear in training and test data. The realistic question is the **cold-start** one: *for a drug the model has never seen with any indication, can it rank its true indications?* VectorDrugMatch builds and audits a benchmark that asks exactly that, and compares classical fingerprint models, a random-walk embedding and five graph neural networks under identical conditions.
@@ -40,7 +49,7 @@ flowchart LR
   H --> K[GNNs on message-passing graph<br/>treats edges and reverse removed<br/>GCN, GraphSAGE, GAT, RGCN, HGT]
   I & J & K --> L[evaluate_primekg.py<br/>make_results_package.py]
   H --> M[run_ablations_coldstart.py]
-  I & K --> N[explain_models.py<br/>SHAP / GNNExplainer]
+  I & K --> N[explain_models.py<br/>SHAP / relation perturbation]
   subgraph EVI[Evidence layer, never used as labels]
     O[Open Targets 26.09] --- P[WHO EML 24th list] --- Q[HAI surveys] --- R[IHME GBD 2023]
   end
@@ -81,7 +90,7 @@ Classical (`src/models/baseline/`): Logistic Regression, Gaussian Naive Bayes, R
 * **Metrics**: ROC-AUC, PR-AUC, Brier, MCC, F1, Precision@K, Recall@K, MRR and NDCG@K per disease, each also on `ntd_only`, `mapped_only`, `with_structure` and `no_structure` subsets.
 
 ## 9. Explainability, equity evidence and NDPI limitations
-* **Explanations**: SHAP for Random Forest/XGBoost on test pairs (cold-start models), GNNExplainer for HGT/RGCN. They describe a model, not causal biology. Implemented and tested on synthetic inputs only until the final run.
+* **Explanations**: SHAP for Random Forest/XGBoost on test pairs (cold-start models), a **local relation-family perturbation** for the GNNs (each relation family and its reverse edges are removed from the k-hop neighbourhood and the change in predicted probability is recorded; relation-level, not edge-level; it replaced PyG GNNExplainer during the Colab run). They describe a model, not causal biology.
 * **NDPI** = weighted mean of the available components (EML 0.45, burden 0.45, access 0.10), renormalised over what is present; a missing component is never treated as 0. **Limitations**: the weights are an unvalidated proposal; burden (IHME) exists for 50 of 82 NTD pairs and for no non-NTD pair, so NDPI is burden-aware only there; access is a regional historical pilot; EML status 0 means "no candidate entry found", not a verified absence; on the burden-aware pairs the ranking changes materially with the weights (Spearman against the default from -0.42 to a median of 0.87 over a 66-point grid). It has no external validation.
 
 ## 10. Installation and reproduction
@@ -93,7 +102,7 @@ python -m pytest -q tests                               # tests that need local 
 ```
 Data layer on your machine (needs the private inputs listed in `Docs/COLAB_TRAINING_HANDOFF.md`): `python scripts/run_full_pipeline.py --stage prepare` then `--stage external`. `--dry-run` prints every command without running it.
 
-**Final experiment (Google Colab, GPU)**: follow `Docs/COLAB_BEGINNER_HANDBOOK.md` (step by step) or `Docs/COLAB_TRAINING_HANDOFF.md` (reference). Training is resumable (`--resume`) and writes everything to Google Drive.
+**Final experiment (Google Colab, GPU)** - completed 2026-11-11; to re-run, pin `1c85d98` and follow `Docs/COLAB_BEGINNER_HANDBOOK.md` (step by step) or `Docs/COLAB_TRAINING_HANDOFF.md` (reference). Training is resumable (`--resume`) and writes everything to Google Drive.
 
 ## 11. Project structure
 ```
@@ -101,7 +110,7 @@ configs/        experiment configs (full, structure-covered, and *_dp disease-pr
 scripts/        data build, split, validation, training, evaluation, ablations, explanations, equity/NDPI, release freezing
 src/data/       dataset, graph builder, MONDO mapping       src/features/   drug, disease, disease-profile, pair features
 src/models/     baseline/ (5 classical) and gnn/ (GCN, GraphSAGE, GAT, RGCN, HGT)
-src/explainability/  SHAP and GNNExplainer helpers          src/scoring/    NDPI, EML status, similarity, literature
+src/explainability/  SHAP and relation-perturbation helpers          src/scoring/    NDPI, EML status, similarity, literature
 src/utils/      metrics, ranking, results I/O
 tests/          unit and static tests (leakage, features, EML extraction, resume, explainability)
 notebooks/      colab_final_run.ipynb (the final run, pinned to a commit)
@@ -112,14 +121,14 @@ data/ outputs/  git-ignored; produced locally or in Colab
 Earlier-phase scripts (`main_pipeline.py`, `train_benchmark.py`, `run_ablations.py`, `optuna_gnn.py`, `validate_pipeline.py`, `evaluate.py`, `export_codebase.py`, `validate_negatives.py`), the three root helper scripts, two old notebooks and the early planning documents were moved with `git mv` into `legacy/` (history preserved, nothing deleted). Their results must not be reported as cold-start results. `scripts/preprocess.py` and `config.yaml` remain because other scripts reference them.
 
 ## 12. Limitations and future work
-* No trained-model results yet; the disease-profile variant's effect is unknown; NTD evaluation rests on very few positives; a single seed.
+* Results exist for four selected variants only in this repository; a single fixed split (five training seeds); NTD evaluation rests on 15 test positives; the disease-profile features may encode popularity; the GCN was stabilised during the run (`Docs/PROJECT_STATUS.md` section 3); two report figures need regeneration (section 6 there).
 * Sampled negatives are unlabelled pairs, not proven non-treatments; 996 drugs lack a structure; 9,089 disease nodes lack a DOID.
 * Open Targets overlap with PrimeKG is **not** independent validation (shared upstream sources); the `UNVALIDATED_INDICATION` flag semantics are undocumented upstream.
 * Equity layer limits as in section 9; seven NTD groups have no burden value.
-* Future work (not started): multi-seed study, a model-score by NDPI candidate ranking over unseen drug-disease pairs, further external validation. There is no deployed API or web application in this repository (`legacy/docs/API.md` is an early design note only).
+* Future work (not started): split-level resampling, a model-score by NDPI candidate ranking over unseen drug-disease pairs, further external validation. A GCN inference package exists in private Drive but there is no deployed API or web application and no inference code path published here (`legacy/docs/API.md` is an early design note only).
 
 ## 13. Licence and data
 No code licence file is included yet; choose one before release. Third-party data carry their own terms (`Docs/LICENCE_AUDIT.md`); DrugBank-derived, IHME, WHO EML and Open Targets-derived files must not be redistributed through this repository. Three small DrugBank-derived files exist in the **history** of the `mukul` branch (not in the current tree); see `Docs/RELEASE_AUDIT.md`.
 
 ## 14. Documentation index
-`Docs/COLAB_BEGINNER_HANDBOOK.md` (how to run the final experiment) · `Docs/COLAB_TRAINING_HANDOFF.md` · `Docs/FINAL_PROJECT_HANDOFF.md` · `Docs/RELEASE_AUDIT.md` · `Docs/paper/PAPER_DRAFT_IEEE.md` · `Docs/DATA_PROVENANCE.md` · `Docs/LICENCE_AUDIT.md` · `Docs/DATA_DICTIONARY.md` · `Docs/EQUITY_DATA_SPECS.md` · `Docs/NTD_MAPPING.md` · `Docs/FINAL_RELEASE_READINESS.md`.
+`Docs/PROJECT_STATUS.md` (**current status and caveats**) · `reports/research_validation_20261111/` · `Docs/COLAB_RESEARCH_VALIDATION_LOG.md` · `Docs/COLAB_BEGINNER_HANDBOOK.md` (how to re-run) · `Docs/COLAB_TRAINING_HANDOFF.md` · `Docs/FINAL_PROJECT_HANDOFF.md` · `Docs/RELEASE_AUDIT.md` · `Docs/paper/PAPER_DRAFT_IEEE.md` · `Docs/DATA_PROVENANCE.md` · `Docs/LICENCE_AUDIT.md` · `Docs/DATA_DICTIONARY.md` · `Docs/EQUITY_DATA_SPECS.md` · `Docs/NTD_MAPPING.md` · `Docs/FINAL_RELEASE_READINESS.md`.

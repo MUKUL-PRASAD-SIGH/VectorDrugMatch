@@ -1,6 +1,8 @@
 # Docs index
 
-**Run the final experiment**
+**Current status:** `PROJECT_STATUS.md` (read first), `COLAB_RESEARCH_VALIDATION_LOG.md`, `FINAL_PROJECT_HANDOFF_20261111.md`, `paper/RESULTS_AND_VALIDATION_ADDENDUM_20261111.md`, and `../reports/research_validation_20261111/`.
+
+**Run (or re-run) the final experiment**
 * `COLAB_BEGINNER_HANDBOOK.md` - primary step-by-step guide (Drive folders, upload list, notebook steps, resume, collecting results).
 * `COLAB_TRAINING_HANDOFF.md` - reference: pin, Drive layout, ordered steps, CV/calibration analysis.
 * `FINAL_PROJECT_HANDOFF.md`, `HUMAN_ACTION_CHECKLIST.md` - remaining human actions.

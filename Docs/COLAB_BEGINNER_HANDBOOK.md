@@ -1,8 +1,11 @@
 # Colab beginner handbook: from zero to the final results
 
+> **Status update (2026-11-11):** the Colab run described here as pending has been completed. Current status, results, the code of record (`1c85d98`) and known caveats: [`Docs/PROJECT_STATUS.md`](PROJECT_STATUS.md). Where this document says "pending", "not yet run" or names an older pin, the status file wins.
+
+
 Written for someone who has never used Google Colab. Follow it in order. Nothing here needs programming: you click, wait, and check. Button names in Colab change slightly over time; if a label differs a little, look for the closest match.
 
-**The version to use:** the code commit **`b86df0d`** (full value is in the notebook, in the line `PIN = '...'`). **Authoritative guides:** this handbook, plus `Docs/GOOGLE_DRIVE_UPLOAD_GUIDE.md` for the Drive upload. **Time needed:** the run is long and its length is **not known in advance**; Step 6 (smoke test) measures speed so you can judge. You can stop and resume.
+**The version to use:** the code commit **`1c85d98`** (full value is in the notebook, in the line `PIN = '...'`). **Authoritative guides:** this handbook, plus `Docs/GOOGLE_DRIVE_UPLOAD_GUIDE.md` for the Drive upload. **Time needed:** the run is long and its length is **not known in advance**; Step 6 (smoke test) measures speed so you can judge. You can stop and resume.
 
 **Words you will meet**
 * *Notebook*: a document made of **cells**. A *code cell* is a grey box with a small **play button (▶)** on its left; pressing it runs the cell. A *text cell* is just explanation.
@@ -37,7 +40,7 @@ Open `VDM_Data` in Drive. It must look like the tree in `Docs/GOOGLE_DRIVE_UPLOA
 * **Never** share the Drive folders and never upload any of these files to GitHub. No passwords, keys or `.env` files anywhere.
 
 ### A6. Make sure the code is on GitHub
-Colab downloads the code from GitHub. The commit above must have been **pushed** (published on `mukul` and `main` on 2026-11-11, after your approval). To check: open https://github.com/MUKUL-PRASAD-SIGH/VectorDrugMatch/commits/mukul and look for a commit starting with `b86df0d`. If it is not there, stop: the run cannot start yet.
+Colab downloads the code from GitHub. The commit above must have been **pushed** (published on `mukul` and `main` on 2026-11-11, after your approval). To check: open https://github.com/MUKUL-PRASAD-SIGH/VectorDrugMatch/commits/mukul and look for a commit starting with `1c85d98`. If it is not there, stop: the run cannot start yet.
 
 ---
 
@@ -52,11 +55,11 @@ Sign in with the same Google account as your Drive. (Alternative: go to https://
 
 ### B2. Save your own copy to Drive and name it
 1. **File → Save a copy in Drive**. A new tab opens with your copy.
-2. Click the notebook title at the top-left and rename it to: `VDM_final_run_b86df0d`.
+2. Click the notebook title at the top-left and rename it to: `VDM_final_run_1c85d98`.
 3. Work **only in your copy** from now on, so your own settings and any outputs shown in it are saved in your Drive.
 
 ### B3. Check you have the correct version
-Scroll to the top: the first text cell says it is pinned to a commit and shows its first 10 characters (`b86df0d...`). Later, Step 2 prints a line with that commit: it must start with `b86df0d`. If it shows anything else, stop.
+Scroll to the top: the first text cell says it is pinned to a commit and shows its first 10 characters (`1c85d98...`). Later, Step 2 prints a line with that commit: it must start with `1c85d98`. If it shows anything else, stop.
 
 ### B4. Choose the GPU
 Menu **Runtime → Change runtime type**. Under *Hardware accelerator* choose **T4 GPU**, then **Save**. (A GPU is needed for the graph models.)
@@ -79,7 +82,7 @@ Only this notebook session gets access; you can revoke it later at https://myacc
 | Step | What it does | You must see | Wait (not timed on Colab) |
 |---|---|---|---|
 | 1 GPU | checks the graphics card | `GPU available: True` and a table naming a Tesla T4 | seconds |
-| 2 Drive, code, libraries (3 cells) | mounts Drive, downloads the code at the pinned commit, installs libraries | `Mounted at /content/drive`; a line starting `b86df0d`; `ok: ... torch_cluster available` | a few minutes |
+| 2 Drive, code, libraries (3 cells) | mounts Drive, downloads the code at the pinned commit, installs libraries | `Mounted at /content/drive`; a line starting `1c85d98`; `ok: ... torch_cluster available` | a few minutes |
 | 3a Upload check | checks every expected Drive file (existence, size, SHA-256) | `RESULT: PASS`; on `FAIL` fix the upload and re-run this cell | short |
 | 3 Inputs | copies your Drive files into the session | `copied` lines for `mondo.obo`, `drugbank_*`, `B09474-eng.pdf`, `downloads/`; **no** error | short |
 | 4 Prepare | downloads PrimeKG (about 1 GB) and rebuilds the benchmark | no `[FAIL]` anywhere; ends with `pipeline stage complete` | includes a 1 GB download |
@@ -119,7 +122,7 @@ Step 6's printed times let you estimate Step 7 and 8 (the notebook does not gues
 
 ## F. Resuming after a disconnect (this is expected on long runs)
 Everything finished is already in `MyDrive/VDM_Outputs/outputs`, and `outputs/pipeline_log.jsonl` records which models finished. To continue:
-1. Reopen **your saved copy** (`VDM_final_run_b86df0d`) from Drive.
+1. Reopen **your saved copy** (`VDM_final_run_1c85d98`) from Drive.
 2. Runtime → **Change runtime type** → T4 GPU (if needed) and run **Steps 1 to 6b again, in order**. (Step 6 repeats the smoke test; it can be skipped only if you are sure the session is healthy, but **do not skip 6b**.)
 3. Run the Step 7 cell again. Because it uses `--resume`, the models that already finished at this same commit print `[resume] already completed ... skipped`, and only the missing ones train. Do the same for Step 8.
 Never delete files in `VDM_Outputs`.

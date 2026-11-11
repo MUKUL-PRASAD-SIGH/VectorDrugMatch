@@ -1,5 +1,5 @@
 model,roc_auc_mean,roc_auc_sd,pr_auc_mean,pr_auc_sd
 PrimeKG GCN,0.788,0.011778157750684063,0.5285,0.03341317105573787
-PrimeKG RF,,,,
-Structure GCN,,,,
-Structure XGBoost,,,,
+PrimeKG RF,0.8049,0.0020,0.6113,0.0078
+Structure GCN,0.7847,0.0089,0.5390,0.0182
+Structure XGBoost,0.8433,0.0000,0.6979,0.0000

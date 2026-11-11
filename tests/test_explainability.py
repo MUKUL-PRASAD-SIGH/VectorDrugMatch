@@ -89,5 +89,6 @@ def test_gnn_explainer_link_runs_on_tiny_graph():
         m(d.x_dict, d.edge_index_dict, torch.tensor([[0], [0]]))        # initialise lazy layers (the training script does this too)
     prob, edges, rel = explain_link_gnn(m, d, drug_idx=2, disease_idx=5, hops=2, epochs=10)
     assert 0.0 <= prob <= 1.0
-    assert {"src_type", "relation", "dst_type", "src_node_id", "dst_node_id", "edge_mask"} <= set(edges.columns) and len(edges) > 0
-    assert {"relation", "mean_edge_mask", "n_edges"} <= set(rel.columns) and len(rel) > 0
+    # explain_link_gnn is a local relation-family perturbation (not GNNExplainer edge masks): one row per relation family present in the neighbourhood
+    assert {"relation", "removed_edges", "original_probability", "perturbed_probability", "probability_drop", "attribution_method"} <= set(edges.columns) and len(edges) > 0
+    assert set(rel.columns) == set(edges.columns) and len(rel) > 0
