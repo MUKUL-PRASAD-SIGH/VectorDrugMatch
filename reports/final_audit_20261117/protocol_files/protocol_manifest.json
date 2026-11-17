@@ -1,0 +1,102 @@
+{
+ "protocol": "final_audit_20261117",
+ "seed": 20261117,
+ "neg_ratio": 5,
+ "n_indication_drugs": 1801,
+ "n_dev_drugs": 1440,
+ "n_holdout_drugs": 361,
+ "stratification": "has NTD indication x indication-count bucket (1|2-3|4-8|9+)",
+ "inputs_sha256": {
+  "edges.csv": "19cb372c2cab1bcf9e0ee472d32c613609476f6a69337096af0b72a405b53442",
+  "drugs.csv": "6fdd280a32eb3fc377907a316ae5fe325aa6c2cdb77e4e83ea4a4c0970d460ab",
+  "diseases.csv": "4d29b7baa3ce238d1c7e384680e93dfcf12ebc9d4bf4faeef16cea65f1fdc464",
+  "drug_features.npy": "b03ccc4eaf5a83458fb9e1165a79b24d093b719a6e1b6c237911063b322d69ca"
+ },
+ "files": {
+  "cv_fold0.npz": {
+   "sha256": "ecba354bf6f6e2dd24c4f9e210d41f3dd262c022bdc4c24ee574f99e0bd10cc5",
+   "train_drugs": 1152,
+   "val_drugs": 288,
+   "train_pos": 6172,
+   "train_neg": 30860,
+   "val_pos": 1297,
+   "val_neg": 6485,
+   "val_popmatch_pos": 1297,
+   "val_popmatch_neg": 6485,
+   "excluded_graph_pairs": 3216
+  },
+  "cv_fold1.npz": {
+   "sha256": "3e2bd500107b12639f1e42afab02b1b321f48a9a202ff09c4f8f0fc316761bd4",
+   "train_drugs": 1152,
+   "val_drugs": 288,
+   "train_pos": 5795,
+   "train_neg": 28975,
+   "val_pos": 1674,
+   "val_neg": 8370,
+   "val_popmatch_pos": 1674,
+   "val_popmatch_neg": 8370,
+   "excluded_graph_pairs": 3593
+  },
+  "cv_fold2.npz": {
+   "sha256": "0559e267b5cf6d043c685a279b5cd0450142089299e2cd7464286396917ffa46",
+   "train_drugs": 1152,
+   "val_drugs": 288,
+   "train_pos": 5972,
+   "train_neg": 29860,
+   "val_pos": 1497,
+   "val_neg": 7485,
+   "val_popmatch_pos": 1497,
+   "val_popmatch_neg": 7485,
+   "excluded_graph_pairs": 3416
+  },
+  "cv_fold3.npz": {
+   "sha256": "e51c4871ba529f7903f96f210ef0987a25acf676cfb8e8de732804f1daef4b14",
+   "train_drugs": 1152,
+   "val_drugs": 288,
+   "train_pos": 5925,
+   "train_neg": 29625,
+   "val_pos": 1544,
+   "val_neg": 7720,
+   "val_popmatch_pos": 1544,
+   "val_popmatch_neg": 7720,
+   "excluded_graph_pairs": 3463
+  },
+  "cv_fold4.npz": {
+   "sha256": "52e7fa388825f4b5780b63e9afb79d83144439708e5468cab06ab680995e208c",
+   "train_drugs": 1152,
+   "val_drugs": 288,
+   "train_pos": 6012,
+   "train_neg": 30060,
+   "val_pos": 1457,
+   "val_neg": 7285,
+   "val_popmatch_pos": 1457,
+   "val_popmatch_neg": 7285,
+   "excluded_graph_pairs": 3376
+  },
+  "final_train.npz": {
+   "sha256": "17c9873bf2921dfdbd607b9605659489a3fd20a20b1eedfebf551ef2a399470b",
+   "train_drugs": 1296,
+   "val_drugs": 144,
+   "train_pos": 6784,
+   "train_neg": 33920,
+   "val_pos": 685,
+   "val_neg": 3425,
+   "val_popmatch_pos": 685,
+   "val_popmatch_neg": 3425,
+   "excluded_graph_pairs": 2604
+  }
+ },
+ "holdout": {
+  "file": "holdout_LOCKED.npz",
+  "sha256": "b54367adcf4fd68146fa51193a5886f01a747cb6450f52880a5f0bf1e80538e3",
+  "drugs": 361,
+  "pos": 1919,
+  "neg": 9595,
+  "popmatch_pos": 1919,
+  "popmatch_neg": 9595,
+  "ntd_positive_pairs": 18,
+  "status": "LOCKED - evaluate once, only via scripts/final_audit/evaluate_final_holdout.py after selection is frozen"
+ },
+ "overlap_with_historical_seed42_test_drugs": 53,
+ "note": "The holdout drugs overlap the historical seed-42 val/test drugs by chance (independent re-partition). Those historical test results were seen, but no model trained for the final protocol uses holdout labels; the overlap is reported, not hidden."
+}
