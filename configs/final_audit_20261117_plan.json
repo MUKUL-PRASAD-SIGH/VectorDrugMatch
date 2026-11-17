@@ -1,0 +1,30 @@
+{
+ "_doc": "Predeclared before any final-protocol GCN result was produced (2026-11-17). Executed by scripts/final_audit/select_dev.py. Holdout is never read for any of this.",
+ "selection_metric": "mean over (fold, seed) of validation AP on the 'hard' negatives of the development CV folds",
+ "tie_rule": "candidates within 0.005 AP of the best are tied; among tied candidates prefer the higher mean popmatch-validation AP, then fewer parameters (or the non-ensemble)",
+ "common": {"epochs": 200, "patience": 20, "k": 4, "arch": "GCN", "variant": "original", "layers": 3, "emb": 64, "head": 32, "dropout": 0.2, "lr": 0.005, "wd": 0.0001, "sched_patience": 10},
+ "stage_A_convergence": {"name": "A_k4_L3_e200", "splits": ["historical"], "seeds": [21, 42, 52, 72, 100], "overrides": {}},
+ "stage_B_one_factor": {
+  "splits": ["cv_fold0", "cv_fold1", "cv_fold2", "cv_fold3", "cv_fold4"], "seeds": [42],
+  "configs": {
+   "L3_base": {},
+   "L2": {"layers": 2},
+   "L4": {"layers": 4},
+   "L3_emb128": {"emb": 128, "head": 64},
+   "L3_drop0.4": {"dropout": 0.4},
+   "L3_drop0.1": {"dropout": 0.1},
+   "L3_lr0.002": {"lr": 0.002},
+   "L3_wd5e-4": {"wd": 0.0005},
+   "L3_wd1e-5": {"wd": 0.00001},
+   "L3_k1": {"k": 1},
+   "L3_mechanism": {"variant": "mechanism"},
+   "L3_train_treats": {"variant": "train_treats"},
+   "RGCN_L2_original": {"arch": "RGCN", "layers": 2}
+  }
+ },
+ "stage_C": {"seeds_added": [21, 52], "n_top": 3, "combo_min_gain_ap": 0.005,
+             "combo_rule": "merge the overrides of every stage-B config (excluding variant/arch changes) whose mean val AP beats L3_base by >= combo_min_gain_ap; when two improving overrides set the same key, keep the larger gain"},
+ "final_candidates": ["best GCN config (stage C, 3 seeds x 5 folds)", "deg_conn_fp_gbm", "rankavg(best GCN, deg_conn_fp_gbm)"],
+ "final_training": {"split": "final_train", "seeds": [21, 42, 52, 72, 100]},
+ "deployment_setting": "ranking candidate NEW indications for drugs already in PrimeKG (approved/investigational drugs with known contraindication / off-label records). The mechanism-only variant is reported for the novel-compound setting but is not the deployed model unless it wins the rule."
+}

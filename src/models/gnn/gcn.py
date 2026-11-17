@@ -12,7 +12,7 @@ from torch_geometric.nn import GraphConv, to_hetero
 
 
 class GCN(nn.Module):
-    def __init__(self, hidden_channels, out_channels, num_layers=2):
+    def __init__(self, hidden_channels, out_channels, num_layers=2, dropout=0.2):
         super().__init__()
 
         if num_layers < 1:
@@ -20,7 +20,7 @@ class GCN(nn.Module):
 
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
-        self.dropout = nn.Dropout(p=0.2)
+        self.dropout = nn.Dropout(p=dropout)
 
         self.convs.append(
             GraphConv(-1, hidden_channels, aggr="mean")
@@ -65,13 +65,14 @@ class GCN(nn.Module):
 class StableHeteroGCN(nn.Module):
     """GCN with GCN-specific feature scaling and mean relation aggregation."""
 
-    def __init__(self, metadata, hidden_channels, out_channels, num_layers):
+    def __init__(self, metadata, hidden_channels, out_channels, num_layers, dropout=0.2):
         super().__init__()
 
         base_model = GCN(
             hidden_channels=hidden_channels,
             out_channels=out_channels,
             num_layers=num_layers,
+            dropout=dropout,
         )
 
         self.encoder = to_hetero(
@@ -107,11 +108,12 @@ class StableHeteroGCN(nn.Module):
         return self.encoder(x_dict, edge_index_dict)
 
 
-def create_gcn_model(metadata, hidden_channels=64, out_channels=64, num_layers=2):
-    """Factory for the numerically stable heterogeneous GCN."""
+def create_gcn_model(metadata, hidden_channels=64, out_channels=64, num_layers=2, dropout=0.2):
+    """Factory for the numerically stable heterogeneous GCN (dropout default 0.2 = every historical run)."""
     return StableHeteroGCN(
         metadata,
         hidden_channels=hidden_channels,
         out_channels=out_channels,
         num_layers=num_layers,
+        dropout=dropout,
     )

@@ -1,0 +1,209 @@
+{
+ "reach2": {
+  "pos_fraction_reachable": 0.2831086439333862,
+  "neg_fraction_reachable": 0.07010309278350516,
+  "auc_reachability_flag": 0.6065027755749405,
+  "gcn_auc_within_reachable": 0.8631925168257348,
+  "gcn_auc_within_unreachable": 0.837137746238221,
+  "n_unreachable_pos": 904,
+  "n_unreachable_neg": 5863
+ },
+ "reach3": {
+  "pos_fraction_reachable": 0.8112609040444092,
+  "neg_fraction_reachable": 0.6157018239492467,
+  "auc_reachability_flag": 0.5977795400475813,
+  "gcn_auc_within_reachable": 0.8712862281890553,
+  "gcn_auc_within_unreachable": 0.7648940302493263,
+  "n_unreachable_pos": 238,
+  "n_unreachable_neg": 2423
+ },
+ "disease_popularity": {
+  "auc_alone": 0.648270854859473,
+  "spearman_gcn_vs_pop_all": 0.2044906295393325,
+  "spearman_gcn_vs_pop_negatives": 0.07538950485602594,
+  "pos_mean_pop": 2.298513889312744,
+  "neg_mean_pop": 1.774918794631958
+ },
+ "gcn_auc_within_popularity_quintile": [
+  {
+   "quintile": 0,
+   "n": 1514,
+   "pos": 153,
+   "gcn_auc": 0.7204900279974836,
+   "conn_gbm_auc": 0.7032674936249298
+  },
+  {
+   "quintile": 1,
+   "n": 1513,
+   "pos": 174,
+   "gcn_auc": 0.808536564428764,
+   "conn_gbm_auc": 0.7551698385310706
+  },
+  {
+   "quintile": 2,
+   "n": 1513,
+   "pos": 184,
+   "gcn_auc": 0.91711322668237,
+   "conn_gbm_auc": 0.9201099224654039
+  },
+  {
+   "quintile": 3,
+   "n": 1513,
+   "pos": 284,
+   "gcn_auc": 0.8218756804455701,
+   "conn_gbm_auc": 0.7874416965585211
+  },
+  {
+   "quintile": 4,
+   "n": 1513,
+   "pos": 466,
+   "gcn_auc": 0.8921689191681936,
+   "conn_gbm_auc": 0.9162044836872979
+  }
+ ],
+ "rank_average_ensemble_vs_baseline": {
+  "roc_auc_1_mean": 0.8723379918886677,
+  "roc_auc_2_mean": 0.8434293993979075,
+  "roc_auc_diff": 0.028908592490760165,
+  "roc_auc_diff_ci": [
+   0.021584824047981226,
+   0.03710152812270261
+  ],
+  "roc_auc_p": 0.0009995002498750624,
+  "ap_1_mean": 0.7322411390869638,
+  "ap_2_mean": 0.7065987179333781,
+  "ap_diff": 0.025642421153585615,
+  "ap_diff_ci": [
+   0.015624155557947628,
+   0.03646971934797108
+  ],
+  "ap_p": 0.0009995002498750624
+ },
+ "seed_stability": {
+  "top50_pairwise_jaccard_mean": 0.24575132367159905,
+  "top50_pairwise_jaccard_min": 0.13636363636363635,
+  "top100_pairwise_jaccard_mean": 0.31913655597636487,
+  "top100_pairwise_jaccard_min": 0.2345679012345679,
+  "top500_pairwise_jaccard_mean": 0.5599017251711595,
+  "top500_pairwise_jaccard_min": 0.4836795252225519,
+  "pairwise_spearman_mean": 0.7934027214166501,
+  "pairwise_spearman_min": 0.7499876487514757
+ },
+ "top500_concentration": {
+  "unique_drugs": 98,
+  "unique_diseases": 282,
+  "max_pairs_one_drug": 118,
+  "max_pairs_one_disease": 11,
+  "test_drugs": 271,
+  "test_diseases": 638
+ },
+ "high_conf_fp_profile": {
+  "n": 29,
+  "median_dis_train_degree_hcfp": 11.0,
+  "median_dis_train_degree_all_neg": 5.0,
+  "frac_contra_via_related_hcfp": 0.06896551724137931,
+  "frac_contra_via_related_all_neg": 0.014908802537668518,
+  "top_drugs": {
+   "DB00959": 5,
+   "DB00896": 4,
+   "DB01242": 2,
+   "DB00982": 2,
+   "DB06700": 2,
+   "DB00291": 2,
+   "DB01220": 2,
+   "DB15566": 1,
+   "DB01185": 1,
+   "DB13946": 1
+  },
+  "top_diseases": {
+   "MONDO:0004857": 2,
+   "MONDO_GROUP:4795_1051": 2,
+   "MONDO:0006589": 1,
+   "MONDO:0006004": 1,
+   "MONDO_GROUP:17256_17257": 1,
+   "MONDO:0009693": 1,
+   "MONDO:0005915": 1,
+   "MONDO:0006554": 1,
+   "MONDO:0018437": 1,
+   "MONDO:0001119": 1
+  }
+ },
+ "drugs_with_highest_mean_negative_score": [
+  {
+   "drug": "DB00959",
+   "mean": 0.4038,
+   "count": 23
+  },
+  {
+   "drug": "DB00291",
+   "mean": 0.3388,
+   "count": 18
+  },
+  {
+   "drug": "DB00595",
+   "mean": 0.3171,
+   "count": 17
+  },
+  {
+   "drug": "DB00896",
+   "mean": 0.2823,
+   "count": 17
+  },
+  {
+   "drug": "DB00541",
+   "mean": 0.2781,
+   "count": 32
+  },
+  {
+   "drug": "DB01185",
+   "mean": 0.2662,
+   "count": 22
+  },
+  {
+   "drug": "DB00982",
+   "mean": 0.2077,
+   "count": 24
+  },
+  {
+   "drug": "DB00526",
+   "mean": 0.185,
+   "count": 24
+  },
+  {
+   "drug": "DB00609",
+   "mean": 0.1782,
+   "count": 30
+  },
+  {
+   "drug": "DB01219",
+   "mean": 0.172,
+   "count": 17
+  }
+ ],
+ "gcn_auc_by_drug_gene_degree": [
+  {
+   "drug_gene_degree": "0-0",
+   "n": 1142,
+   "pos": 137,
+   "gcn_auc": 0.8011729672803864
+  },
+  {
+   "drug_gene_degree": "1-2",
+   "n": 1844,
+   "pos": 326,
+   "gcn_auc": 0.8008834679146762
+  },
+  {
+   "drug_gene_degree": "3-10",
+   "n": 2718,
+   "pos": 405,
+   "gcn_auc": 0.8490404743985952
+  },
+  {
+   "drug_gene_degree": "11-inf",
+   "n": 1758,
+   "pos": 374,
+   "gcn_auc": 0.9197973014744522
+  }
+ ]
+}
