@@ -41,6 +41,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--splits", nargs="+", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--skip-rf", action="store_true", help="skip the historical RF recipe (its dense Morgan pair matrix needs several GB)")
     a = ap.parse_args()
     data = build_hetero_data(REPO / "data/processed/primekg", include_features=True)
     fp = data["drug"].x.numpy()
@@ -51,20 +52,27 @@ def main():
         t0 = time.time()
         F = PairFeaturizer(mp_graph(data, z), z["edges_train"], z["y_train"], fp)
         sets = {"train": z["edges_train"], "val": z["edges_val"], "val_popmatch": z["edges_val_popmatch"]}
+        for extra in ("test", "test_popmatch"):                      # disease-disjoint comparison split
+            if f"edges_{extra}" in z:
+                sets[extra] = z[f"edges_{extra}"]
         feats = feature_matrices(F, sets)
         y = {k: np.asarray(z[f"y_{k}"]).astype(int) for k in sets}
         preds, models = {}, {}
         for name in GROUPS:
             m = gbm().fit(design(feats["train"], name), y["train"])
-            preds[name] = {k: m.predict_proba(design(feats[k], name))[:, 1] for k in ("val", "val_popmatch")}
+            ev_keys = [k for k in sets if k != "train"]
+            preds[name] = {k: m.predict_proba(design(feats[k], name))[:, 1] for k in ev_keys}
             models[name] = m
-        preds["disease_popularity"] = {k: feats[k]["label"][:, 0] for k in ("val", "val_popmatch")}
-        preds["max_tanimoto"] = {k: feats[k]["label"][:, 2] for k in ("val", "val_popmatch")}
-        Xrf = {k: np.concatenate([build_pair_features(fp, dis_x, e[0], e[1]), build_disease_profile_block(fp, z["edges_train"], z["y_train"], e)], 1) for k, e in sets.items()}
-        rf = CalibratedClassifierCV(estimator=RandomForestClassifier(n_estimators=100, max_depth=10, class_weight="balanced", random_state=42, n_jobs=-1),
-                                    method="sigmoid", cv=3).fit(Xrf["train"], y["train"])
-        preds["rf_disease_profile"] = {k: rf.predict_proba(Xrf[k])[:, 1] for k in ("val", "val_popmatch")}
-        models["rf_disease_profile"] = rf
+        ev_keys = [k for k in sets if k != "train"]
+        preds["disease_popularity"] = {k: feats[k]["label"][:, 0] for k in ev_keys}
+        preds["max_tanimoto"] = {k: feats[k]["label"][:, 2] for k in ev_keys}
+        if not a.skip_rf:
+          Xrf = {k: np.concatenate([build_pair_features(fp, dis_x, e[0], e[1]), build_disease_profile_block(fp, z["edges_train"], z["y_train"], e)], 1) for k, e in sets.items()}
+          rf = CalibratedClassifierCV(estimator=RandomForestClassifier(n_estimators=100, max_depth=10, class_weight="balanced", random_state=42, n_jobs=-1),
+                                      method="sigmoid", cv=3).fit(Xrf["train"], y["train"])
+          preds["rf_disease_profile"] = {k: rf.predict_proba(Xrf[k])[:, 1] for k in ev_keys}
+          models["rf_disease_profile"] = rf
+          del Xrf
         for name, pr in preds.items():
             d = REPO / a.out / name / spn / "seed0"
             d.mkdir(parents=True, exist_ok=True)

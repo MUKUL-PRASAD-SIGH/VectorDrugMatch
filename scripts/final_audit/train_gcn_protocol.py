@@ -45,6 +45,7 @@ from src.models.gnn.rgcn import create_rgcn_model  # noqa: E402
 from src.utils.final_metrics import all_metrics  # noqa: E402
 
 FINAL_DIR = "data/processed/primekg/splits_final_20261117"
+DISEASE_DIR = "data/processed/primekg/splits_disease_20261118"   # comparison protocol: diseases are the held-out unit
 HIST = "data/processed/primekg/splits/seed42.npz"
 
 
@@ -68,7 +69,7 @@ def load_split(name):
         return z, p
     if "holdout" in name.lower():
         sys.exit("the locked holdout is never a training/validation split (use scripts/final_audit/evaluate_final_holdout.py)")
-    p = REPO / FINAL_DIR / f"{name}.npz"
+    p = (REPO / DISEASE_DIR / f"{name}.npz") if name == "disease_split" else (REPO / FINAL_DIR / f"{name}.npz")
     return dict(np.load(p)), p
 
 
@@ -114,10 +115,12 @@ def audit(ed, splits, data, variant):
     out["treats_edges_are_train_positives_only"] = {"pass": bool(np.isin(tk, trk).all() and (tk.size == (trk.size if variant == "train_treats" else 0))),
                                                    "n_treats_edges": int(tk.size)}
     out["rev_treats_is_flip"] = {"pass": bool(set(key(ed[REV].flip(0).cpu().numpy()).tolist()) == set(tk.tolist()))}
-    dtr, dva = set(np.asarray(splits["drugs_train"]).tolist()), set(np.asarray(splits["drugs_val"]).tolist())
-    dte = set(np.asarray(splits["drugs_test"]).tolist()) if "drugs_test" in splits else set()
-    out["drug_sets_disjoint"] = {"pass": bool(not (dtr & dva) and not (dtr & dte) and not (dva & dte))}
-    out["train_pair_drugs_are_train_drugs"] = {"pass": bool(set(np.asarray(splits["edges_train"])[0].tolist()) <= dtr)}
+    unit = "diseases" if "diseases_train" in splits else "drugs"     # held-out unit: drugs (main protocol) or diseases (comparison protocol)
+    row = 1 if unit == "diseases" else 0
+    utr, uva = set(np.asarray(splits[f"{unit}_train"]).tolist()), set(np.asarray(splits[f"{unit}_val"]).tolist())
+    ute = set(np.asarray(splits[f"{unit}_test"]).tolist()) if f"{unit}_test" in splits else set()
+    out[f"{unit[:-1]}_sets_disjoint"] = {"pass": bool(not (utr & uva) and not (utr & ute) and not (uva & ute)), "held_out_unit": unit}
+    out[f"train_pair_{unit}_are_train_{unit}"] = {"pass": bool(set(np.asarray(splits["edges_train"])[row].tolist()) <= utr)}
     known = np.unique(np.concatenate([key(data[("drug", r, "disease")].edge_index.numpy()) for r in ("treats",) + LABEL_REL if ("drug", r, "disease") in data.edge_types]))
     neg = {}
     nok = True
@@ -243,10 +246,15 @@ def run_one(hp, split_name, seed, ctx, out_root, resume):
         pp = predict(model, x, ed_eval, splits["edges_val_popmatch"])
         m["val_popmatch"] = all_metrics(splits["y_val_popmatch"], pp)
         sets.append(("val_popmatch", "edges_val_popmatch", "y_val_popmatch", pp))
-    if "edges_test" in splits:                                       # historical split only (already-seen test set)
+    if "edges_test" in splits:            # historical split (already-seen test set) or the disease-disjoint comparison split
+        tk = "historical_test" if split_name == "historical" else "test"
         pt = predict(model, x, ed_eval, splits["edges_test"])
-        m["historical_test"] = all_metrics(splits["y_test"], pt)
+        m[tk] = all_metrics(splits["y_test"], pt)
         sets.append(("test", "edges_test", "y_test", pt))
+        if "edges_test_popmatch" in splits:
+            pp2 = predict(model, x, ed_eval, splits["edges_test_popmatch"])
+            m["test_popmatch"] = all_metrics(splits["y_test_popmatch"], pp2)
+            sets.append(("test_popmatch", "edges_test_popmatch", "y_test_popmatch", pp2))
     for nm, ek, yk, p in sets:
         e = np.asarray(splits[ek])
         pd.DataFrame({"drug_id": ids_d[e[0]], "disease_id": ids_s[e[1]], "label": np.asarray(splits[yk]).astype(int), "probability": p}).to_csv(
@@ -261,7 +269,7 @@ def run_one(hp, split_name, seed, ctx, out_root, resume):
         "model_sha256": sha(run_dir / "model.pth")}, indent=1), encoding="utf-8")
     P(f"DONE {hp['name']} {split_name} s{seed}: val AUC {m['val']['roc_auc']:.4f} AP {m['val']['pr_auc_ap']:.4f}"
       + (f" | popmatch AUC {m['val_popmatch']['roc_auc']:.4f}" if "val_popmatch" in m else "")
-      + (f" | hist-test AUC {m['historical_test']['roc_auc']:.4f}" if "historical_test" in m else "") + f" | best ep {best_ep}/{len(hist)} | {train_s:.0f}s")
+      + (f" | test AUC {m.get('historical_test', m.get('test', {})).get('roc_auc', float('nan')):.4f}" if ("historical_test" in m or "test" in m) else "") + f" | best ep {best_ep}/{len(hist)} | {train_s:.0f}s")
     log.close()
 
 
