@@ -1,0 +1,327 @@
+{
+ "calibration": {
+  "hard_score_gcn": {
+   "bins_mean_pred": [
+    0.02557523122942969,
+    0.14306256725820019,
+    0.24575523538461538,
+    0.34926751426701574,
+    0.4474822275732218,
+    0.5483683580874318,
+    0.6516788571428571,
+    0.7531778416352202,
+    0.8522698059259258,
+    0.959535222987013
+   ],
+   "bins_frac_pos": [
+    0.05054334091483447,
+    0.12447434819175777,
+    0.2532051282051282,
+    0.3481675392670157,
+    0.48535564853556484,
+    0.5573770491803278,
+    0.75,
+    0.8238993710691824,
+    0.8930041152263375,
+    0.9532467532467532
+   ]
+  },
+  "hard_score_gbm": {
+   "bins_mean_pred": [
+    0.042922696355853766,
+    0.13878912885631434,
+    0.2435546729790837,
+    0.34625369898590647,
+    0.44759278951330317,
+    0.5473613477788295,
+    0.6524462212181801,
+    0.7493128029236696,
+    0.8547022360727831,
+    0.9745915108912451
+   ],
+   "bins_frac_pos": [
+    0.042377622377622375,
+    0.10150181253236665,
+    0.2084130019120459,
+    0.3048780487804878,
+    0.2804878048780488,
+    0.4189189189189189,
+    0.5294117647058824,
+    0.6644295302013423,
+    0.7281553398058253,
+    0.929384965831435
+   ]
+  },
+  "popmatch_score_gcn": {
+   "bins_mean_pred": [
+    0.027013978734817656,
+    0.14385200121266614,
+    0.24536481262711868,
+    0.34708918523076926,
+    0.44764198804020094,
+    0.5483246119607843,
+    0.6510151484697508,
+    0.7505383493023255,
+    0.851721702680723,
+    0.9577922492546584
+   ],
+   "bins_frac_pos": [
+    0.05756223917110376,
+    0.11571540265832682,
+    0.2231638418079096,
+    0.25576923076923075,
+    0.2914572864321608,
+    0.3333333333333333,
+    0.5231316725978647,
+    0.5077519379844961,
+    0.6536144578313253,
+    0.7598343685300207
+   ]
+  },
+  "popmatch_score_gbm": {
+   "bins_mean_pred": [
+    0.04694202556014708,
+    0.13995548046283154,
+    0.24490943557894435,
+    0.34554037174431823,
+    0.4484251056918726,
+    0.5459189718921587,
+    0.6536636604031388,
+    0.7500716838951863,
+    0.8537352574150723,
+    0.9725133333929874
+   ],
+   "bins_frac_pos": [
+    0.0509500588532033,
+    0.09184629803186505,
+    0.12457142857142857,
+    0.1728110599078341,
+    0.19166666666666668,
+    0.30097087378640774,
+    0.3230769230769231,
+    0.515625,
+    0.5617977528089888,
+    0.796875
+   ]
+  },
+  "prevalence_note": {
+   "training_and_eval_prevalence": 0.16666666666666666,
+   "all_pairs_indication_prevalence": 6.907737990999043e-05,
+   "bayes_shift_examples": [
+    {
+     "model_prob_at_1to5": 0.5,
+     "implied_prob_at_all_pairs_prevalence": 0.0003452914922236001
+    },
+    {
+     "model_prob_at_1to5": 0.9,
+     "implied_prob_at_all_pairs_prevalence": 0.0030990627898906742
+    },
+    {
+     "model_prob_at_1to5": 0.99,
+     "implied_prob_at_all_pairs_prevalence": 0.03306498601085249
+    }
+   ],
+   "interpretation": "component probabilities are calibrated only at the sampled 1:5 prevalence; at the prevalence of indications among all drug-disease pairs a 0.9 becomes a small number. The API therefore serves a ranking score, not a probability."
+  }
+ },
+ "top500_concentration": {
+  "unique_drugs": 52,
+  "unique_diseases": 188,
+  "max_pairs_one_drug": 116,
+  "max_pairs_one_disease": 11,
+  "median_dis_train_deg_top500": 13.5,
+  "median_dis_train_deg_all": 6.0,
+  "precision_top500": 0.996
+ },
+ "spearman_score_vs_disease_popularity_negatives": 0.21000263205307348,
+ "performance_by_sparsity": [
+  {
+   "stratum": "drug_gene_targets",
+   "range": "0-0",
+   "n": 2003,
+   "pos": 225,
+   "auc_selected": 0.8382602174728159,
+   "auc_gcn": 0.7695713035870516,
+   "auc_gbm": 0.826766654168229
+  },
+  {
+   "stratum": "drug_gene_targets",
+   "range": "1-2",
+   "n": 2641,
+   "pos": 328,
+   "auc_selected": 0.8784508029905201,
+   "auc_gcn": 0.866478441049002,
+   "auc_gbm": 0.8319058239220525
+  },
+  {
+   "stratum": "drug_gene_targets",
+   "range": "3-10",
+   "n": 4733,
+   "pos": 745,
+   "auc_selected": 0.9348582660733878,
+   "auc_gcn": 0.9122599341649107,
+   "auc_gbm": 0.9050798368259139
+  },
+  {
+   "stratum": "drug_gene_targets",
+   "range": "11-inf",
+   "n": 2137,
+   "pos": 621,
+   "auc_selected": 0.920168763463475,
+   "auc_gcn": 0.8986611941757061,
+   "auc_gbm": 0.8996952527840448
+  },
+  {
+   "stratum": "disease_training_indications",
+   "range": "0-0",
+   "n": 1437,
+   "pos": 114,
+   "auc_selected": 0.6563863362108977,
+   "auc_gcn": 0.6234103777963428,
+   "auc_gbm": 0.6383650926257443
+  },
+  {
+   "stratum": "disease_training_indications",
+   "range": "1-3",
+   "n": 2620,
+   "pos": 259,
+   "auc_selected": 0.8402196896478982,
+   "auc_gcn": 0.8048435075118683,
+   "auc_gbm": 0.7674607808025851
+  },
+  {
+   "stratum": "disease_training_indications",
+   "range": "4-15",
+   "n": 5858,
+   "pos": 943,
+   "auc_selected": 0.939823446091509,
+   "auc_gcn": 0.9080482734589829,
+   "auc_gbm": 0.9181536815147
+  },
+  {
+   "stratum": "disease_training_indications",
+   "range": "16-inf",
+   "n": 1599,
+   "pos": 603,
+   "auc_selected": 0.9217899791537627,
+   "auc_gcn": 0.8908752755632813,
+   "auc_gbm": 0.9004925173330138
+  }
+ ],
+ "gcn_seed_stability_holdout": {
+  "top50_jaccard_mean": 0.45374533056330363,
+  "top50_jaccard_min": 0.35135135135135137,
+  "top100_jaccard_mean": 0.5568770134195942,
+  "top100_jaccard_min": 0.4925373134328358,
+  "top500_jaccard_mean": 0.6725714850416646,
+  "top500_jaccard_min": 0.639344262295082,
+  "pairwise_spearman_mean": 0.861782727413936,
+  "pairwise_spearman_min": 0.839473108057647,
+  "per_seed_auc": [
+   0.8741287381254512,
+   0.8637963634546718,
+   0.8671138645089654,
+   0.8716930690353807,
+   0.8749614195121275
+  ],
+  "per_seed_ap": [
+   0.6999724015363514,
+   0.6970952928603003,
+   0.6933506258910082,
+   0.6970103585702119,
+   0.7005484885554785
+  ],
+  "seed_mean_auc": 0.8819925861377449
+ },
+ "confusion_at_prevalence_cut": {
+  "threshold_ranking_score": 0.7753041362530413,
+  "tp": 1362,
+  "fp": 558,
+  "fn": 557,
+  "tn": 9037,
+  "note": "cut chosen so the number of flagged pairs equals the number of positives (no tuning on the holdout)"
+ },
+ "high_conf_errors": {
+  "top30_fp_median_dis_train_deg": 15.0,
+  "all_neg_median_dis_train_deg": 5.0,
+  "top30_fp_drugs": {
+   "Ciclesonide": 3,
+   "Methscopolamine": 3,
+   "Thiothixene": 3,
+   "Triamcinolone": 2,
+   "Ampicillin": 2,
+   "Tropicamide": 2,
+   "Cyclacillin": 2,
+   "Flumethasone": 1
+  },
+  "bottom30_fn_median_drug_gene_deg": 4.5,
+  "bottom30_fn_median_dis_train_deg": 2.0,
+  "all_pos_median_dis_train_deg": 11.0
+ },
+ "drugs_with_highest_mean_negative_score": [
+  {
+   "drug_id": "DB00635",
+   "drug_name": "Prednisone",
+   "mean": 0.7226,
+   "count": 16
+  },
+  {
+   "drug_id": "DB00882",
+   "drug_name": "Clomifene",
+   "mean": 0.7039,
+   "count": 29
+  },
+  {
+   "drug_id": "DB00620",
+   "drug_name": "Triamcinolone",
+   "mean": 0.6795,
+   "count": 24
+  },
+  {
+   "drug_id": "DB09287",
+   "drug_name": "Polyethylene glycol",
+   "mean": 0.6419,
+   "count": 31
+  },
+  {
+   "drug_id": "DB00766",
+   "drug_name": "Clavulanic acid",
+   "mean": 0.617,
+   "count": 26
+  },
+  {
+   "drug_id": "DB00196",
+   "drug_name": "Fluconazole",
+   "mean": 0.6161,
+   "count": 22
+  },
+  {
+   "drug_id": "DB00730",
+   "drug_name": "Thiabendazole",
+   "mean": 0.6071,
+   "count": 18
+  },
+  {
+   "drug_id": "DB12035",
+   "drug_name": "Sarecycline",
+   "mean": 0.604,
+   "count": 31
+  },
+  {
+   "drug_id": "DB05773",
+   "drug_name": "Trastuzumab emtansine",
+   "mean": 0.6038,
+   "count": 31
+  },
+  {
+   "drug_id": "DB00741",
+   "drug_name": "Hydrocortisone",
+   "mean": 0.6,
+   "count": 18
+  }
+ ],
+ "evidence_candidates": {
+  "rule": "holdout drugs only; for each drug the top-3 diseases by ranking_score among pairs with NO PrimeKG relation (indication, contraindication, off-label); the 20 highest-scoring, one per drug, go to literature review",
+  "n_candidates_pool": 1083
+ }
+}

@@ -1,0 +1,410 @@
+{
+ "audit": "final_audit_20261117",
+ "generated_utc": "2026-11-17T21:33:10Z",
+ "git": {
+  "branch": "exp/final-audit-20261117",
+  "head": "e8b34a19b7cbace56de843c3c7a0623001e509a4",
+  "historical_ablation_commit": "fee2401c155e8ed8c50374e3ccf472e0e1ec60c7",
+  "gpu_run_commits": [
+   "3af51fd3a9c0c2bdb53bfcaf5afd2721332c7d38",
+   "0b3d225f176e8733a779b46ae73292b18f9852e5"
+  ],
+  "note": "the two GPU-run commits differ only in the notebook and the committed protocol files; training code identical (git diff d176908..HEAD on training code is empty)"
+ },
+ "data": {
+  "primekg_source": "Harvard Dataverse 10.7910/DVN/IXA7BM (kg.csv sha256 0a5a010f...)",
+  "processed_inputs_sha256": {
+   "edges.csv": "19cb372c2cab1bcf9e0ee472d32c613609476f6a69337096af0b72a405b53442",
+   "drugs.csv": "6fdd280a32eb3fc377907a316ae5fe325aa6c2cdb77e4e83ea4a4c0970d460ab",
+   "diseases.csv": "4d29b7baa3ce238d1c7e384680e93dfcf12ebc9d4bf4faeef16cea65f1fdc464",
+   "drug_features.npy": "b03ccc4eaf5a83458fb9e1165a79b24d093b719a6e1b6c237911063b322d69ca"
+  },
+  "historical_split": {
+   "file": "data/processed/primekg/splits/seed42.npz",
+   "sha256": "1475cdf93b24a91ff67b7c822e821a2688bdb3605d334fe06977e19b9299934b"
+  },
+  "final_protocol": {
+   "protocol": "final_audit_20261117",
+   "seed": 20261117,
+   "neg_ratio": 5,
+   "n_indication_drugs": 1801,
+   "n_dev_drugs": 1440,
+   "n_holdout_drugs": 361,
+   "stratification": "has NTD indication x indication-count bucket (1|2-3|4-8|9+)",
+   "inputs_sha256": {
+    "edges.csv": "19cb372c2cab1bcf9e0ee472d32c613609476f6a69337096af0b72a405b53442",
+    "drugs.csv": "6fdd280a32eb3fc377907a316ae5fe325aa6c2cdb77e4e83ea4a4c0970d460ab",
+    "diseases.csv": "4d29b7baa3ce238d1c7e384680e93dfcf12ebc9d4bf4faeef16cea65f1fdc464",
+    "drug_features.npy": "b03ccc4eaf5a83458fb9e1165a79b24d093b719a6e1b6c237911063b322d69ca"
+   },
+   "files": {
+    "cv_fold0.npz": {
+     "sha256": "ecba354bf6f6e2dd24c4f9e210d41f3dd262c022bdc4c24ee574f99e0bd10cc5",
+     "train_drugs": 1152,
+     "val_drugs": 288,
+     "train_pos": 6172,
+     "train_neg": 30860,
+     "val_pos": 1297,
+     "val_neg": 6485,
+     "val_popmatch_pos": 1297,
+     "val_popmatch_neg": 6485,
+     "excluded_graph_pairs": 3216
+    },
+    "cv_fold1.npz": {
+     "sha256": "3e2bd500107b12639f1e42afab02b1b321f48a9a202ff09c4f8f0fc316761bd4",
+     "train_drugs": 1152,
+     "val_drugs": 288,
+     "train_pos": 5795,
+     "train_neg": 28975,
+     "val_pos": 1674,
+     "val_neg": 8370,
+     "val_popmatch_pos": 1674,
+     "val_popmatch_neg": 8370,
+     "excluded_graph_pairs": 3593
+    },
+    "cv_fold2.npz": {
+     "sha256": "0559e267b5cf6d043c685a279b5cd0450142089299e2cd7464286396917ffa46",
+     "train_drugs": 1152,
+     "val_drugs": 288,
+     "train_pos": 5972,
+     "train_neg": 29860,
+     "val_pos": 1497,
+     "val_neg": 7485,
+     "val_popmatch_pos": 1497,
+     "val_popmatch_neg": 7485,
+     "excluded_graph_pairs": 3416
+    },
+    "cv_fold3.npz": {
+     "sha256": "e51c4871ba529f7903f96f210ef0987a25acf676cfb8e8de732804f1daef4b14",
+     "train_drugs": 1152,
+     "val_drugs": 288,
+     "train_pos": 5925,
+     "train_neg": 29625,
+     "val_pos": 1544,
+     "val_neg": 7720,
+     "val_popmatch_pos": 1544,
+     "val_popmatch_neg": 7720,
+     "excluded_graph_pairs": 3463
+    },
+    "cv_fold4.npz": {
+     "sha256": "52e7fa388825f4b5780b63e9afb79d83144439708e5468cab06ab680995e208c",
+     "train_drugs": 1152,
+     "val_drugs": 288,
+     "train_pos": 6012,
+     "train_neg": 30060,
+     "val_pos": 1457,
+     "val_neg": 7285,
+     "val_popmatch_pos": 1457,
+     "val_popmatch_neg": 7285,
+     "excluded_graph_pairs": 3376
+    },
+    "final_train.npz": {
+     "sha256": "17c9873bf2921dfdbd607b9605659489a3fd20a20b1eedfebf551ef2a399470b",
+     "train_drugs": 1296,
+     "val_drugs": 144,
+     "train_pos": 6784,
+     "train_neg": 33920,
+     "val_pos": 685,
+     "val_neg": 3425,
+     "val_popmatch_pos": 685,
+     "val_popmatch_neg": 3425,
+     "excluded_graph_pairs": 2604
+    }
+   },
+   "holdout": {
+    "file": "holdout_LOCKED.npz",
+    "sha256": "b54367adcf4fd68146fa51193a5886f01a747cb6450f52880a5f0bf1e80538e3",
+    "drugs": 361,
+    "pos": 1919,
+    "neg": 9595,
+    "popmatch_pos": 1919,
+    "popmatch_neg": 9595,
+    "ntd_positive_pairs": 18,
+    "status": "LOCKED - evaluate once, only via scripts/final_audit/evaluate_final_holdout.py after selection is frozen"
+   },
+   "overlap_with_historical_seed42_test_drugs": 53,
+   "note": "The holdout drugs overlap the historical seed-42 val/test drugs by chance (independent re-partition). Those historical test results were seen, but no model trained for the final protocol uses holdout labels; the overlap is reported, not hidden."
+  }
+ },
+ "predeclared_plan": {
+  "file": "configs/final_audit_20261117_plan.json",
+  "sha256": "9e73c9fd8a53e0cdb4b1620502102d02d72789b54fa553fa05844bd2573c588f"
+ },
+ "selection": {
+  "file": "reports/final_audit_20261117/FROZEN_SELECTION.json",
+  "sha256": "e8cb89dc3e3169712ccfed7994928e981afae40d66ddceb577c4a19e2264ecce"
+ },
+ "holdout_lock": {
+  "started_utc": "2026-11-17T21:08:39Z",
+  "bundle": "vdm-1.0.0",
+  "selection_sha256": "e8cb89dc3e3169712ccfed7994928e981afae40d66ddceb577c4a19e2264ecce",
+  "holdout_sha256": "b54367adcf4fd68146fa51193a5886f01a747cb6450f52880a5f0bf1e80538e3",
+  "finished_utc": "2026-11-17T21:17:51Z",
+  "results_sha256": "98a512217a03de165b2ffa0d01cdb3bdcb15e626f9c7f421835a9c062a7c093a"
+ },
+ "final_model": {
+  "bundle": "vdm-1.0.0",
+  "status": "FROZEN",
+  "kind": "rankavg",
+  "selected_model": "rankavg[L3_combo+deg_conn_fp_gbm]",
+  "files_sha256": {
+   "fingerprints.npz": "aa3d11172d088243df398793f05c4671fee0b6d29d1cb234a16126acd490c7ed",
+   "gbm.joblib": "e183fbc75b80126e3e4f4bbfe04943128de7ce8840fde77cf6132d92f0bd4c4c",
+   "gcn_seed100.npz": "aaac4d48eb90622bb18715a5ea1b3d3c31679562da0064ea28055b558de5ad6d",
+   "gcn_seed21.npz": "da68cab86b3fa77daa5b0ed82abb2bf5cde0a1e5c10004245d465325fca9388a",
+   "gcn_seed42.npz": "f9006a9e252c606a95829b7434bf3758afa42e3055e7b093776e0127f355b3a7",
+   "gcn_seed52.npz": "63ba67bf861b4b8d42146ca3e2547ffdb0943612fbfc7138c9de92d62a3482d0",
+   "gcn_seed72.npz": "b2d2935c5bcb50b09822ddcdb12b3e29b89fb398b8c71f3f0b7e1c0626c501e0",
+   "graph.npz": "356cc474f91157ee9106adb7d4d6ca5e972a95d46b2894c221ffb532fa14e5e8",
+   "ids.npz": "c042cc9a4fee93236ee272387b7cf357b198e69401f0302017508fbac306e5cd",
+   "known_pairs.npz": "4c775cb52fd84c10ec9e258a1b550b8c37d74c292d62a35f54fddfd3f508879f",
+   "reference.npz": "ba189e57895ddc123c8e5637e0307c0c1ff439f8e2ddca5c780b2a2e9eebdd73"
+  },
+  "bundle_mb": 57.6,
+  "gcn_params_per_seed": 3307137,
+  "gcn_seeds": [
+   100,
+   21,
+   42,
+   52,
+   72
+  ],
+  "gcn_hp": {
+   "name": "L3_combo",
+   "arch": "GCN",
+   "variant": "original",
+   "layers": 4,
+   "emb": 128,
+   "head": 64,
+   "dropout": 0.4,
+   "lr": 0.005,
+   "wd": 0.0005,
+   "k": 4,
+   "epochs": 200,
+   "patience": 20,
+   "sched_patience": 10
+  },
+  "gbm": "HistGradientBoosting(max_iter=300, lr=0.05, max_leaf_nodes=31, l2=1.0, random_state=0) on deg+conn+label features",
+  "final_gcn_training_seconds": [
+   45.0,
+   40.2,
+   50.0,
+   42.1,
+   41.6
+  ],
+  "final_gcn_best_epochs": [
+   70,
+   59,
+   80,
+   64,
+   63
+  ]
+ },
+ "inference_latency_cpu_local": {
+  "bundle_load_seconds": 3.73,
+  "score_1000_pairs_median_seconds": 0.217,
+  "rank_one_drug_all_diseases_median_seconds": 2.099,
+  "rank_one_disease_all_drugs_median_seconds": 0.438,
+  "host": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+  "note": "numpy/scipy CPU path used by the API; Docker smoke test on the provisional bundle: /rank by drug ~1.7 s, by disease ~0.35 s"
+ },
+ "gpu_runs": {
+  "n": 130,
+  "convergence": [
+   {
+    "name": "A_k4_L3_e200",
+    "split": "historical",
+    "seed": 100,
+    "git_commit": "3af51fd3a9c0c2bdb53bfcaf5afd2721332c7d38",
+    "gpu": "Tesla T4",
+    "torch": "2.14.1+cu130",
+    "cuda": "13.0",
+    "python": "3.13.16",
+    "utc": "2026-11-17T14:17:50Z",
+    "split_sha256": "1475cdf93b24a91ff67b7c822e821a2688bdb3605d334fe06977e19b9299934b",
+    "model_sha256": "43d09c1c791482e0ba1a72c6a1d6a32c5e775d471b2537c54ba607ba2ece2f66"
+   },
+   {
+    "name": "A_k4_L3_e200",
+    "split": "historical",
+    "seed": 21,
+    "git_commit": "3af51fd3a9c0c2bdb53bfcaf5afd2721332c7d38",
+    "gpu": "Tesla T4",
+    "torch": "2.14.1+cu130",
+    "cuda": "13.0",
+    "python": "3.13.16",
+    "utc": "2026-11-17T14:15:48Z",
+    "split_sha256": "1475cdf93b24a91ff67b7c822e821a2688bdb3605d334fe06977e19b9299934b",
+    "model_sha256": "218702081f108d31906390e08b8a8ed7cb8d6585d76e026998aa790e28cc8015"
+   },
+   {
+    "name": "A_k4_L3_e200",
+    "split": "historical",
+    "seed": 42,
+    "git_commit": "3af51fd3a9c0c2bdb53bfcaf5afd2721332c7d38",
+    "gpu": "Tesla T4",
+    "torch": "2.14.1+cu130",
+    "cuda": "13.0",
+    "python": "3.13.16",
+    "utc": "2026-11-17T14:16:13Z",
+    "split_sha256": "1475cdf93b24a91ff67b7c822e821a2688bdb3605d334fe06977e19b9299934b",
+    "model_sha256": "d831b7fd8095a46e6bf361c52af6ca387d0a0d9953976365bec93cf46f6c8b2b"
+   },
+   {
+    "name": "A_k4_L3_e200",
+    "split": "historical",
+    "seed": 52,
+    "git_commit": "3af51fd3a9c0c2bdb53bfcaf5afd2721332c7d38",
+    "gpu": "Tesla T4",
+    "torch": "2.14.1+cu130",
+    "cuda": "13.0",
+    "python": "3.13.16",
+    "utc": "2026-11-17T14:16:48Z",
+    "split_sha256": "1475cdf93b24a91ff67b7c822e821a2688bdb3605d334fe06977e19b9299934b",
+    "model_sha256": "ed7bdc3bec8322af647c800855eafb08b1b57464ed798a9aecb480990f72aa5a"
+   },
+   {
+    "name": "A_k4_L3_e200",
+    "split": "historical",
+    "seed": 72,
+    "git_commit": "3af51fd3a9c0c2bdb53bfcaf5afd2721332c7d38",
+    "gpu": "Tesla T4",
+    "torch": "2.14.1+cu130",
+    "cuda": "13.0",
+    "python": "3.13.16",
+    "utc": "2026-11-17T14:17:23Z",
+    "split_sha256": "1475cdf93b24a91ff67b7c822e821a2688bdb3605d334fe06977e19b9299934b",
+    "model_sha256": "28a1503f1c6d1b0473ccfa46e6c4d1713b64be6a3872adc869eece19c41ac912"
+   }
+  ],
+  "final_model": [
+   {
+    "name": "L3_combo",
+    "split": "final_train",
+    "seed": 100,
+    "git_commit": "0b3d225f176e8733a779b46ae73292b18f9852e5",
+    "gpu": "Tesla T4",
+    "torch": "2.14.1+cu130",
+    "cuda": "13.0",
+    "python": "3.13.16",
+    "utc": "2026-11-17T15:25:06Z",
+    "split_sha256": "17c9873bf2921dfdbd607b9605659489a3fd20a20b1eedfebf551ef2a399470b",
+    "model_sha256": "8e13d359b4d53e6a8b19f9021ac118ffed930e0996cc4af26b518e429fa169fd"
+   },
+   {
+    "name": "L3_combo",
+    "split": "final_train",
+    "seed": 21,
+    "git_commit": "0b3d225f176e8733a779b46ae73292b18f9852e5",
+    "gpu": "Tesla T4",
+    "torch": "2.14.1+cu130",
+    "cuda": "13.0",
+    "python": "3.13.16",
+    "utc": "2026-11-17T15:22:03Z",
+    "split_sha256": "17c9873bf2921dfdbd607b9605659489a3fd20a20b1eedfebf551ef2a399470b",
+    "model_sha256": "46011c4c0ece06848ef003863eb11843f96a041dcbbefb48b597ab5764ebd273"
+   },
+   {
+    "name": "L3_combo",
+    "split": "final_train",
+    "seed": 42,
+    "git_commit": "0b3d225f176e8733a779b46ae73292b18f9852e5",
+    "gpu": "Tesla T4",
+    "torch": "2.14.1+cu130",
+    "cuda": "13.0",
+    "python": "3.13.16",
+    "utc": "2026-11-17T15:22:54Z",
+    "split_sha256": "17c9873bf2921dfdbd607b9605659489a3fd20a20b1eedfebf551ef2a399470b",
+    "model_sha256": "6be412932b09afb7ee09571f468312dc738bb5127be8f959fe9e11dd3b151640"
+   },
+   {
+    "name": "L3_combo",
+    "split": "final_train",
+    "seed": 52,
+    "git_commit": "0b3d225f176e8733a779b46ae73292b18f9852e5",
+    "gpu": "Tesla T4",
+    "torch": "2.14.1+cu130",
+    "cuda": "13.0",
+    "python": "3.13.16",
+    "utc": "2026-11-17T15:23:37Z",
+    "split_sha256": "17c9873bf2921dfdbd607b9605659489a3fd20a20b1eedfebf551ef2a399470b",
+    "model_sha256": "2af71286b60687d90bf0780b104667473f156101489eab0959d28a2d4237b506"
+   },
+   {
+    "name": "L3_combo",
+    "split": "final_train",
+    "seed": 72,
+    "git_commit": "0b3d225f176e8733a779b46ae73292b18f9852e5",
+    "gpu": "Tesla T4",
+    "torch": "2.14.1+cu130",
+    "cuda": "13.0",
+    "python": "3.13.16",
+    "utc": "2026-11-17T15:24:20Z",
+    "split_sha256": "17c9873bf2921dfdbd607b9605659489a3fd20a20b1eedfebf551ef2a399470b",
+    "model_sha256": "a5c4ee4a5faedcc9897c2a68db997bb65e7ca068b13edbab7eacf3cb44b2e3ee"
+   }
+  ]
+ },
+ "historical_gpu_archive": {
+  "root": "treats_edge_ablation_20261112_gpu",
+  "problems": [],
+  "n_expected_main_runs": 42,
+  "n_found_main_runs": 42,
+  "missing_runs": [],
+  "unexpected_runs": [],
+  "smoke_runs": [
+   "A_k4/seed42",
+   "A_k4_L3/seed42",
+   "A_orig/seed42",
+   "B0_naive/seed42",
+   "B_k2/seed42",
+   "B_k4/seed42",
+   "B_k4_L3/seed42",
+   "B_k8/seed42",
+   "C_k4/seed42",
+   "D_rgcn_B/seed42"
+  ],
+  "split_file_sha256": "1475cdf93b24a91ff67b7c822e821a2688bdb3605d334fe06977e19b9299934b",
+  "split_manifest_matches_local": true,
+  "runs": "see phase2_artifacts/artifact_verification.json",
+  "commits": [
+   "fee2401c155e8ed8c50374e3ccf472e0e1ec60c7"
+  ],
+  "torch_versions": [
+   "2.14.1+cu130"
+  ],
+  "gpus": [
+   "Tesla T4"
+  ],
+  "n_leakage_all_pass": 42,
+  "n_with_model_pth": 0,
+  "prediction_files_identical_pairs": true,
+  "runs_best_epoch_at_budget": [
+   "A_k4_L3/seed72",
+   "A_orig/seed100",
+   "A_orig/seed21",
+   "A_orig/seed42",
+   "C_k4/seed72"
+  ],
+  "seed_wise_csv_rows": 42,
+  "seed_wise_csv_matches": true,
+  "five_seed_summary_matches": true,
+  "all_checks_pass": true
+ },
+ "software": {
+  "local": {
+   "python": "3.10.11",
+   "platform": "Windows-10-10.0.26300-SP0"
+  },
+  "colab_gpu": "Tesla T4, torch 2.14.1+cu130, Python 3.13 (run_config.json)",
+  "serving_lock": "requirements-serving.lock"
+ },
+ "failed_or_superseded": [
+  "phase3 baselines with leave-one-out label features (train/test shift) -> superseded by drug-cross-fitted features (phase3_historical_LOO_superseded/)",
+  "Colab regeneration of the final protocol produced different arrays (library versions) -> exact files committed and copied (protocol_files/)",
+  "Colab Drive mount outage on the first attempt (no runs lost)",
+  "select_dev stage-C planning bug (re-run changed the plan); correct plan fully executed; surplus L4 seeds reported",
+  "L3_train_treats, L3_mechanism, RGCN, L3_k1, L2 were all worse than L3_base on dev CV",
+  "historical: B_k* (treats edges with masking), D_rgcn_B worse than no-treats controls; B0_naive is a leakage diagnostic"
+ ]
+}

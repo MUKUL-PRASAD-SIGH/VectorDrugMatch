@@ -1,0 +1,5 @@
+set,drug_has_contra_or_offlabel_edges,drugs,pairs,pos,selected_auc,selected_ap,gcn_auc,gcn_ap,gbm_auc,gbm_ap
+hard,True,196,6559,1436,0.9205,0.8522,0.9073,0.8053,0.8892,0.8128
+hard,False,165,4955,483,0.8619,0.579,0.7999,0.4058,0.8435,0.5596
+popmatch,True,196,8143,1436,0.8766,0.7007,0.8586,0.6079,0.8474,0.6816
+popmatch,False,165,3371,483,0.8231,0.5317,0.7624,0.3977,0.8115,0.5612

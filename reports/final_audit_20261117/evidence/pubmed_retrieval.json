@@ -1,0 +1,667 @@
+{
+ "retrieved_utc": "2026-11-17T21:31:21Z",
+ "source": "NCBI PubMed E-utilities (esearch, relevance sort; esummary)",
+ "results": [
+  {
+   "drug": "Prednisone",
+   "drug_id": "DB00635",
+   "disease": "lupus erythematosus",
+   "disease_id": "MONDO_GROUP:4670_5282_19561",
+   "ranking_score": 0.9998783454987834,
+   "rank_within_drug": 5,
+   "pubmed_query": "(\"Prednisone\"[tiab]) AND (lupus[tiab])",
+   "pubmed_count": 2171,
+   "top_hits": [
+    {
+     "pmid": "3511372",
+     "title": "Therapy of lupus nephritis. Controlled trial of prednisone and cytotoxic drugs.",
+     "pubdate": "1986 Mar 6",
+     "journal": "N Engl J Med",
+     "pubtype": [
+      "Clinical Trial",
+      "Comparative Study",
+      "Journal Article",
+      "Randomized Controlled Trial",
+      "Research Support, Non-U.S. Gov't"
+     ]
+    },
+    {
+     "pmid": "30926722",
+     "title": "2019 update of the EULAR recommendations for the management of systemic lupus erythematosus.",
+     "pubdate": "2019 Jun",
+     "journal": "Ann Rheum Dis",
+     "pubtype": [
+      "Journal Article",
+      "Practice Guideline",
+      "Research Support, Non-U.S. Gov't"
+     ]
+    },
+    {
+     "pmid": "26611550",
+     "title": "Corticosteroids in Lupus.",
+     "pubdate": "2016 Feb",
+     "journal": "Rheum Dis Clin North Am",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Cefotaxime",
+   "drug_id": "DB00493",
+   "disease": "staphylococcal infection",
+   "disease_id": "MONDO:0024313",
+   "ranking_score": 0.9969586374695864,
+   "rank_within_drug": 1,
+   "pubmed_query": "(\"Cefotaxime\"[tiab]) AND (staphylococcal[tiab])",
+   "pubmed_count": 68,
+   "top_hits": [
+    {
+     "pmid": "6094452",
+     "title": "Treatment of severe staphylococcal infections with cefotaxime and fosfomycin in combination.",
+     "pubdate": "1984 Sep",
+     "journal": "J Antimicrob Chemother",
+     "pubtype": [
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "7587040",
+     "title": "Cefotaxime in the treatment of staphylococcal infections. Comparison of in vitro and in vivo studies.",
+     "pubdate": "1995 May-Jun",
+     "journal": "Diagn Microbiol Infect Dis",
+     "pubtype": [
+      "Comparative Study",
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "3902652",
+     "title": "Gram-positive superinfections following beta-lactam chemotherapy: the significance of the enterococcus.",
+     "pubdate": "1985",
+     "journal": "Infection",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Levocetirizine",
+   "drug_id": "DB06282",
+   "disease": "atopic conjunctivitis",
+   "disease_id": "MONDO:0005642",
+   "ranking_score": 0.9953771289537712,
+   "rank_within_drug": 3,
+   "pubmed_query": "(\"Levocetirizine\"[tiab]) AND (allergic conjunctivitis[tiab])",
+   "pubmed_count": 8,
+   "top_hits": [
+    {
+     "pmid": "40152721",
+     "title": "Treatment of allergic rhinitis and allergic conjunctivitis.",
+     "pubdate": "2025 Mar 31",
+     "journal": "Med Lett Drugs Ther",
+     "pubtype": [
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "31169808",
+     "title": "OTC drugs for seasonal allergies.",
+     "pubdate": "2019 Apr 22",
+     "journal": "Med Lett Drugs Ther",
+     "pubtype": [
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "33848281",
+     "title": "Drugs for allergic rhinitis and allergic conjunctivitis.",
+     "pubdate": "2021 Apr 19",
+     "journal": "Med Lett Drugs Ther",
+     "pubtype": [
+      "Journal Article"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Triamcinolone",
+   "drug_id": "DB00620",
+   "disease": "iridocyclitis (disease)",
+   "disease_id": "MONDO:0004773",
+   "ranking_score": 0.9952554744525548,
+   "rank_within_drug": 68,
+   "pubmed_query": "(\"Triamcinolone\"[tiab]) AND (iridocyclitis[tiab] OR uveitis[tiab])",
+   "pubmed_count": 406,
+   "top_hits": [
+    {
+     "pmid": "24100371",
+     "title": "Drug-induced uveitis.",
+     "pubdate": "2013 Nov",
+     "journal": "Curr Opin Ophthalmol",
+     "pubtype": [
+      "Journal Article",
+      "Research Support, Non-U.S. Gov't",
+      "Review"
+     ]
+    },
+    {
+     "pmid": "15325193",
+     "title": "Macular edema.",
+     "pubdate": "2004 Sep-Oct",
+     "journal": "Surv Ophthalmol",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    },
+    {
+     "pmid": "15803424",
+     "title": "[Drug induced uveitis].",
+     "pubdate": "2005 Mar",
+     "journal": "Arch Soc Esp Oftalmol",
+     "pubtype": [
+      "English Abstract",
+      "Journal Article",
+      "Review"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Ceftriaxone",
+   "drug_id": "DB01212",
+   "disease": "staphylococcal infection",
+   "disease_id": "MONDO:0024313",
+   "ranking_score": 0.992214111922141,
+   "rank_within_drug": 1,
+   "pubmed_query": "(\"Ceftriaxone\"[tiab]) AND (staphylococcal[tiab])",
+   "pubmed_count": 106,
+   "top_hits": [
+    {
+     "pmid": "31669426",
+     "title": "Aminoglycosides for infective endocarditis: time to say goodbye?",
+     "pubdate": "2020 Jun",
+     "journal": "Clin Microbiol Infect",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    },
+    {
+     "pmid": "41485836",
+     "title": "Infection after cesarean delivery: diagnosis, pathophysiology, management, and prevention.",
+     "pubdate": "2026 Jan",
+     "journal": "Am J Obstet Gynecol",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    },
+    {
+     "pmid": "33568029",
+     "title": "Pharmacokinetics and Efficacy of Ceftriaxone in Staphylococcal Mastitis in Crossbred Cows Following Single Intravenous Administration.",
+     "pubdate": "2021",
+     "journal": "Curr Drug Metab",
+     "pubtype": [
+      "Journal Article"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Hydrocortisone",
+   "drug_id": "DB00741",
+   "disease": "spondyloarthropathy",
+   "disease_id": "MONDO_GROUP:5095_43377",
+   "ranking_score": 0.991970802919708,
+   "rank_within_drug": 47,
+   "pubmed_query": "(\"Hydrocortisone\"[tiab]) AND (spondyloarthropathy[tiab])",
+   "pubmed_count": 0,
+   "top_hits": []
+  },
+  {
+   "drug": "Flunisolide",
+   "drug_id": "DB00180",
+   "disease": "dermatitis, atopic",
+   "disease_id": "MONDO:0011292",
+   "ranking_score": 0.9916058394160584,
+   "rank_within_drug": 1,
+   "pubmed_query": "(\"Flunisolide\"[tiab]) AND (atopic dermatitis[tiab])",
+   "pubmed_count": 1,
+   "top_hits": [
+    {
+     "pmid": "18926054",
+     "title": "Exhaled breath condensate cytokines and pH in pediatric asthma and atopic dermatitis.",
+     "pubdate": "2008 Sep-Oct",
+     "journal": "Allergy Asthma Proc",
+     "pubtype": [
+      "Journal Article"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Prochlorperazine",
+   "drug_id": "DB00433",
+   "disease": "anxiety disorder",
+   "disease_id": "MONDO_GROUP:8187_2050_5618_5451_5371_100081_5383_1942_1098_3265_11924_12384",
+   "ranking_score": 0.9883211678832116,
+   "rank_within_drug": 1,
+   "pubmed_query": "(\"Prochlorperazine\"[tiab]) AND (anxiety[tiab])",
+   "pubmed_count": 25,
+   "top_hits": [
+    {
+     "pmid": "21927108",
+     "title": "Prochlorperazine in anxiety.",
+     "pubdate": "1985 Jul",
+     "journal": "Indian J Psychiatry",
+     "pubtype": [
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "38784181",
+     "title": "Akathisia and oculogyric crisis in hyperemesis gravidarum.",
+     "pubdate": "2024 Jun",
+     "journal": "Obstet Med",
+     "pubtype": [
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "33041146",
+     "title": "MAGraine: Magnesium compared to conventional therapy for treatment of migraines.",
+     "pubdate": "2021 Jan",
+     "journal": "Am J Emerg Med",
+     "pubtype": [
+      "Journal Article",
+      "Randomized Controlled Trial"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Cyproheptadine",
+   "drug_id": "DB00434",
+   "disease": "neurotic disorder",
+   "disease_id": "MONDO:0005379",
+   "ranking_score": 0.9880778588807786,
+   "rank_within_drug": 1,
+   "pubmed_query": "(\"Cyproheptadine\"[tiab]) AND (neurosis[tiab] OR anxiety[tiab])",
+   "pubmed_count": 42,
+   "top_hits": [
+    {
+     "pmid": "40868416",
+     "title": "Lifestyle and SSRI Interventions in Pediatric Cyclic Vomiting Syndrome: Rethinking First-Line Management.",
+     "pubdate": "2025 Jul 23",
+     "journal": "Children (Basel)",
+     "pubtype": [
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "35748419",
+     "title": "EGD for Refractory Toxidromes: Is It Time to Add to the Algorithm?",
+     "pubdate": "2022 Jan-Dec",
+     "journal": "J Investig Med High Impact Case Rep",
+     "pubtype": [
+      "Case Reports",
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "30076469",
+     "title": "Managing cyclic vomiting syndrome in children: beyond the guidelines.",
+     "pubdate": "2018 Oct",
+     "journal": "Eur J Pediatr",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Triazolam",
+   "drug_id": "DB00897",
+   "disease": "anxiety",
+   "disease_id": "MONDO:0011918",
+   "ranking_score": 0.9877128953771288,
+   "rank_within_drug": 2,
+   "pubmed_query": "(\"Triazolam\"[tiab]) AND (anxiety[tiab])",
+   "pubmed_count": 92,
+   "top_hits": [
+    {
+     "pmid": "31643621",
+     "title": "Benzodiazepines.",
+     "pubdate": "2012",
+     "journal": "",
+     "pubtype": [
+      "Review"
+     ]
+    },
+    {
+     "pmid": "8031376",
+     "title": "Triazolam and dental anxiety.",
+     "pubdate": "1994 Apr",
+     "journal": "J Am Dent Assoc",
+     "pubtype": [
+      "Comment",
+      "Letter"
+     ]
+    },
+    {
+     "pmid": "8748566",
+     "title": "Nefazodone: a new antidepressant.",
+     "pubdate": "1995 Dec 15",
+     "journal": "Am J Health Syst Pharm",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Benzphetamine",
+   "drug_id": "DB00865",
+   "disease": "anxiety disorder",
+   "disease_id": "MONDO_GROUP:8187_2050_5618_5451_5371_100081_5383_1942_1098_3265_11924_12384",
+   "ranking_score": 0.9854014598540146,
+   "rank_within_drug": 1,
+   "pubmed_query": "(\"Benzphetamine\"[tiab]) AND (anxiety[tiab])",
+   "pubmed_count": 1,
+   "top_hits": [
+    {
+     "pmid": "30726003",
+     "title": "Prescription of Controlled Substances: Benefits and Risks (Archived).",
+     "pubdate": "2025 Jan",
+     "journal": "",
+     "pubtype": [
+      "Study Guide"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Chlorprothixene",
+   "drug_id": "DB01239",
+   "disease": "anxiety disorder",
+   "disease_id": "MONDO_GROUP:8187_2050_5618_5451_5371_100081_5383_1942_1098_3265_11924_12384",
+   "ranking_score": 0.9846715328467152,
+   "rank_within_drug": 1,
+   "pubmed_query": "(\"Chlorprothixene\"[tiab]) AND (anxiety[tiab])",
+   "pubmed_count": 13,
+   "top_hits": [
+    {
+     "pmid": "13900877",
+     "title": "Thioridazine and chlorprothixene in the management of anxiety in tuberculous patients.",
+     "pubdate": "1962 Apr",
+     "journal": "Am Rev Respir Dis",
+     "pubtype": [
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "14013234",
+     "title": "[Chlorprothixene ambulatory psychiatry].",
+     "pubdate": "1962 Oct",
+     "journal": "Hospital (Rio J)",
+     "pubtype": [
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "1969172",
+     "title": "Bromazepam in generalized anxiety. Randomized, multi-practice comparisons with both chlorprothixene and placebo.",
+     "pubdate": "1990",
+     "journal": "Psychopharmacology (Berl)",
+     "pubtype": [
+      "Clinical Trial",
+      "Comparative Study",
+      "Journal Article",
+      "Randomized Controlled Trial"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Aripiprazole lauroxil",
+   "drug_id": "DB14185",
+   "disease": "bipolar disorder",
+   "disease_id": "MONDO_GROUP:4985_693_24613_1866",
+   "ranking_score": 0.98345498783455,
+   "rank_within_drug": 1,
+   "pubmed_query": "(\"Aripiprazole lauroxil\"[tiab]) AND (bipolar disorder[tiab])",
+   "pubmed_count": 8,
+   "top_hits": [
+    {
+     "pmid": "37345508",
+     "title": "Switching to long-acting injectable antipsychotics: pharmacological considerations and practical approaches.",
+     "pubdate": "2023 Sep-Dec",
+     "journal": "Expert Opin Pharmacother",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    },
+    {
+     "pmid": "38299536",
+     "title": "Evaluating the efficacy and safety of the currently available once-every-two months long-acting injectable formulations of aripiprazole for the treatment of schizophrenia or as a maintenance monotherapy for bipolar I disorder in adults.",
+     "pubdate": "2024 Mar",
+     "journal": "Expert Rev Neurother",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    },
+    {
+     "pmid": "28672735",
+     "title": "Safety concerns associated with second-generation antipsychotic long-acting injection treatment. A systematic update.",
+     "pubdate": "2017 Jun 23",
+     "journal": "Horm Mol Biol Clin Investig",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Flumethasone",
+   "drug_id": "DB00663",
+   "disease": "ankylosing spondylitis",
+   "disease_id": "MONDO_GROUP:5306_20655",
+   "ranking_score": 0.9811435523114356,
+   "rank_within_drug": 2,
+   "pubmed_query": "(\"Flumethasone\"[tiab]) AND (ankylosing spondylitis[tiab])",
+   "pubmed_count": 0,
+   "top_hits": []
+  },
+  {
+   "drug": "Ciclesonide",
+   "drug_id": "DB01410",
+   "disease": "atopic eczema",
+   "disease_id": "MONDO:0004980",
+   "ranking_score": 0.981021897810219,
+   "rank_within_drug": 4,
+   "pubmed_query": "(\"Ciclesonide\"[tiab]) AND (atopic dermatitis[tiab] OR eczema[tiab])",
+   "pubmed_count": 0,
+   "top_hits": []
+  },
+  {
+   "drug": "Amcinonide",
+   "drug_id": "DB00288",
+   "disease": "intrinsic asthma",
+   "disease_id": "MONDO:0004765",
+   "ranking_score": 0.9800486618004868,
+   "rank_within_drug": 7,
+   "pubmed_query": "(\"Amcinonide\"[tiab]) AND (asthma[tiab])",
+   "pubmed_count": 2,
+   "top_hits": [
+    {
+     "pmid": "10894975",
+     "title": "Delayed generalized allergic reactions to corticosteroids.",
+     "pubdate": "2000",
+     "journal": "Dermatology",
+     "pubtype": [
+      "Case Reports",
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "14641354",
+     "title": "Angioedema and dysphagia caused by contact allergy to inhaled budesonide.",
+     "pubdate": "2003 Aug",
+     "journal": "Contact Dermatitis",
+     "pubtype": [
+      "Case Reports",
+      "Journal Article"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Ampicillin",
+   "drug_id": "DB00415",
+   "disease": "streptococcal infection",
+   "disease_id": "MONDO:0021680",
+   "ranking_score": 0.97992700729927,
+   "rank_within_drug": 6,
+   "pubmed_query": "(\"Ampicillin\"[tiab]) AND (streptococcal[tiab])",
+   "pubmed_count": 328,
+   "top_hits": [
+    {
+     "pmid": "3657307",
+     "title": "Vancomycin.",
+     "pubdate": "1987 Oct",
+     "journal": "Mayo Clin Proc",
+     "pubtype": [
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "33091945",
+     "title": "Ampicillin Dose for Early and Late-Onset Group B Streptococcal Disease in Neonates.",
+     "pubdate": "2022 May",
+     "journal": "Am J Perinatol",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    },
+    {
+     "pmid": "10090000",
+     "title": "The penicillins.",
+     "pubdate": "1999 Mar",
+     "journal": "Mayo Clin Proc",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Trazodone",
+   "drug_id": "DB00656",
+   "disease": "manic bipolar affective disorder",
+   "disease_id": "MONDO:0024612",
+   "ranking_score": 0.979683698296837,
+   "rank_within_drug": 3,
+   "pubmed_query": "(\"Trazodone\"[tiab]) AND (mania[tiab] OR bipolar[tiab])",
+   "pubmed_count": 59,
+   "top_hits": [
+    {
+     "pmid": "29477251",
+     "title": "Comparative efficacy and acceptability of 21 antidepressant drugs for the acute treatment of adults with major depressive disorder: a systematic review and network meta-analysis.",
+     "pubdate": "2018 Apr 7",
+     "journal": "Lancet",
+     "pubtype": [
+      "Comparative Study",
+      "Journal Article",
+      "Research Support, Non-U.S. Gov't",
+      "Systematic Review",
+      "Network Meta-Analysis"
+     ]
+    },
+    {
+     "pmid": "19667003",
+     "title": "Carbamazepine-induced hyperammonemia.",
+     "pubdate": "2009 Aug 15",
+     "journal": "Am J Health Syst Pharm",
+     "pubtype": [
+      "Case Reports",
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "18029952",
+     "title": "Rivastigmine-induced dystonia.",
+     "pubdate": "2007 Dec 1",
+     "journal": "Am J Health Syst Pharm",
+     "pubtype": [
+      "Case Reports",
+      "Journal Article"
+     ]
+    }
+   ]
+  },
+  {
+   "drug": "Flurandrenolide",
+   "drug_id": "DB00846",
+   "disease": "intrinsic asthma",
+   "disease_id": "MONDO:0004765",
+   "ranking_score": 0.9795620437956204,
+   "rank_within_drug": 6,
+   "pubmed_query": "(\"Flurandrenolide\"[tiab]) AND (asthma[tiab])",
+   "pubmed_count": 0,
+   "top_hits": []
+  },
+  {
+   "drug": "Salbutamol",
+   "drug_id": "DB01001",
+   "disease": "pulmonary emphysema",
+   "disease_id": "MONDO:0004849",
+   "ranking_score": 0.979440389294404,
+   "rank_within_drug": 3,
+   "pubmed_query": "(\"Salbutamol\"[tiab]) AND (emphysema[tiab] OR COPD[tiab])",
+   "pubmed_count": 595,
+   "top_hits": [
+    {
+     "pmid": "32960872",
+     "title": "Drugs for COPD.",
+     "pubdate": "2020 Sep 7",
+     "journal": "Med Lett Drugs Ther",
+     "pubtype": [
+      "Journal Article",
+      "Review"
+     ]
+    },
+    {
+     "pmid": "36451327",
+     "title": "Respiratory inhalers and the environment.",
+     "pubdate": "2022 Dec",
+     "journal": "Aust J Gen Pract",
+     "pubtype": [
+      "Journal Article"
+     ]
+    },
+    {
+     "pmid": "26963310",
+     "title": "[Asthma-COPD overlap syndrome].",
+     "pubdate": "2015",
+     "journal": "Tuberk Toraks",
+     "pubtype": [
+      "Journal Article"
+     ]
+    }
+   ]
+  }
+ ]
+}
