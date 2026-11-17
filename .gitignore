@@ -56,3 +56,6 @@ Docs/paper/PAPER_DRAFT_IEEE.pdf
 # Local Colab artifacts
 outputs_local_pre_drive/
 outputs
+
+# serving secrets
+deploy/.env

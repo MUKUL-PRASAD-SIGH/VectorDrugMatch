@@ -56,6 +56,24 @@ class PairFeaturizer:
         self.SS = ((SS + SS.T) > 0).astype(float)
         self.DC = g(("drug", "contraindicated_for", "disease"), n_dr, n_di)
         self.DO = g(("drug", "offlabel_for", "disease"), n_dr, n_di)
+        self._setup(n_dr, n_di, n_g, train_edges, train_y, drug_fp)
+
+    MATS = ("DG", "SG", "GG", "SS", "DC", "DO")
+
+    def matrices(self):
+        """The leakage-safe graph as sparse matrices (for the serving bundle)."""
+        return {k: getattr(self, k).tocsr() for k in self.MATS}
+
+    @classmethod
+    def from_matrices(cls, mats, train_edges, train_y, drug_fp):
+        """Rebuild without PyG from matrices() output (serving)."""
+        self = cls.__new__(cls)
+        for k in cls.MATS:
+            setattr(self, k, sp.csr_matrix(mats[k]))
+        self._setup(self.DG.shape[0], self.SG.shape[0], self.DG.shape[1], train_edges, train_y, drug_fp)
+        return self
+
+    def _setup(self, n_dr, n_di, n_g, train_edges, train_y, drug_fp):
         te, ty = np.asarray(train_edges), np.asarray(train_y).astype(bool)
         self.train_edges, self.train_y, self.fp = te, ty, drug_fp
         self.n = (n_dr, n_di, n_g)
@@ -101,29 +119,43 @@ class PairFeaturizer:
         direct = self._pick(self.DC, d, s) + self._pick(self.DO, d, s)
         # reachability in <= 2 / <= 3 undirected hops
         A = self.A
-        u, inv = np.unique(d, return_inverse=True)
-        Au = A[u + self.off["drug"]]                                       # 1-hop rows of the unique drugs
-        dis_cols = A[:, self.off["disease"]:self.off["disease"] + self.n[1]]
-        R1 = Au[:, self.off["disease"]:self.off["disease"] + self.n[1]]
-        R2 = (Au @ dis_cols).tocsr()                                       # 2-hop walks drug -> disease
-        R3 = ((Au @ A).tocsr() @ dis_cols).tocsr()                         # 3-hop walks drug -> disease
-        r1 = np.asarray(R1[inv, s]).ravel() > 0
-        r2 = r1 | (np.asarray(R2[inv, s]).ravel() > 0)
-        r3 = r2 | (np.asarray(R3[inv, s]).ravel() > 0)
+        nd, ns = self.n[0], self.n[1]
+        dr0, di0 = self.off["drug"], self.off["disease"]
+        u_d, inv_d = np.unique(d, return_inverse=True)
+        u_s, inv_s = np.unique(s, return_inverse=True)
+        if len(u_s) < len(u_d):                                            # walk from the disease side (A is symmetric): cheaper for disease->drug ranking
+            As = A[u_s + di0]
+            cols = A[:, dr0:dr0 + nd]
+            R1, R2, R3 = As[:, dr0:dr0 + nd], (As @ cols).tocsr(), ((As @ A).tocsr() @ cols).tocsr()
+            pick = lambda M: np.asarray(M[inv_s, d]).ravel()  # noqa: E731
+        else:
+            Au = A[u_d + dr0]                                              # 1-hop rows of the unique drugs
+            cols = A[:, di0:di0 + ns]
+            R1, R2, R3 = Au[:, di0:di0 + ns], (Au @ cols).tocsr(), ((Au @ A).tocsr() @ cols).tocsr()
+            pick = lambda M: np.asarray(M[inv_d, s]).ravel()  # noqa: E731
+        r1 = pick(R1) > 0
+        r2 = r1 | (pick(R2) > 0)
+        r3 = r2 | (pick(R3) > 0)
         cols = [np.log1p(p_dgs), np.log1p(p_dggs), np.log1p(p_dcs), np.log1p(p_dos), (direct > 0).astype(float), r2.astype(float), r3.astype(float)]
         return np.stack(cols, 1).astype(np.float32)
 
     def label_features(self, edges, lab_edges=None, lab_y=None):
         """Features that use training labels, computed from the positives in (lab_edges, lab_y) (default: all training pairs).
         -> (n, 5): log train-indication degree of s, log p_dgdt, max / mean Tanimoto to the profile drugs of s, has_profile."""
-        le = self.train_edges if lab_edges is None else np.asarray(lab_edges)
+        default = lab_edges is None
+        le = self.train_edges if default else np.asarray(lab_edges)
         ly = self.train_y if lab_y is None else np.asarray(lab_y).astype(bool)
-        pos = le[:, ly]
-        T = sp.csr_matrix((np.ones(pos.shape[1]), (pos[0], pos[1])), shape=(self.n[0], self.n[1]))
-        T.data[:] = 1.0
+        if default and getattr(self, "_cache", None) is not None:
+            T, DGDT = self._cache
+        else:
+            pos = le[:, ly]
+            T = sp.csr_matrix((np.ones(pos.shape[1]), (pos[0], pos[1])), shape=(self.n[0], self.n[1]))
+            T.data[:] = 1.0
+            DGDT = (self.DD @ T).tocsr()
+            if default:
+                self._cache = (T, DGDT)
         d, s = np.asarray(edges[0]), np.asarray(edges[1])
         tdeg = np.asarray(T.sum(0)).ravel()[s]
-        DGDT = (self.DD @ T).tocsr()
         p_dgdt = self._pick(DGDT, d, s)
         blk = build_disease_profile_block(self.fp, le, ly.astype(int), np.asarray(edges))   # LOO inside is a no-op when d is not a profile drug
         return np.concatenate([np.log1p(np.stack([tdeg, p_dgdt], 1)), blk[:, 1:]], 1).astype(np.float32)
