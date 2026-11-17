@@ -54,7 +54,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bundle", required=True)
     ap.add_argument("--B", type=int, default=2000)
+    ap.add_argument("--dry-run", action="store_true", help="exercise the full code path on final_train's internal-validation pairs (no lock, no holdout, "
+                                                           "nothing written to the bundle); output under outputs/final_audit_20261117/holdout_dry_run")
     a = ap.parse_args()
+    if a.dry_run:
+        return run(a, REPO / a.bundle, None, REPO / "outputs/final_audit_20261117/holdout_dry_run", dry=True)
     selp = REP / "FROZEN_SELECTION.json"
     lock = REP / "HOLDOUT_EVALUATED.lock"
     if not selp.exists():
@@ -71,21 +75,29 @@ def main():
         sys.exit("holdout file hash differs from the committed protocol manifest")
     lock.write_text(json.dumps({"started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "bundle": man["bundle_version"],
                                 "selection_sha256": sha(selp), "holdout_sha256": sha(hp)}), encoding="utf-8")
-    out = REP / "final_holdout"
-    out.mkdir(exist_ok=True)
+    run(a, bundle, hp, REP / "final_holdout", dry=False, man=man, lock=lock)
 
+
+def run(a, bundle, hp, out, dry, man=None, lock=None):
+    out.mkdir(parents=True, exist_ok=True)
+    man = man or json.loads((bundle / "manifest.json").read_text())
     sc = Scorer(bundle)
     from src.data.graph_builder import build_hetero_data
     from src.features.disease_profile import build_disease_profile_block
     from src.features.pair import build_pair_features
     dis_x = build_hetero_data(REPO / "data/processed/primekg", include_features=True)["disease"].x.numpy()   # the RF's disease features, as in training
-    h = np.load(hp)
+    if dry:
+        z = np.load(PROTO / "final_train.npz")
+        h = {"edges_holdout": z["edges_val"], "y_holdout": z["y_val"], "edges_holdout_popmatch": z["edges_val_popmatch"], "y_holdout_popmatch": z["y_val_popmatch"],
+             "holdout_indication_pairs": z["edges_val"][:, z["y_val"] == 1][:, :400]}
+    else:
+        h = np.load(hp)
     res = {"bundle": man["bundle_version"], "selected_model": man["selected_model"], "kind": man["kind"], "sets": {}}
     preds_all = []
     for setname, ek, yk in (("hard", "edges_holdout", "y_holdout"), ("popmatch", "edges_holdout_popmatch", "y_holdout_popmatch")):
         e, y = h[ek], h[yk].astype(int)
         rs, comp, _ = sc.score(e[0], e[1])
-        models = {"SELECTED(" + man["selected_model"] + ")": rs[None, :]}
+        models = {"SELECTED(" + str(man.get("selected_model") or man["bundle_version"]) + ")": rs[None, :]}
         if sc.gcn:                                            # per-seed GCN probabilities (seed-level uncertainty)
             from src.serving.scoring import gcn_head_numpy
             models["gcn_component_per_seed"] = np.stack([gcn_head_numpy(g["emb_drug"], g["emb_disease"], {k: g[k] for k in ("W1", "b1", "W2", "b2")}, e[0], e[1]) for g in sc.gcn])
@@ -147,7 +159,11 @@ def main():
                                     "means": pr.drop(columns=["drug_id"]).mean().round(4).to_dict(),
                                     "note": "all diseases ranked per holdout drug; PrimeKG contraindication/off-label pairs removed; targets = the drug's PrimeKG indications"}
     res["finished_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    res["dry_run"] = dry
     (out / "HOLDOUT_RESULTS.json").write_text(json.dumps(res, indent=1, default=float), encoding="utf-8")
+    if dry:
+        print("DRY RUN OK", json.dumps(res["per_drug_full_ranking"]["means"], default=float)[:400])
+        return
     lock.write_text(json.dumps({**json.loads(lock.read_text()), "finished_utc": res["finished_utc"], "results_sha256": sha(out / "HOLDOUT_RESULTS.json")}), encoding="utf-8")
     # attach to the bundle manifest (model files and their checksums unchanged)
     man["holdout_metrics"] = {"results_file": str((out / "HOLDOUT_RESULTS.json").relative_to(REPO)), "results_sha256": sha(out / "HOLDOUT_RESULTS.json"),
