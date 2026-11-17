@@ -57,6 +57,14 @@ degree, connectivity and drug-cross-fitted fingerprint-profile features. **Locke
     true negatives, route/formulation-aware drug representations, systematic safety screening, expert curation of top candidates, and experimental
     or clinical evidence. Computational metrics are not clinical validation.
 
+## Comparison against published methods (added 2026-11-18, after the selection was frozen)
+TxGNN itself could not be run (it pins `dgl==0.5.2`, unavailable for Python 3.9+, and every split it supports holds out *diseases*, not drugs), so no
+head-to-head claim against it is made. Instead the standard KG-embedding baselines (TransE, DistMult, ComplEx, RotatE) are trained on identical data
+and splits, and VectorDrugMatch is additionally measured on a disease-disjoint split mirroring the published protocol. Complete so far: on that
+disease-disjoint protocol every disease-profile and chemistry feature is **exactly at chance** (AUC 0.500) because a held-out disease has no known
+drugs, so the deployed GBM component contributes nothing there - VectorDrugMatch is a new-indication-for-a-known-drug system, not a zero-shot-disease
+system. See `COMPARISON_PUBLISHED_BASELINES.md`; the GPU parts are pending.
+
 ## Why this status and not another
 * Not "generalisation insufficient": the locked drug-disjoint holdout supports good generalisation within PrimeKG.
 * Not "validation incomplete": selection, holdout evaluation, statistics, baselines and evidence review are complete and reproducible.
@@ -64,7 +72,7 @@ degree, connectivity and drug-cross-fitted fingerprint-profile features. **Locke
   so the system needs a staged period with expert review before broader research use.
 
 ## Artifact index (`reports/final_audit_20261117/`)
-Reports: `FINAL_RESEARCH_REPORT.md`, `DATA_INTEGRITY_AUDIT.md`, `LEAKAGE_AUDIT.md`, `STATISTICAL_COMPARISONS.md`, `MODEL_SELECTION_REPORT.md`,
+Reports: `FINAL_RESEARCH_REPORT.md`, `COMPARISON_PUBLISHED_BASELINES.md`, `DATA_INTEGRITY_AUDIT.md`, `LEAKAGE_AUDIT.md`, `STATISTICAL_COMPARISONS.md`, `MODEL_SELECTION_REPORT.md`,
 `CONVERGENCE_ANALYSIS.md`, `BASELINE_COMPARISON.md`, `INDEPENDENT_EVIDENCE_VALIDATION.md`, `DEPLOYMENT_READINESS.md`, `MODEL_CARD.md`.
 Tables: `FINAL_METRICS.csv`, `SEED_WISE_METRICS.csv`, `PAIRED_COMPARISONS.csv`, `PREDICTIONS.csv` (holdout), `DEV_CV_SUMMARY.csv`, `DEV_CV_RUNS.csv`.
 Provenance: `EXPERIMENT_MANIFEST.json`, `FROZEN_SELECTION.json`, `HOLDOUT_EVALUATED.lock`, `protocol_manifest_committed.json`, `protocol_files/`.
