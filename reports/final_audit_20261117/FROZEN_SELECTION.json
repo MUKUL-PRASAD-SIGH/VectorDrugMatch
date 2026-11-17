@@ -1,0 +1,46 @@
+{
+ "frozen_utc": "2026-11-17T21:04:53.480416+00:00",
+ "rule": "mean over (fold, seed) of validation AP on the 'hard' negatives of the development CV folds; candidates within 0.005 AP of the best are tied; among tied candidates prefer the higher mean popmatch-validation AP, then fewer parameters (or the non-ensemble)",
+ "best_gcn_config": "L3_combo",
+ "best_gcn_hp": {
+  "epochs": 200,
+  "patience": 20,
+  "k": 4,
+  "arch": "GCN",
+  "variant": "original",
+  "layers": 4,
+  "emb": 128,
+  "head": 64,
+  "dropout": 0.4,
+  "lr": 0.005,
+  "wd": 0.0005,
+  "sched_patience": 10
+ },
+ "selected_model": "rankavg[L3_combo+deg_conn_fp_gbm]",
+ "tied_candidates": [
+  {
+   "model": "rankavg[L3_combo+deg_conn_fp_gbm]",
+   "kind": "ensemble",
+   "n_runs": 15,
+   "n_folds": 5,
+   "n_seeds": 3,
+   "val_ap": 0.7641000134568388,
+   "val_ap_sd": 0.024755677412530003,
+   "val_auc": 0.9012417064352185,
+   "val_auc_sd": 0.010792148086235933,
+   "popmatch_ap": 0.6447220334450672,
+   "popmatch_auc": 0.8540086687479899,
+   "n_params": NaN,
+   "is_ensemble": true
+  }
+ ],
+ "gcn_final_checkpoints": {
+  "outputs\\final_audit_20261117\\final_model\\L3_combo\\final_train\\seed100\\model.pth": "8e13d359b4d53e6a8b19f9021ac118ffed930e0996cc4af26b518e429fa169fd",
+  "outputs\\final_audit_20261117\\final_model\\L3_combo\\final_train\\seed21\\model.pth": "46011c4c0ece06848ef003863eb11843f96a041dcbbefb48b597ab5764ebd273",
+  "outputs\\final_audit_20261117\\final_model\\L3_combo\\final_train\\seed42\\model.pth": "6be412932b09afb7ee09571f468312dc738bb5127be8f959fe9e11dd3b151640",
+  "outputs\\final_audit_20261117\\final_model\\L3_combo\\final_train\\seed52\\model.pth": "2af71286b60687d90bf0780b104667473f156101489eab0959d28a2d4237b506",
+  "outputs\\final_audit_20261117\\final_model\\L3_combo\\final_train\\seed72\\model.pth": "a5c4ee4a5faedcc9897c2a68db997bb65e7ca068b13edbab7eacf3cb44b2e3ee"
+ },
+ "gbm_final_model": "outputs\\final_audit_20261117\\dev_cv\\deg_conn_fp_gbm\\final_train\\seed0\\model.joblib",
+ "holdout_status": "not yet evaluated"
+}

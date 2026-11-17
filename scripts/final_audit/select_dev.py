@@ -112,9 +112,12 @@ def stage_b_means(summ):
     return summ.set_index("model").val_ap
 
 
-def stage_c_configs(summ):
+def stage_c_configs(df):
+    """Stage C plan from the STAGE B runs only (stage B seeds, all folds). Bug fixed 2026-11-18: the first version used means over every seed present,
+    so re-running stage C after it had added seeds changed the plan (observed on Colab: L4 replaced L3_emb128 on the second run)."""
     sb = PLAN["stage_B_one_factor"]["configs"]
-    m = stage_b_means(summ[summ.model.isin(sb)])
+    sb_seeds = PLAN["stage_B_one_factor"]["seeds"]
+    m = df[df.model.isin(sb) & df.seed.isin(sb_seeds)].groupby("model").val_ap.mean()
     top = list(m.sort_values(ascending=False).index[: PLAN["stage_C"]["n_top"]])
     base = m["L3_base"]
     combo, gain_of = {}, {}
@@ -146,8 +149,8 @@ def main():
             for name, over in s["configs"].items():
                 run(cmd(name, hp_of(over), s["splits"], s["seeds"], f"{OUT}/dev_cv"))
         elif a.stage == "C":
-            _, summ = dev_table()
-            cfgs = stage_c_configs(summ)
+            df, _ = dev_table()
+            cfgs = stage_c_configs(df)
             (REPO / OUT / "stage_C_plan.json").write_text(json.dumps(cfgs, indent=1), encoding="utf-8")
             print("stage C configs:", json.dumps(cfgs))
             seeds = [42] + PLAN["stage_C"]["seeds_added"]
