@@ -16,7 +16,9 @@ Protocol
     filtered against every known drug-disease pair of any relation, matching the split protocol.
   * Checkpoint selection: best validation ROC-AUC on the split's validation pairs, patience in evaluations - the same policy as the GCN.
     Hyper-parameters are fixed a priori and identical for the four models (dim 128 = the deployed GCN's width, gamma 12, 64 negatives,
-    self-adversarial alpha 1.0, Adam lr 1e-3, batch 4096, budget 20,000 steps with early stopping).
+    self-adversarial alpha 1.0, Adam lr 2e-3, batch 8192, budget 12,000 steps = about 200 passes over the training triples, with early
+    stopping on validation ROC-AUC). The budget was set from a CPU pilot (DistMult, cv_fold0) in which validation ROC-AUC was still rising at
+    1,000 steps of batch 1024, i.e. these models need far more optimisation than the GCN; the pilot log is in the comparison report.
   * Structure-only by construction: no chemical fingerprints (unlike the GCN), which is inherent to this model class.
 
 Outputs per run: <out>/<model>/<split>/seed<seed>/{metrics.json, val_predictions.csv, val_popmatch_predictions.csv,
@@ -259,9 +261,9 @@ def main():
     ap.add_argument("--gamma", type=float, default=12.0)
     ap.add_argument("--negs", type=int, default=64)
     ap.add_argument("--alpha", type=float, default=1.0)
-    ap.add_argument("--lr", type=float, default=1e-3)
-    ap.add_argument("--batch", type=int, default=4096)
-    ap.add_argument("--steps", type=int, default=20000)
+    ap.add_argument("--lr", type=float, default=2e-3)
+    ap.add_argument("--batch", type=int, default=8192)
+    ap.add_argument("--steps", type=int, default=12000)
     ap.add_argument("--patience", type=int, default=5)
     ap.add_argument("--eval-every", type=int, default=1000)
     ap.add_argument("--eval-holdout", action="store_true", help="also score the locked holdout (post-hoc comparison only; nothing is selected on it)")

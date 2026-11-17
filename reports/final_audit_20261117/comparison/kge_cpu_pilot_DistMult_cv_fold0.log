@@ -1,0 +1,31 @@
+C:\Users\Mukul Prasad\Desktop\PROJECTS\Vector Drug Match\VectorDrugMatch\src\data\graph_builder.py:99: DtypeWarning: Columns (0,1) have mixed types. Specify dtype option on import or set low_memory=False.
+  edges_df = pd.read_csv(proc / "edges.csv")
+  [WARNING] drug_features.npy not found. Using empty feature matrix.
+
+==================================================
+HeteroData Graph Summary
+==================================================
+  Drug nodes:    7,957
+  Disease nodes: 17,080
+  Gene nodes:    19,051
+  Edge types:    12
+    ('drug', 'treats', 'disease'): 9,388
+    ('drug', 'binds', 'gene'): 25,468
+    ('disease', 'associates', 'gene'): 80,411
+    ('gene', 'interacts', 'gene'): 642,150
+    ('drug', 'contraindicated_for', 'disease'): 30,675
+    ('drug', 'offlabel_for', 'disease'): 2,568
+    ('disease', 'related_to', 'disease'): 64,388
+    ('disease', 'rev_treats', 'drug'): 9,388
+    ('gene', 'rev_binds', 'drug'): 25,468
+    ('gene', 'rev_associates', 'disease'): 80,411
+    ('disease', 'rev_contraindicated_for', 'drug'): 30,675
+    ('disease', 'rev_offlabel_for', 'drug'): 2,568
+==================================================
+  DistMult cv_fold0 s42 step    250 loss 0.6928 val AUC 0.5048
+  DistMult cv_fold0 s42 step    500 loss 0.6690 val AUC 0.5122
+  DistMult cv_fold0 s42 step    750 loss 0.6388 val AUC 0.5758
+  DistMult cv_fold0 s42 step   1000 loss 0.5829 val AUC 0.5909
+  DistMult cv_fold0 s42 step   1250 loss 0.5456 val AUC 0.6102
+  DistMult cv_fold0 s42 step   1500 loss 0.5053 val AUC 0.6332
+DONE DistMult cv_fold0 s42: val AUC 0.6332 AP 0.3068 | 163s
